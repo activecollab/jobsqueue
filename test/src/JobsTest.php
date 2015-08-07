@@ -7,10 +7,7 @@
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
   /**
-   * Class description
-   *
-   * @package
-   * @subpackage
+   * @package ActiveCollab\JobsQueue\Test
    */
   class JobsTest extends TestCase
   {

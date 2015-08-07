@@ -8,7 +8,7 @@
   /**
    * @package ActiveCollab\JobsQueue\Queue
    */
-  class MySqlQueue implements Queue
+  class MySql implements Queue
   {
     const TABLE_NAME = 'jobs_queue';
 

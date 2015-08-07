@@ -7,7 +7,7 @@
   /**
    * @package ActiveCollab\JobsQueue\Queue
    */
-  class ArrayQueue implements Queue
+  class Memory implements Queue
   {
     /**
      * @var array

@@ -4,7 +4,7 @@
 
   use ActiveCollab\JobsQueue\Dispatcher;
   use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+  use ActiveCollab\JobsQueue\Queue\MySql;
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
   use mysqli;
 
@@ -28,9 +28,9 @@
       parent::setUp();
 
       $this->link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
-      $this->link->query('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME . '`');
+      $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
 
-      $this->dispatcher = new Dispatcher(new MySqlQueue($this->link));
+      $this->dispatcher = new Dispatcher(new MySql($this->link));
 
       $this->assertCount(0, $this->dispatcher->getQueue());
     }
@@ -40,7 +40,7 @@
      */
     public function tearDown()
     {
-      $this->link->query('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME . '`');
+      $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
       $this->link->close();
 
       parent::tearDown();
@@ -53,7 +53,7 @@
     {
       $result = $this->link->query('SHOW TABLES');
       $this->assertEquals(1, $result->num_rows);
-      $this->assertEquals(MySqlQueue::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
+      $this->assertEquals(MySql::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
     }
 
     /**
@@ -77,7 +77,7 @@
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
       $this->assertInstanceOf('mysqli_result', $result);
       $this->assertEquals(1, $result->num_rows);
 
@@ -94,7 +94,7 @@
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY ])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
       $this->assertInstanceOf('mysqli_result', $result);
       $this->assertEquals(1, $result->num_rows);
 
@@ -111,7 +111,7 @@
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
       $this->assertInstanceOf('mysqli_result', $result);
       $this->assertEquals(1, $result->num_rows);
 
@@ -137,7 +137,7 @@
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
       $this->assertInstanceOf('mysqli_result', $result);
       $this->assertEquals(1, $result->num_rows);
 
@@ -154,7 +154,7 @@
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
       $this->assertInstanceOf('mysqli_result', $result);
       $this->assertEquals(1, $result->num_rows);
 
@@ -171,7 +171,7 @@
      */
     private function assertRecordsCount($expected)
     {
-      $result = $this->link->query('SELECT COUNT(`id`) AS "record_count" FROM `' . MySqlQueue::TABLE_NAME . '`');
+      $result = $this->link->query('SELECT COUNT(`id`) AS "record_count" FROM `' . MySql::TABLE_NAME . '`');
       $this->assertEquals(1, $result->num_rows);
       $this->assertEquals($expected, (integer) $result->fetch_assoc()['record_count']);
     }

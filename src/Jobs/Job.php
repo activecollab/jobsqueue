@@ -9,6 +9,10 @@
    */
   abstract class Job
   {
+    const NOT_A_PRIORITY = 0;
+    const HAS_PRIORITY = 256;
+    const HAS_HIGHEST_PRIORITY = 4294967295; // UNSIGNED INT https://dev.mysql.com/doc/refman/5.0/en/integer-types.html
+
     /**
      * @var array
      */
@@ -28,6 +32,12 @@
       } else {
         throw new InvalidArgumentException('Data is expected to be an array or NULL');
       }
+
+      if (empty($this->data['priority']) || $this->data['priority'] < self::NOT_A_PRIORITY) {
+        $this->data['priority'] = self::NOT_A_PRIORITY;
+      } else if ($this->data['priority'] > self::HAS_HIGHEST_PRIORITY) {
+        $this->data['priority'] = self::HAS_HIGHEST_PRIORITY;
+      }
     }
 
     /**
@@ -38,7 +48,7 @@
     /**
      * @return array
      */
-    protected function getData()
+    public function getData()
     {
       return $this->data;
     }

@@ -38,7 +38,7 @@
         'second' => new ArrayQueue(),
         'third' => new ArrayQueue(),
       ]);
-      
+
       $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\ArrayQueue', $dispatcher->getQueue('first'));
       $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\ArrayQueue', $dispatcher->getQueue('second'));
       $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\ArrayQueue', $dispatcher->getQueue('third'));

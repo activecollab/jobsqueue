@@ -31,14 +31,21 @@
       $this->assertCount(0, $this->dispatcher->getQueue());
     }
 
-    public function testInc()
+    /**
+     * Test if dispatch adds a job to the queue
+     */
+    public function testDispatchAddsEventToTheQueue()
     {
-      $number = 1245;
+      $this->assertEquals(0, $this->dispatcher->dispatch(new Inc([ 'number' => 1245 ])));
+      $this->assertCount(1, $this->dispatcher->getQueue());
+    }
 
-      $this->dispatcher->dispatch(new Inc([ 'number' => $number ]), function($run_result) use (&$number) {
-        $number = $run_result;
-      });
-
-      $this->assertEquals(1246, $number);
+    /**
+     * Test if run executes immediately
+     */
+    public function testRunExecutesImmediately()
+    {
+      $this->assertEquals(1246, $this->dispatcher->run(new Inc([ 'number' => 1245 ])));
+      $this->assertCount(0, $this->dispatcher->getQueue());
     }
   }

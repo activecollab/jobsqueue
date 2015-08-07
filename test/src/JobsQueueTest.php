@@ -9,6 +9,9 @@
    */
   class JobsQueueTest extends TestCase
   {
+    /**
+     * Test if queue implements Countable interface
+     */
     public function testQueuesAreCountable()
     {
       $this->assertInstanceOf('Countable', new ArrayQueue());

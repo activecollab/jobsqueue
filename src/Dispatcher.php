@@ -26,13 +26,23 @@
     /**
      * Add a job to the queue
      *
-     * @param  Job           $job
-     * @param  callable|null $on_instance_response
+     * @param  Job   $job
      * @return mixed
      */
-    public function dispatch(Job $job, callable $on_instance_response = null)
+    public function dispatch(Job $job)
     {
+      return $this->queue->enqueue($job);
+    }
 
+    /**
+     * Run a job now (sync, waits for a response)
+     *
+     * @param  Job $job
+     * @return mixed
+     */
+    public function run(Job $job)
+    {
+      return $this->queue->run($job);
     }
 
     /**

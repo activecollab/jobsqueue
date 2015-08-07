@@ -2,12 +2,13 @@
 
   namespace ActiveCollab\JobsQueue\Jobs;
 
+  use JsonSerializable;
   use InvalidArgumentException;
 
   /**
    * @package ActiveCollab\JobsQueue\Jobs
    */
-  abstract class Job
+  abstract class Job implements JsonSerializable
   {
     const NOT_A_PRIORITY = 0;
     const HAS_PRIORITY = 256;
@@ -44,6 +45,14 @@
      * @return mixed
      */
     abstract public function run();
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+      return $this->data;
+    }
 
     /**
      * @return array

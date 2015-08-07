@@ -67,8 +67,12 @@
      */
     public function enqueue(Job $job)
     {
-      if ($statement = $this->link->prepare('INSERT INTO `' . self::TABLE_NAME . '` (?, ?, ?) VALUES (type, priority, data)')) {
-        $statement->bind_param('sss', get_class($job), $job->getData()['priority'], json_encode($job));
+      if ($statement = $this->link->prepare('INSERT INTO `' . self::TABLE_NAME . '` (type, priority, data) VALUES (?, ?, ?)')) {
+        $job_type = get_class($job);
+        $job_data = $job->getData();
+        $encoded_job_data = json_encode($job);
+
+        $statement->bind_param('sss', $job_type, $job_data['priority'], $encoded_job_data);
         $statement->execute();
 
         return $this->link->insert_id;

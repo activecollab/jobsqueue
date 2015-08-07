@@ -24,4 +24,11 @@
      * @return mixed
      */
     public function run(Job $job);
+
+    /**
+     * Return Job that is next in line to be executed
+     *
+     * @return Job|null
+     */
+    public function nextInLine();
   }

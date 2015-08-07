@@ -93,6 +93,16 @@
     }
 
     /**
+     * Return Job that is next in line to be executed
+     *
+     * @return Job|null
+     */
+    public function nextInLine()
+    {
+      
+    }
+
+    /**
      * @return int
      */
     public function count()

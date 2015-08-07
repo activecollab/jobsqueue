@@ -15,6 +15,11 @@
     private $data = [];
 
     /**
+     * @var bool
+     */
+    private $needs_sort = false;
+
+    /**
      * Add a job to the queue
      *
      * @param  Job     $job
@@ -23,6 +28,10 @@
     public function enqueue(Job $job)
     {
       $this->data[] = $job;
+
+      if (!$this->needs_sort) {
+        $this->needs_sort = true;
+      }
 
       return $this->count() - 1;
     }
@@ -36,6 +45,34 @@
     public function run(Job $job)
     {
       return $job->run();
+    }
+
+    /**
+     * Return Job that is next in line to be executed
+     *
+     * @return Job|null
+     */
+    public function nextInLine()
+    {
+      if (empty($this->data)) {
+        return null;
+      }
+
+      if ($this->needs_sort) {
+        $this->sortByPriority($this->data);
+      }
+
+      return $this->data[0];
+    }
+
+    /**
+     * Sort jobs so priority ones are at the beginning of the array
+     *
+     * @param array $data
+     */
+    private function sortByPriority(array &$data)
+    {
+
     }
 
     /**

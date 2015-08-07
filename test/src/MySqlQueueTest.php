@@ -8,6 +8,9 @@
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
   use mysqli;
 
+  /**
+   * @package ActiveCollab\JobsQueue\Test
+   */
   class MySqlQueueTest extends TestCase
   {
     /**
@@ -162,6 +165,24 @@
 
       $this->assertArrayHasKey('retries', $row);
       $this->assertEquals('0', $row['retries']);
+    }
+
+    /**
+     * Test next in line when no priority is set (FIFO)
+     */
+    public function testNextInLine()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
+
+      $this->assertRecordsCount(2);
+
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+      $this->assertEquals(1, $next_in_line->getId());
     }
 
     /**

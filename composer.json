@@ -1,0 +1,27 @@
+{
+  "name" : "activecollab/jobsqueue",
+  "type": "library",
+  "description": "Simple jobs queue",
+  "prefer-stable": true,
+  "keywords": [ "jobs", "queue", "activecollab" ],
+  "homepage": "https://labs.activecollab.com",
+  "authors": [
+    {
+      "name": "Ilija Studen",
+      "email": "ilija.studen@activecollab.com"
+    }
+  ],
+  "require" : {
+    "php": ">=5.4.0"
+  },
+  "require-dev" : {
+    "phpunit/phpunit": "~4.7"
+  },
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "ActiveCollab\\JobsQueue\\": "src",
+      "ActiveCollab\\JobsQueue\\Test\\": "test/src"
+    }
+  }
+}

@@ -63,6 +63,8 @@ if ($database_link->connect_error) {
 }
 
 $queue = new MySql($database_link);
+
+// Not required but gives you flexibility with failure handling
 $queue->onJobFailure(function(Job $job, Exception $reason) {
   throw new Exception('Job ' . get_class($job) . ' failed', 0, $reason);
 });
@@ -80,12 +82,13 @@ Code that executes jobs from the queue will get this job as next available job:
 
 ```php
 $next_in_line = $dispatcher->getQueue()->nextInLine();
+$dispatcher->getQueue()->execute($next_in_line);
 ```
 
 To run a job and wait for the result, use `execute()` instead of `dispatch()`:
 
 ```php
-$result = $dispatcher->run(new Inc([ 'number' => 123 ]));
+$result = $dispatcher->execute(new Inc([ 'number' => 123 ]));
 ```
 
 When constructing a new `Job` instead, you can also set:

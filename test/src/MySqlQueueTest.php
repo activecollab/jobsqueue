@@ -4,7 +4,6 @@
 
   use ActiveCollab\JobsQueue\Jobs\Job;
   use ActiveCollab\JobsQueue\Queue\MySql;
-  use ActiveCollab\JobsQueue\Test\Jobs\Failing;
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
   /**

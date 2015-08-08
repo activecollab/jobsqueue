@@ -72,7 +72,6 @@
      */
     private function sortByPriority(array &$data)
     {
-
     }
 
     /**

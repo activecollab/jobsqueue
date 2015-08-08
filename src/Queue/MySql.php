@@ -124,7 +124,7 @@
         if (($previous_attempts + 1) >= $job->getAttempts()) {
           $this->deleteByJobId($job_id);
         } else {
-          $this->increaseAttemptsByJobId($job_id);
+          $this->prepreForNextAttempt($job_id, $job->getDelay());
         }
       }
 
@@ -192,11 +192,14 @@
      * Increase number of attempts by job ID
      *
      * @param integer $job_id
+     * @param integer $delay
      */
-    public function increaseAttemptsByJobId($job_id)
+    public function prepreForNextAttempt($job_id, $delay = 0)
     {
-      $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = `attempts` + 1 WHERE `id` = ?');
-      $statement->bind_param('i', $job_id);
+      $timestamp = date('Y-m-d H:i:s', time() + $delay);
+
+      $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = `attempts` + 1 WHERE `id` = ?');
+      $statement->bind_param('si', $timestamp, $job_id);
       $statement->execute();
       $statement->close();
     }
@@ -235,20 +238,30 @@
      */
     public function reserveNextJob()
     {
-      if ($result = $this->link->query('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL ORDER BY `priority` DESC, `id` LIMIT 0, 1')) {
+      $timestamp = date('Y-m-d H:i:s');
+
+      $statement = $this->link->prepare('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 1');
+      $statement->bind_param('s', $timestamp);
+      $statement->execute();
+
+      if ($result = $statement->get_result()) {
+        $statement->close();
+
         if ($result->num_rows) {
           $job_id = (integer) $result->fetch_assoc()['id'];
           $reservation_key = $this->prepareNewReservationKey();
-          $timestamp = $timestamp = date('Y-m-d H:i:s');;
 
           $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL');
           $statement->bind_param('ssi', $reservation_key, $timestamp, $job_id);
           $statement->execute();
 
+          $affected_rows = $this->link->affected_rows;
+          $statement->close();
+
           // Simple concurency control. We reserve the ID with first query, and then update it with reservation code. If a different job
           // reserved that particular job between the two queries, we will not be able to update it because its reservation key will be
           // updated and we will have 0 for affected rows
-          if ($this->link->affected_rows === 1) {
+          if ($affected_rows === 1) {
             return $job_id;
           }
         }

@@ -3,8 +3,19 @@
 [![Build Status](https://travis-ci.org/activecollab/jobsqueue.svg?branch=master)](https://travis-ci.org/activecollab/jobsqueue)
 
 Reason for existence: it's light, with very little dependencies. It can be used with cron + database powered queues for
-people who are not allowed to run a proper messaging or job management server, or proper messaging or job manager when
-it is available.
+people who are not allowed to run a proper messaging or job management server. Or you can execute jobs through proper
+messaging or job manager with it.
+
+To install it, use Composer:
+
+```json
+{
+    "require": {
+        "activecollab/jobsqueue": "~0.1"
+    }
+}
+```
+
 
 This library uses three elements:
 
@@ -14,58 +25,68 @@ This library uses three elements:
 
 As a demonstration, we'll create a simple job that increments a number:
 
-    <?php
+```php
+<?php
 
-      use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\Job;
 
-      class Inc extends Job
-      {
-        /**
-         * Increment a number
-         *
-         * @return integer
-         */
-        public function execute()
-        {
-          return $this->getData()['number'] + 1;
-        }
-      }
+class Inc extends Job
+{
+  /**
+   * Increment a number
+   *
+   * @return integer
+   */
+  public function execute()
+  {
+    return $this->getData()['number'] + 1;
+  }
+}
+```
 
 Tip: To fail an attempt, just throw an exception from within `execute()` method.
 
 Now, lets create a dispatcher instance that manages one MySQL powered queue:
 
-    <?php
+```php
+<?php
 
-      use ActiveCollab\JobsQueue\Dispatcher;
-      use ActiveCollab\JobsQueue\Queue\MySql;
-      use mysqli;
-      use RuntimeException;
+use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\Queue\MySql;
+use mysqli;
+use RuntimeException;
 
-      $database_link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
+$database_link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
 
-      if ($database_link->connect_error) {
-        throw new RuntimeException('Failed to connect to database. MySQL said: ' . $database_link->connect_error);
-      }
+if ($database_link->connect_error) {
+  throw new RuntimeException('Failed to connect to database. MySQL said: ' . $database_link->connect_error);
+}
 
-      $queue = new MySql($database_link);
-      $queue->onJobFailure(function(Job $job, Exception $reason) {
-        throw new Exception('Job ' . get_class($job) . ' failed', 0, $reason);
-      });
+$queue = new MySql($database_link);
+$queue->onJobFailure(function(Job $job, Exception $reason) {
+  throw new Exception('Job ' . get_class($job) . ' failed', 0, $reason);
+});
 
-      $dispatcher = new Dispatcher($queue);
+$dispatcher = new Dispatcher($queue);
+```
 
 Lets add a job to the queue:
 
-    $dispatcher->dispatch(new Inc([ 'number' => 123 ]));
+```php
+$dispatcher->dispatch(new Inc([ 'number' => 123 ]));
+```
 
 Code that executes jobs from the queue will get this job as next available job:
 
-    $next_in_line = $dispatcher->getQueue()->nextInLine();
+```php
+$next_in_line = $dispatcher->getQueue()->nextInLine();
+```
 
 To run a job and wait for the result, use `execute()` instead of `dispatch()`:
 
-    $result = $dispatcher->run(new Inc([ 'number' => 123 ]));
+```php
+$result = $dispatcher->run(new Inc([ 'number' => 123 ]));
+```
 
 When constructing a new `Job` instead, you can also set:
 

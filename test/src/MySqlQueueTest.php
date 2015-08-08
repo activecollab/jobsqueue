@@ -2,68 +2,16 @@
 
   namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Dispatcher;
   use ActiveCollab\JobsQueue\Jobs\Job;
   use ActiveCollab\JobsQueue\Queue\MySql;
   use ActiveCollab\JobsQueue\Test\Jobs\Failing;
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
-  use mysqli;
-  use Exception;
 
   /**
    * @package ActiveCollab\JobsQueue\Test
    */
-  class MySqlQueueTest extends TestCase
+  class MySqlQueueTest extends AbstractMySqlQueueTest
   {
-    /**
-     * @var mysqli
-     */
-    private $link;
-
-    /**
-     * @var Dispatcher
-     */
-    private $dispatcher;
-
-    /**
-     * @var string|null
-     */
-    private $last_failed_job = null, $last_failure_message = null;
-
-    /**
-     * Set up test environment
-     */
-    public function setUp()
-    {
-      parent::setUp();
-
-      $this->link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
-      $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
-
-      $queue = new MySql($this->link);
-      $queue->onJobFailure(function(Job $job, Exception $reason) {
-        $this->last_failed_job = get_class($job);
-        $this->last_failure_message = $reason->getMessage();
-      });
-
-      $this->dispatcher = new Dispatcher($queue);
-
-      $this->assertCount(0, $this->dispatcher->getQueue());
-    }
-
-    /**
-     * Tear down test environment
-     */
-    public function tearDown()
-    {
-      $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
-      $this->link->close();
-
-      $this->last_failed_job = $this->last_failure_message = null;
-
-      parent::tearDown();
-    }
-
     /**
      * Test if job queue table is prepared for testing
      */
@@ -268,7 +216,7 @@
     /**
      * Test if job execution removes it from the queue
      */
-    public function testExecuteJobRemotesItFromQueue()
+    public function testExecuteJobRemovesItFromQueue()
     {
       $this->assertRecordsCount(0);
 
@@ -283,97 +231,5 @@
       $this->assertEquals(124, $job_execution_result);
 
       $this->assertRecordsCount(0);
-    }
-
-    /**
-     * Test job failure
-     */
-    public function testJobFailure()
-    {
-      $this->assertRecordsCount(0);
-
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Failing()));
-
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
-
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
-
-      $this->dispatcher->getQueue()->execute($next_in_line);
-
-      $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Failing', $this->last_failed_job);
-      $this->assertEquals('Built to fail!', $this->last_failure_message);
-
-      $this->assertRecordsCount(0);
-    }
-
-    public function testJobFailureAttempts()
-    {
-      $this->assertRecordsCount(0);
-
-      $failing_job = new Failing([ 'attempts' => 3 ]);
-      $this->assertEquals(3, $failing_job->getAttempts());
-
-      $this->assertEquals(1, $this->dispatcher->dispatch($failing_job));
-
-      // First attempt
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
-
-      $this->dispatcher->getQueue()->execute($next_in_line);
-
-      $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Failing', $this->last_failed_job);
-      $this->assertEquals('Built to fail!', $this->last_failure_message);
-
-      $this->assertRecordsCount(1);
-      $this->assertAttempts(1, $next_in_line->getQueueId());
-
-      // Second attempt
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
-
-      $this->dispatcher->getQueue()->execute($next_in_line);
-      $this->assertAttempts(2, $next_in_line->getQueueId());
-
-      // Third attempt
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
-
-      $this->dispatcher->getQueue()->execute($next_in_line);
-      $this->assertAttempts(null, $next_in_line->getQueueId());
-      $this->assertNull($this->dispatcher->getQueue()->nextInLine());
-    }
-
-    /**
-     * Check number of records in memories table
-     *
-     * @param integer $expected
-     */
-    private function assertRecordsCount($expected)
-    {
-      $result = $this->link->query('SELECT COUNT(`id`) AS "record_count" FROM `' . MySql::TABLE_NAME . '`');
-      $this->assertEquals(1, $result->num_rows);
-      $this->assertEquals($expected, (integer) $result->fetch_assoc()['record_count']);
-    }
-
-    /**
-     * Check if attempts value for the given job has an expected value
-     *
-     * @param integer|null $expected
-     * @param integer      $job_id
-     */
-    private function assertAttempts($expected, $job_id)
-    {
-      $result = $this->link->query('SELECT `attempts` FROM `' . MySql::TABLE_NAME . "` WHERE '" . $this->link->escape_string((string) $job_id) . "'");
-
-      if ($expected === null) {
-        $this->assertEquals(0, $result->num_rows);
-      } else {
-        $this->assertEquals(1, $result->num_rows);
-        $this->assertEquals($expected, (integer) $result->fetch_assoc()['attempts']);
-      }
     }
   }

@@ -10,6 +10,20 @@
   class Inc extends Job
   {
     /**
+     * Construct a new Job instance
+     *
+     * @param array|null $data
+     */
+    public function __construct(array $data = null)
+    {
+      if (!($data && is_array($data) && array_key_exists('number', $data) && is_int($data['number']))) {
+        throw new \InvalidArgumentException('Number is required and it needs to be an integer value');
+      }
+
+      parent::__construct($data);
+    }
+
+    /**
      * Increment a number
      *
      * @return integer

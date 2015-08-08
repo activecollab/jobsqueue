@@ -34,7 +34,7 @@
      */
     public function testJobIsHasNoPriorityByDefault()
     {
-      $this->assertEquals(Job::NOT_A_PRIORITY, (new Inc())->getData()['priority']);
+      $this->assertEquals(Job::NOT_A_PRIORITY, (new Inc([ 'number' => 123 ]))->getData()['priority']);
     }
 
     /**
@@ -42,7 +42,7 @@
      */
     public function testCustomPriority()
     {
-      $this->assertEquals(123, (new Inc([ 'priority' => 123 ]))->getData()['priority']);
+      $this->assertEquals(123, (new Inc([ 'number' => 123, 'priority' => 123 ]))->getData()['priority']);
     }
 
     /**
@@ -50,7 +50,7 @@
      */
     public function testJobCantHavePriorityLowerThanNotPriority()
     {
-      $this->assertEquals(Job::NOT_A_PRIORITY, (new Inc([ 'priority' => -123 ]))->getData()['priority']);
+      $this->assertEquals(Job::NOT_A_PRIORITY, (new Inc([ 'number' => 123, 'priority' => -123 ]))->getData()['priority']);
     }
 
     /**
@@ -58,6 +58,6 @@
      */
     public function testJobCantHavePriorityHigherThanHighestPriority()
     {
-      $this->assertEquals(Job::HAS_HIGHEST_PRIORITY, (new Inc([ 'priority' => Job::HAS_HIGHEST_PRIORITY + 1 ]))->getData()['priority']);
+      $this->assertEquals(Job::HAS_HIGHEST_PRIORITY, (new Inc([ 'number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY + 1 ]))->getData()['priority']);
     }
   }

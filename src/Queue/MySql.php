@@ -31,11 +31,14 @@
           `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
           `priority` int(10) unsigned DEFAULT '0',
           `data` text CHARACTER SET utf8 NOT NULL,
-          `is_locked` tinyint(1) unsigned DEFAULT '0',
-          `retries` smallint(6) DEFAULT '0',
+          `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+          `reserved_at` datetime DEFAULT NULL,
+          `attempts` smallint(6) DEFAULT '0',
           PRIMARY KEY (`id`),
+          UNIQUE KEY `reservation_key` (`reservation_key`),
           KEY `type` (`type`),
-          KEY `priority` (`priority`)
+          KEY `priority` (`priority`),
+          KEY `reserved_at` (`reserved_at`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
       }
     }
@@ -99,7 +102,7 @@
      */
     public function nextInLine()
     {
-      
+
     }
 
     /**

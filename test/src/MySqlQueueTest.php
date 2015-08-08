@@ -134,9 +134,9 @@
     }
 
     /**
-     * Test that jobs are not locked by default
+     * Test that jobs are not reserved by default
      */
-    public function testJobsAreNotLockedByDefault()
+    public function testJobsAreNotReservedByDefault()
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
 
@@ -146,14 +146,17 @@
 
       $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('is_locked', $row);
-      $this->assertEquals('0', $row['is_locked']);
+      $this->assertArrayHasKey('reservation_key', $row);
+      $this->assertNull($row['reservation_key']);
+
+      $this->assertArrayHasKey('reserved_at', $row);
+      $this->assertNull($row['reserved_at']);
     }
 
     /**
-     * Test that jobs start with zero retries
+     * Test that jobs start with zero attempts
      */
-    public function testRetriesAreZeroByDefault()
+    public function testAttemptsAreZeroByDefault()
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
 
@@ -163,8 +166,8 @@
 
       $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('retries', $row);
-      $this->assertEquals('0', $row['retries']);
+      $this->assertArrayHasKey('attempts', $row);
+      $this->assertEquals('0', $row['attempts']);
     }
 
     /**

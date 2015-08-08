@@ -91,8 +91,17 @@ To run a job and wait for the result, use `execute()` instead of `dispatch()`:
 $result = $dispatcher->execute(new Inc([ 'number' => 123 ]));
 ```
 
-When constructing a new `Job` instead, you can also set:
+When constructing a new `Job` instance, you can set an array of job data, as well as following job properties:
 
 1. `attempts` - Number of attempts before job is considered to fail and is removed from the queue. Value can be between 1 and 256. Default is 1 (try once and fail if it does not go well),
 2. `delay` - Number of seconds to wait before first execution, as well as retries if the job fails and needs to be retried. Value can be between 1 and 3600 (one hour). Default is 0 (no delay),
 3. `priority` - Value between 0 and 4294967295 that determins how important the job is (a job with higher value has higher priority). Default is 0 (job is not a priority).
+
+```php
+$job = new Inc([
+  'number' => 123,
+  'priority' => Job::HAS_HIGHEST_PRIORITY,
+  'attempts' => 5,
+  'delay' => 5,
+]);
+```

@@ -149,6 +149,40 @@
     }
 
     /**
+     * Test if new jobs are instantly available
+     */
+    public function testNewJobsAreAvailableInstantly()
+    {
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+
+      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+      $this->assertInstanceOf('mysqli_result', $result);
+      $this->assertEquals(1, $result->num_rows);
+
+      $row = $result->fetch_assoc();
+
+      $this->assertArrayHasKey('available_at', $row);
+      $this->assertEquals(time(), strtotime($row['available_at']));
+    }
+
+    /**
+     * Test new jobs can be delayed by a specified number of seconds
+     */
+    public function testNewJobsCanBeDelayed()
+    {
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123, 'delay' => 5 ])));
+
+      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+      $this->assertInstanceOf('mysqli_result', $result);
+      $this->assertEquals(1, $result->num_rows);
+
+      $row = $result->fetch_assoc();
+
+      $this->assertArrayHasKey('available_at', $row);
+      $this->assertGreaterThan(time(), strtotime($row['available_at']));
+    }
+
+    /**
      * Test that jobs are not reserved by default
      */
     public function testJobsAreNotReservedByDefault()

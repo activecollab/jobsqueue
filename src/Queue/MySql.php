@@ -31,6 +31,7 @@
           `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
           `priority` int(10) unsigned DEFAULT '0',
           `data` text CHARACTER SET utf8 NOT NULL,
+          `available_at` datetime DEFAULT NULL,
           `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
           `reserved_at` datetime DEFAULT NULL,
           `attempts` smallint(6) DEFAULT '0',
@@ -70,12 +71,13 @@
      */
     public function enqueue(Job $job)
     {
-      if ($statement = $this->link->prepare('INSERT INTO `' . self::TABLE_NAME . '` (type, priority, data) VALUES (?, ?, ?)')) {
+      if ($statement = $this->link->prepare('INSERT INTO `' . self::TABLE_NAME . '` (type, priority, data, available_at) VALUES (?, ?, ?, ?)')) {
         $job_type = get_class($job);
         $job_data = $job->getData();
         $encoded_job_data = json_encode($job);
+        $timestamp = date('Y-m-d H:i:s', time() + $job->getDelay());
 
-        $statement->bind_param('sss', $job_type, $job_data['priority'], $encoded_job_data);
+        $statement->bind_param('ssss', $job_type, $job_data['priority'], $encoded_job_data, $timestamp);
         $statement->execute();
 
         return $this->link->insert_id;
@@ -237,9 +239,10 @@
         if ($result->num_rows) {
           $job_id = (integer) $result->fetch_assoc()['id'];
           $reservation_key = $this->prepareNewReservationKey();
+          $timestamp = $timestamp = date('Y-m-d H:i:s');;
 
-          $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = FROM_UNIXTIME(UNIX_TIMESTAMP()) WHERE `id` = ? AND `reservation_key` IS NULL');
-          $statement->bind_param('si', $reservation_key, $job_id);
+          $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL');
+          $statement->bind_param('ssi', $reservation_key, $timestamp, $job_id);
           $statement->execute();
 
           // Simple concurency control. We reserve the ID with first query, and then update it with reservation code. If a different job

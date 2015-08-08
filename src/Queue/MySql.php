@@ -2,8 +2,9 @@
 
   namespace ActiveCollab\JobsQueue\Queue;
 
+  use ActiveCollab\JobsQueue\Exception\JobFailed;
   use ActiveCollab\JobsQueue\Jobs\Job;
-  use RuntimeException;
+  use Exception, RuntimeException;
 
   /**
    * @package ActiveCollab\JobsQueue\Queue
@@ -87,12 +88,48 @@
     /**
      * Run job now (sync, waits for a response)
      *
-     * @param  Job   $job
+     * @param  Job              $job
      * @return mixed
+     * @throws RuntimeException
      */
     public function execute(Job $job)
     {
-      return $job->execute();
+      try {
+        $result = $job->execute();
+
+        if ($job_id = $job->getQueueId()) {
+          $this->deleteByJobId($job_id);
+        }
+
+        return $result;
+      } catch (\Exception $e) {
+        $this->failJob($job, $e);
+      }
+
+      return null;
+    }
+
+    /**
+     * Handle a job failure (attempts, removal from queue, exception handling etc)
+     *
+     * @param Job            $job
+     * @param Exception|null $reason
+     */
+    private function failJob(Job $job, Exception $reason = null)
+    {
+      if ($job_id = $job->getQueueId()) {
+        $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
+
+        if (($previous_attempts + 1) >= $job->getAttempts()) {
+          $this->deleteByJobId($job_id);
+        } else {
+          $this->increaseAttemptsByJobId($job_id);
+        }
+      }
+
+      if ($this->on_job_failure && is_callable($this->on_job_failure)) {
+        call_user_func($this->on_job_failure, $job, $reason);
+      }
     }
 
     /**
@@ -125,6 +162,55 @@
       } else {
         throw new RuntimeException('Failed to query job details. MySQL said: ' . $this->link->error);
       }
+    }
+
+    /**
+     * Return number of previous attempts that we recorded for the given job
+     *
+     * @param  integer $job_id
+     * @return integer
+     */
+    private function getPreviousAttemptsByJobId($job_id)
+    {
+      $statement = $this->link->prepare('SELECT `attempts` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?');
+      $statement->bind_param('i', $job_id);
+      $statement->execute();
+
+      if ($result = $statement->get_result()) {
+        $statement->close();
+
+        if ($result->num_rows) {
+          return $result->fetch_assoc()['attempts'];
+        }
+      }
+
+      return 0;
+    }
+
+    /**
+     * Increase number of attempts by job ID
+     *
+     * @param integer $job_id
+     */
+    public function increaseAttemptsByJobId($job_id)
+    {
+      $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `attempts` = `attempts` + 1 WHERE `id` = ?');
+      $statement->bind_param('i', $job_id);
+      $statement->execute();
+      $statement->close();
+    }
+
+    /**
+     * Delete by job ID
+     *
+     * @param integer $job_id
+     */
+    public function deleteByJobId($job_id)
+    {
+      $statement = $this->link->prepare('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?');
+      $statement->bind_param('i', $job_id);
+      $statement->execute();
+      $statement->close();
     }
 
     /**
@@ -202,5 +288,20 @@
       } else {
         throw new RuntimeException('Failed to count jobs in jobs queue. MySQL said: ' . $this->link->error);
       }
+    }
+
+    /**
+     * @var callable
+     */
+    private $on_job_failure;
+
+    /**
+     * What to do when job fails
+     *
+     * @param callable|null $callback
+     */
+    public function onJobFailure(callable $callback = null)
+    {
+      $this->on_job_failure = $callback;
     }
   }

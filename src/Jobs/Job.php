@@ -39,6 +39,10 @@
       } else if ($this->data['priority'] > self::HAS_HIGHEST_PRIORITY) {
         $this->data['priority'] = self::HAS_HIGHEST_PRIORITY;
       }
+
+      if (isset($this->data['attempts']) && (!is_int($this->data['attempts']) || $this->data['attempts'] < 1 || $this->data['attempts'] > 256)) {
+        throw new InvalidArgumentException('Attempts need to be an integer value between 1 and 256');
+      }
     }
 
     /**
@@ -60,6 +64,26 @@
     public function getData()
     {
       return $this->data;
+    }
+
+    /**
+     * Return job priority
+     *
+     * @return int
+     */
+    public function getPriority()
+    {
+      return $this->data['priority'];
+    }
+
+    /**
+     * Return max number of attempts for this job
+     *
+     * @return int
+     */
+    public function getAttempts()
+    {
+      return isset($this->data['attempts']) ? $this->data['attempts'] : 1;
     }
 
     /**

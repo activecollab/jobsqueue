@@ -5,8 +5,10 @@
   use ActiveCollab\JobsQueue\Dispatcher;
   use ActiveCollab\JobsQueue\Jobs\Job;
   use ActiveCollab\JobsQueue\Queue\MySql;
+  use ActiveCollab\JobsQueue\Test\Jobs\Failing;
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
   use mysqli;
+  use Exception;
 
   /**
    * @package ActiveCollab\JobsQueue\Test
@@ -24,6 +26,11 @@
     private $dispatcher;
 
     /**
+     * @var string|null
+     */
+    private $last_failed_job = null, $last_failure_message = null;
+
+    /**
      * Set up test environment
      */
     public function setUp()
@@ -33,7 +40,13 @@
       $this->link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
       $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
 
-      $this->dispatcher = new Dispatcher(new MySql($this->link));
+      $queue = new MySql($this->link);
+      $queue->onJobFailure(function(Job $job, Exception $reason) {
+        $this->last_failed_job = get_class($job);
+        $this->last_failure_message = $reason->getMessage();
+      });
+
+      $this->dispatcher = new Dispatcher($queue);
 
       $this->assertCount(0, $this->dispatcher->getQueue());
     }
@@ -45,6 +58,8 @@
     {
       $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
       $this->link->close();
+
+      $this->last_failed_job = $this->last_failure_message = null;
 
       parent::tearDown();
     }
@@ -195,6 +210,67 @@
 
       $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
       $this->assertEquals(1, $next_in_line->getQueueId());
+    }
+
+    /**
+     * Test priority tasks are front in line
+     */
+    public function testPriorityJobsAreFrontInLine()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456, 'priority' => Job::HAS_PRIORITY ])));
+      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789, 'priority' => Job::HAS_PRIORITY ])));
+
+      $this->assertRecordsCount(3);
+
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+      $this->assertEquals(2, $next_in_line->getQueueId());
+    }
+
+    /**
+     * Test if job execution removes it from the queue
+     */
+    public function testExecuteJobRemotesItFromQueue()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+      $this->assertEquals(1, $next_in_line->getQueueId());
+
+      $job_execution_result = $this->dispatcher->getQueue()->execute($next_in_line);
+      $this->assertEquals(124, $job_execution_result);
+
+      $this->assertRecordsCount(0);
+    }
+
+    /**
+     * Test job failure
+     */
+    public function testJobFailure()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Failing()));
+
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+      $this->assertEquals(1, $next_in_line->getQueueId());
+
+      $this->dispatcher->getQueue()->execute($next_in_line);
+
+      $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Failing', $this->last_failed_job);
+      $this->assertEquals('Built to fail!', $this->last_failure_message);
+
+      $this->assertRecordsCount(0);
     }
 
     /**

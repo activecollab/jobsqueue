@@ -31,4 +31,11 @@
      * @return Job|null
      */
     public function nextInLine();
+
+    /**
+     * What to do when job fails
+     *
+     * @param callable|null $callback
+     */
+    public function onJobFailure(callable $callback = null);
   }

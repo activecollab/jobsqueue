@@ -44,7 +44,7 @@
     /**
      * @return mixed
      */
-    abstract public function run();
+    abstract public function execute();
 
     /**
      * @return array
@@ -60,5 +60,34 @@
     public function getData()
     {
       return $this->data;
+    }
+
+    /**
+     * @var mixed
+     */
+    private $queue_id;
+
+    /**
+     * Return queueu ID that this job is encured under
+     *
+     * @return mixed
+     */
+    public function getQueueId()
+    {
+      return $this->queue_id;
+    }
+
+    /**
+     * Set job queue ID
+     *
+     * @param mixed $queue_id
+     */
+    public function setQueueId($queue_id)
+    {
+      if ($queue_id === null || is_scalar($queue_id)) {
+        $this->queue_id = $queue_id;
+      } else {
+        throw new InvalidArgumentException('Queue ID is expected to be sacalar or empty value');
+      }
     }
   }

@@ -173,6 +173,15 @@
     /**
      * Test next in line when no priority is set (FIFO)
      */
+    public function testNextInLineReturnsNullOnNoJobs()
+    {
+      $this->assertRecordsCount(0);
+      $this->assertNull($this->dispatcher->getQueue()->nextInLine());
+    }
+
+    /**
+     * Test next in line when no priority is set (FIFO)
+     */
     public function testNextInLine()
     {
       $this->assertRecordsCount(0);
@@ -185,7 +194,7 @@
       $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
       $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getId());
+      $this->assertEquals(1, $next_in_line->getQueueId());
     }
 
     /**

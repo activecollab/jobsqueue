@@ -42,9 +42,9 @@
      * @param  Job   $job
      * @return mixed
      */
-    public function run(Job $job)
+    public function execute(Job $job)
     {
-      return $job->run();
+      return $job->execute();
     }
 
     /**

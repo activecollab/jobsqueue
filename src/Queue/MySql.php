@@ -90,9 +90,41 @@
      * @param  Job   $job
      * @return mixed
      */
-    public function run(Job $job)
+    public function execute(Job $job)
     {
-      return $job->run();
+      return $job->execute();
+    }
+
+    /**
+     * Return job by ID
+     *
+     * @param  integer  $job_id
+     * @return Job|null
+     */
+    public function getJobById($job_id)
+    {
+      $statement = $this->link->prepare('SELECT `id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?');
+      $statement->bind_param('i', $job_id);
+      $statement->execute();
+
+      if ($result = $statement->get_result()) {
+        if ($result->num_rows) {
+          $result = $result->fetch_assoc();
+
+          $type = $result['type'];
+          $serialized_data = $result['data'];
+
+          /** @var Job $job */
+          $job = new $type(json_decode($serialized_data, true));
+          $job->setQueueId((integer) $result['id']);
+
+          return $job;
+        }
+
+        return null;
+      } else {
+        throw new RuntimeException('Failed to query job details. MySQL said: ' . $this->link->error);
+      }
     }
 
     /**
@@ -102,7 +134,62 @@
      */
     public function nextInLine()
     {
+      if ($job_id = $this->reserveNextJob()) {
+        return $this->getJobById($job_id);
+      } else {
+        return null;
+      }
+    }
 
+    /**
+     * Reserve next job ID
+     *
+     * @return int|null
+     */
+    public function reserveNextJob()
+    {
+      if ($result = $this->link->query('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL ORDER BY `priority` DESC, `id` LIMIT 0, 1')) {
+        if ($result->num_rows) {
+          $job_id = (integer) $result->fetch_assoc()['id'];
+          $reservation_key = $this->prepareNewReservationKey();
+
+          $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = FROM_UNIXTIME(UNIX_TIMESTAMP()) WHERE `id` = ? AND `reservation_key` IS NULL');
+          $statement->bind_param('si', $reservation_key, $job_id);
+          $statement->execute();
+
+          if ($this->link->affected_rows === 1) {
+            return $job_id;
+          }
+        }
+
+        return null;
+      } else {
+        throw new RuntimeException('Failed to find next job. MySQL said: ' . $this->link->error);
+      }
+    }
+
+    /**
+     * Prepare and return a new reservation key
+     *
+     * @return string
+     */
+    private function prepareNewReservationKey()
+    {
+      do {
+        $reservation_key = sha1(microtime());
+
+        $statement = $this->link->prepare('SELECT COUNT(`id`) AS "record_count" FROM `' . self::TABLE_NAME . '` WHERE `reservation_key` = ?');
+        $statement->bind_param('s', $reservation_key);
+        $statement->execute();
+
+        if ($result = $statement->get_result()) {
+          $key_exists =(boolean) $result->fetch_assoc()['record_count'];
+        } else {
+          throw new RuntimeException('Failed to check uniqueness of reservation key');
+        }
+      } while($key_exists);
+
+      return $reservation_key;
     }
 
     /**
@@ -113,7 +200,7 @@
       if ($result = $this->link->query('SELECT COUNT(`id`) AS "record_count" FROM `' . self::TABLE_NAME . '`')) {
         return (integer) $result->fetch_assoc()['record_count'];
       } else {
-        throw new RuntimeException('Failed to count jobs in jobs queue');
+        throw new RuntimeException('Failed to count jobs in jobs queue. MySQL said: ' . $this->link->error);
       }
     }
   }

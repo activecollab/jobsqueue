@@ -42,7 +42,7 @@
      */
     public function testRunExecutesImmediately()
     {
-      $this->assertEquals(1246, $this->dispatcher->run(new Inc([ 'number' => 1245 ])));
+      $this->assertEquals(1246, $this->dispatcher->execute(new Inc([ 'number' => 1245 ])));
       $this->assertCount(0, $this->dispatcher->getQueue());
     }
   }

@@ -18,12 +18,12 @@
     public function enqueue(Job $job);
 
     /**
-     * Run job now (sync, waits for a response)
+     * Execute a job now (sync, waits for a response)
      *
      * @param  Job   $job
      * @return mixed
      */
-    public function run(Job $job);
+    public function execute(Job $job);
 
     /**
      * Return Job that is next in line to be executed

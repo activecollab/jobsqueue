@@ -14,7 +14,7 @@
      *
      * @return integer
      */
-    public function run()
+    public function execute()
     {
       return $this->getData()['number'] + 1;
     }

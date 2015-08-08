@@ -60,15 +60,15 @@
     }
 
     /**
-     * Run a job now (sync, waits for a response)
+     * Execute a job now (sync, waits for a response)
      *
      * @param  Job    $job
      * @param  string $queue_name
      * @return mixed
      */
-    public function run(Job $job, $queue_name = self::DEFAULT_QUEUE)
+    public function execute(Job $job, $queue_name = self::DEFAULT_QUEUE)
     {
-      return $this->getQueue($queue_name)->run($job);
+      return $this->getQueue($queue_name)->execute($job);
     }
 
     /**

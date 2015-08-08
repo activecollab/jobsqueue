@@ -7,6 +7,7 @@
   use ActiveCollab\JobsQueue\Queue\MySql;
   use mysqli;
   use Exception;
+  use RuntimeException;
 
   /**
    * @package ActiveCollab\JobsQueue\Test
@@ -36,6 +37,11 @@
       parent::setUp();
 
       $this->link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
+
+      if ($this->link->connect_error) {
+        throw new \RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);
+      }
+
       $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
 
       $queue = new MySql($this->link);

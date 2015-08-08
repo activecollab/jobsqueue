@@ -273,6 +273,36 @@
       $this->assertRecordsCount(0);
     }
 
+    public function testJobFailureAttempts()
+    {
+      $this->assertRecordsCount(0);
+
+      $failing_job = new Failing([ 'attempts' => 3 ]);
+      $this->assertEquals(3, $failing_job->getAttempts());
+
+      $this->assertEquals(1, $this->dispatcher->dispatch($failing_job));
+
+      // First attempt
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+      $this->assertEquals(1, $next_in_line->getQueueId());
+
+      $this->dispatcher->getQueue()->execute($next_in_line);
+
+      $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Failing', $this->last_failed_job);
+      $this->assertEquals('Built to fail!', $this->last_failure_message);
+
+      $this->assertRecordsCount(1);
+      $this->assertAttempts(1, $next_in_line->getQueueId());
+
+      // Second attempt
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+      $this->assertEquals(1, $next_in_line->getQueueId());
+
+      // Third attempt
+    }
+
     /**
      * Check number of records in memories table
      *
@@ -283,5 +313,18 @@
       $result = $this->link->query('SELECT COUNT(`id`) AS "record_count" FROM `' . MySql::TABLE_NAME . '`');
       $this->assertEquals(1, $result->num_rows);
       $this->assertEquals($expected, (integer) $result->fetch_assoc()['record_count']);
+    }
+
+    /**
+     * Check if attempts value for the given job has an expected value
+     *
+     * @param integer $expected
+     * @param integer $job_id
+     */
+    private function assertAttempts($expected, $job_id)
+    {
+      $result = $this->link->query('SELECT `attempts` FROM `' . MySql::TABLE_NAME . "` WHERE '" . $this->link->escape_string((string) $job_id) . "'");
+      $this->assertEquals(1, $result->num_rows);
+      $this->assertEquals($expected, (integer) $result->fetch_assoc()['attempts']);
     }
   }

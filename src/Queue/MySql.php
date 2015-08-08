@@ -80,7 +80,11 @@
         $statement->bind_param('ssss', $job_type, $job_data['priority'], $encoded_job_data, $timestamp);
         $statement->execute();
 
-        return $this->link->insert_id;
+        $insert_id = $this->link->insert_id;
+
+        $statement->close();
+
+        return $insert_id;
       } else {
         throw new RuntimeException('Failed to prepare statement. Reason: ' . $this->link->error);
       }
@@ -156,8 +160,12 @@
           $job = new $type(json_decode($serialized_data, true));
           $job->setQueueId((integer) $result['id']);
 
+          $statement->close();
+
           return $job;
         }
+
+        $statement->close();
 
         return null;
       } else {
@@ -287,7 +295,9 @@
         $statement->execute();
 
         if ($result = $statement->get_result()) {
-          $key_exists =(boolean) $result->fetch_assoc()['record_count'];
+          $key_exists = (boolean) $result->fetch_assoc()['record_count'];
+
+          $statement->close();
         } else {
           throw new RuntimeException('Failed to check uniqueness of reservation key');
         }

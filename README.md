@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/activecollab/jobsqueue.svg?branch=master)](https://travis-ci.org/activecollab/jobsqueue)
 
-Reason for existence: it's light, with very little dependencies. It can be used with cron + database powered queues for
+Reason for existence: it's light, with very few dependencies. It can be used with cron + database powered queues for
 people who are not allowed to run a proper messaging or job management server. Or you can execute jobs through proper
 messaging or job manager with it.
 

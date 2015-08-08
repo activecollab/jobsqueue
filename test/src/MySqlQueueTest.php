@@ -300,7 +300,17 @@
       $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
       $this->assertEquals(1, $next_in_line->getQueueId());
 
+      $this->dispatcher->getQueue()->execute($next_in_line);
+      $this->assertAttempts(2, $next_in_line->getQueueId());
+
       // Third attempt
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+      $this->assertEquals(1, $next_in_line->getQueueId());
+
+      $this->dispatcher->getQueue()->execute($next_in_line);
+      $this->assertAttempts(null, $next_in_line->getQueueId());
+      $this->assertNull($this->dispatcher->getQueue()->nextInLine());
     }
 
     /**
@@ -318,13 +328,18 @@
     /**
      * Check if attempts value for the given job has an expected value
      *
-     * @param integer $expected
-     * @param integer $job_id
+     * @param integer|null $expected
+     * @param integer      $job_id
      */
     private function assertAttempts($expected, $job_id)
     {
       $result = $this->link->query('SELECT `attempts` FROM `' . MySql::TABLE_NAME . "` WHERE '" . $this->link->escape_string((string) $job_id) . "'");
-      $this->assertEquals(1, $result->num_rows);
-      $this->assertEquals($expected, (integer) $result->fetch_assoc()['attempts']);
+
+      if ($expected === null) {
+        $this->assertEquals(0, $result->num_rows);
+      } else {
+        $this->assertEquals(1, $result->num_rows);
+        $this->assertEquals($expected, (integer) $result->fetch_assoc()['attempts']);
+      }
     }
   }

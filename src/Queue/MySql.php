@@ -194,7 +194,7 @@
      */
     public function increaseAttemptsByJobId($job_id)
     {
-      $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `attempts` = `attempts` + 1 WHERE `id` = ?');
+      $statement = $this->link->prepare('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = `attempts` + 1 WHERE `id` = ?');
       $statement->bind_param('i', $job_id);
       $statement->execute();
       $statement->close();

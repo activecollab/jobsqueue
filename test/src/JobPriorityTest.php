@@ -4,7 +4,7 @@
 
   use ActiveCollab\JobsQueue\Dispatcher;
   use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\JobsQueue\Queue\Memory;
+  use ActiveCollab\JobsQueue\Queue\Test;
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
   /**
@@ -24,7 +24,7 @@
     {
       parent::setUp();
 
-      $this->dispatcher = new Dispatcher(new Memory());
+      $this->dispatcher = new Dispatcher(new Test());
 
       $this->assertCount(0, $this->dispatcher->getQueue());
     }

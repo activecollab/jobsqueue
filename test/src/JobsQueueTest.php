@@ -2,7 +2,7 @@
 
   namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Queue\Memory;
+  use ActiveCollab\JobsQueue\Queue\Test;
 
   /**
    * @package ActiveCollab\JobsQueue\Test
@@ -14,6 +14,6 @@
      */
     public function testQueuesAreCountable()
     {
-      $this->assertInstanceOf('Countable', new Memory());
+      $this->assertInstanceOf('Countable', new Test());
     }
   }

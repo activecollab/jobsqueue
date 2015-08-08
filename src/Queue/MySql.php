@@ -2,7 +2,6 @@
 
   namespace ActiveCollab\JobsQueue\Queue;
 
-  use ActiveCollab\JobsQueue\Exception\JobFailed;
   use ActiveCollab\JobsQueue\Jobs\Job;
   use Exception, RuntimeException;
 

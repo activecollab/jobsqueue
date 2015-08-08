@@ -243,6 +243,9 @@
           $statement->bind_param('si', $reservation_key, $job_id);
           $statement->execute();
 
+          // Simple concurency control. We reserve the ID with first query, and then update it with reservation code. If a different job
+          // reserved that particular job between the two queries, we will not be able to update it because its reservation key will be
+          // updated and we will have 0 for affected rows
           if ($this->link->affected_rows === 1) {
             return $job_id;
           }

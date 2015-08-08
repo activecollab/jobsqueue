@@ -3,5 +3,12 @@ php:
   - 5.5
   - 5.6
   - '7'
+mysql:
+  database: activecollab_jobs_queue_test
+  username: root
+  encoding: utf8mb4
 install: composer install --dev
+before_script:
+  # create the database
+  - mysql -e 'create database activecollab_jobs_queue_test'
 script: phpunit -c test/phpunit.xml

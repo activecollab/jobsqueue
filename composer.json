@@ -2,6 +2,7 @@
   "name" : "activecollab/jobsqueue",
   "type": "library",
   "description": "Simple jobs queue",
+  "license" : "MIT",
   "prefer-stable": true,
   "keywords": [ "jobs", "queue", "activecollab" ],
   "homepage": "https://labs.activecollab.com",

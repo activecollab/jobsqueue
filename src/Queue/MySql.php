@@ -26,7 +26,7 @@
       $this->link = $link;
 
       if ($create_table_if_missing) {
-        $this->query("CREATE TABLE `" . self::TABLE_NAME . "` (
+        $this->query("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
           `priority` int(10) unsigned DEFAULT '0',

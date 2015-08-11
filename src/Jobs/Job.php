@@ -22,7 +22,8 @@
     /**
      * Construct a new Job instance
      *
-     * @param array|null $data
+     * @param  array|null               $data
+     * @throws InvalidArgumentException
      */
     public function __construct(array $data = null)
     {

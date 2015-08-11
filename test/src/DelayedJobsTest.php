@@ -34,6 +34,8 @@
     {
       $this->assertRecordsCount(0);
 
+      // Set delay of two seconds, because we sometimes got nextInLine() when job was set in one second, and we got to
+      // the next second during assertRecordsCount() step
       $this->assertEquals(1, $this->dispatcher->dispatch(new Failing([ 'delay' => 2, 'attempts' => 2 ])));
 
       $this->assertRecordsCount(1);

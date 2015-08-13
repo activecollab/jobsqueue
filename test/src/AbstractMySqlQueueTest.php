@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\JobsQueue\Test;
 
+  use ActiveCollab\DatabaseConnection\Connection;
   use ActiveCollab\JobsQueue\Dispatcher;
   use ActiveCollab\JobsQueue\Jobs\Job;
   use ActiveCollab\JobsQueue\Queue\MySql;
@@ -18,6 +19,11 @@
      * @var mysqli
      */
     protected $link;
+
+    /**
+     * @var Connection
+     */
+    protected $connection;
 
     /**
      * @var Dispatcher
@@ -42,9 +48,10 @@
         throw new \RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);
       }
 
-      $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
+      $this->connection = new Connection($this->link);
+      $this->connection->execute('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
 
-      $queue = new MySql($this->link);
+      $queue = new MySql($this->connection);
       $queue->onJobFailure(function(Job $job, Exception $reason) {
         $this->last_failed_job = get_class($job);
         $this->last_failure_message = $reason->getMessage();
@@ -60,7 +67,7 @@
      */
     public function tearDown()
     {
-      $this->link->query('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
+      $this->connection->execute('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
       $this->link->close();
 
       $this->last_failed_job = $this->last_failure_message = null;
@@ -75,9 +82,7 @@
      */
     protected function assertRecordsCount($expected)
     {
-      $result = $this->link->query('SELECT COUNT(`id`) AS "record_count" FROM `' . MySql::TABLE_NAME . '`');
-      $this->assertEquals(1, $result->num_rows);
-      $this->assertEquals($expected, (integer) $result->fetch_assoc()['record_count']);
+      $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '`'));
     }
 
     /**
@@ -88,13 +93,12 @@
      */
     protected function assertAttempts($expected, $job_id)
     {
-      $result = $this->link->query('SELECT `attempts` FROM `' . MySql::TABLE_NAME . "` WHERE '" . $this->link->escape_string((string) $job_id) . "'");
+      $result = $this->connection->executeFirstCell('SELECT `attempts` FROM `' . MySql::TABLE_NAME . "` WHERE id = ?", $job_id);
 
       if ($expected === null) {
-        $this->assertEquals(0, $result->num_rows);
+        $this->assertEmpty($result);
       } else {
-        $this->assertEquals(1, $result->num_rows);
-        $this->assertEquals($expected, (integer) $result->fetch_assoc()['attempts']);
+        $this->assertSame($expected, (integer) $result);
       }
     }
   }

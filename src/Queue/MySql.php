@@ -3,8 +3,9 @@
   namespace ActiveCollab\JobsQueue\Queue;
 
   use ActiveCollab\JobsQueue\Jobs\Job;
-  use Exception, RuntimeException;
   use ActiveCollab\DatabaseConnection\Connection;
+  use Exception;
+  use RuntimeException;
 
   /**
    * @package ActiveCollab\JobsQueue\Queue
@@ -121,17 +122,28 @@
      */
     public function getJobById($job_id)
     {
-      if ($result = $this->connection->executeFirstRow('SELECT `id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
-        $type = $result['type'];
-
-        /** @var Job $job */
-        $job = new $type(json_decode($result['data'], true));
-        $job->setQueue($this, (integer) $result['id']);
-
-        return $job;
+      if ($row = $this->connection->executeFirstRow('SELECT `id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
+        return $this->getJobFromRow($row);
       }
 
       return null;
+    }
+
+    /**
+     * Hydrate a job based on row data
+     *
+     * @param  array $row
+     * @return Job
+     */
+    private function getJobFromRow(array $row)
+    {
+      $type = $row['type'];
+
+      /** @var Job $job */
+      $job = new $type(json_decode($row['data'], true));
+      $job->setQueue($this, (integer) $row['id']);
+
+      return $job;
     }
 
     /**
@@ -278,6 +290,11 @@
      */
     public function checkStuckJobs()
     {
+      if ($rows = $this->connection->execute('SELECT * FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
+        foreach ($rows as $row) {
+          $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
+        }
+      }
     }
 
     /**

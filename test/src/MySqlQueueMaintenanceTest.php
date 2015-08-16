@@ -4,6 +4,7 @@
 
   use ActiveCollab\JobsQueue\Queue\MySql;
   use ActiveCollab\JobsQueue\Test\Jobs\Failing;
+  use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
   /**
    * @package ActiveCollab\JobsQueue\Test
@@ -41,5 +42,63 @@
       $this->assertEquals(5, $this->dispatcher->getQueue()->countFailed());
       $this->dispatcher->getQueue()->cleanUp();
       $this->assertEquals(4, $this->dispatcher->getQueue()->countFailed());
+    }
+
+    /**
+     * Test unstuck job by failing it
+     */
+    public function testUnstuckJob()
+    {
+      for ($i = 1; $i <= 5; $i++) {
+        $this->assertEquals($i, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      }
+
+      $this->assertEquals(5, $this->dispatcher->getQueue()->count());
+      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+
+      /** @var Inc $reserved_but_not_going_to_be_executed */
+      $reserved_but_not_going_to_be_executed = $this->dispatcher->getQueue()->nextInLine();
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $reserved_but_not_going_to_be_executed);
+
+      $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+
+      // Lets simulate that job #1 is stuck
+      $this->connection->execute('UPDATE `' . MySql::TABLE_NAME . '` SET `reserved_at` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() - 7200), 1);
+
+      $this->dispatcher->getQueue()->checkStuckJobs();
+
+      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+      $this->assertEquals(4, $this->dispatcher->getQueue()->count());
+      $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
+    }
+
+    /**
+     * Test unstuck job by failing it and respecting attempts settings
+     */
+    public function testUnstuckJobRespectsAttemptsSettings()
+    {
+      for ($i = 1; $i <= 5; $i++) {
+        $this->assertEquals($i, $this->dispatcher->dispatch(new Inc([ 'number' => 123, 'attempts' => 5 ])));
+      }
+
+      $this->assertEquals(5, $this->dispatcher->getQueue()->count());
+      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+
+      /** @var Inc $reserved_but_not_going_to_be_executed */
+      $reserved_but_not_going_to_be_executed = $this->dispatcher->getQueue()->nextInLine();
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $reserved_but_not_going_to_be_executed);
+
+      $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+      $this->assertEquals(0, (integer) $this->connection->executeFirstCell('SELECT `attempts` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1));
+
+      // Lets simulate that job #1 is stuck
+      $this->connection->execute('UPDATE `' . MySql::TABLE_NAME . '` SET `reserved_at` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() - 7200), 1);
+
+      $this->dispatcher->getQueue()->checkStuckJobs();
+
+      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+      $this->assertEquals(1, (integer) $this->connection->executeFirstCell('SELECT `attempts` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1));
+      $this->assertEquals(5, $this->dispatcher->getQueue()->count());
+      $this->assertEquals(0, $this->dispatcher->getQueue()->countFailed());
     }
   }

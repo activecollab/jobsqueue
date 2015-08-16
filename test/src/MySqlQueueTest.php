@@ -194,6 +194,22 @@
     }
 
     /**
+     * Test if queue instance is properly set
+     */
+    public function testJobGetsQueueProperlySet()
+    {
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      $this->assertRecordsCount(1);
+
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Queue\MySql', $next_in_line->getQueue());
+      $this->assertEquals(1, $next_in_line->getQueueId());
+    }
+
+    /**
      * Test priority tasks are front in line
      */
     public function testPriorityJobsAreFrontInLine()

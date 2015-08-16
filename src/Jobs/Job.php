@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\JobsQueue\Jobs;
 
+  use ActiveCollab\JobsQueue\Queue\Queue;
   use JsonSerializable;
   use InvalidArgumentException;
 
@@ -102,6 +103,19 @@
     }
 
     /**
+     * @var Queue
+     */
+    private $queue;
+
+    /**
+     * @return Queue
+     */
+    public function &getQueue()
+    {
+      return $this->queue;
+    }
+
+    /**
      * @var mixed
      */
     private $queue_id;
@@ -119,10 +133,13 @@
     /**
      * Set job queue ID
      *
+     * @param Queue $queue
      * @param mixed $queue_id
      */
-    public function setQueueId($queue_id)
+    public function setQueue(Queue &$queue, $queue_id)
     {
+      $this->queue = $queue;
+
       if ($queue_id === null || is_scalar($queue_id)) {
         $this->queue_id = $queue_id;
       } else {

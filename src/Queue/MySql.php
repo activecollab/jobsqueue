@@ -119,7 +119,7 @@
 
         /** @var Job $job */
         $job = new $type(json_decode($result['data'], true));
-        $job->setQueueId((integer) $result['id']);
+        $job->setQueue($this, (integer) $result['id']);
 
         return $job;
       }

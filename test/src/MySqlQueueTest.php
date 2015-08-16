@@ -18,7 +18,7 @@
     public function testJobsQueueTableIsCreated()
     {
       $result = $this->link->query('SHOW TABLES');
-      $this->assertEquals(1, $result->num_rows);
+      $this->assertEquals(2, $result->num_rows);
       $this->assertEquals(MySql::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
     }
 

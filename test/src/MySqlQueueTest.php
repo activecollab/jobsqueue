@@ -5,6 +5,7 @@
   use ActiveCollab\JobsQueue\Jobs\Job;
   use ActiveCollab\JobsQueue\Queue\MySql;
   use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+  use DateTime;
 
   /**
    * @package ActiveCollab\JobsQueue\Test
@@ -119,14 +120,34 @@
     {
       $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123, 'delay' => 5 ])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
-      $this->assertInstanceOf('mysqli_result', $result);
-      $this->assertEquals(1, $result->num_rows);
+      /** @var DateTime $available_at */
+      $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
 
-      $row = $result->fetch_assoc();
+      $this->assertInstanceOf('DateTime', $available_at);
+      $this->assertGreaterThan(time(), $available_at->getTimestamp());
+    }
 
-      $this->assertArrayHasKey('available_at', $row);
-      $this->assertGreaterThan(time(), strtotime($row['available_at']));
+    /**
+     * Test if we can use first_attempt_delay to set a delay of the first attempt
+     */
+    public function testNewJobsCanBeDelayedWithFirstAttemptExecutedNow()
+    {
+      $inc_job_with_no_first_attempt_delay = new Inc([
+        'number' => 123,
+        'delay' => 5,
+        'first_attempt_delay' => 0
+      ]);
+
+      $this->assertEquals(5, $inc_job_with_no_first_attempt_delay->getDelay());
+      $this->assertEquals(0, $inc_job_with_no_first_attempt_delay->getFirstJobDelay());
+
+      $this->assertEquals(1, $this->dispatcher->dispatch($inc_job_with_no_first_attempt_delay));
+
+      /** @var DateTime $available_at */
+      $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
+
+      $this->assertInstanceOf('DateTime', $available_at);
+      $this->assertLessThanOrEqual(time(), $available_at->getTimestamp());
     }
 
     /**

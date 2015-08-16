@@ -49,6 +49,10 @@
       if (isset($this->data['delay']) && (!is_int($this->data['delay']) || $this->data['delay'] < 1 || $this->data['delay'] > 3600)) {
         throw new InvalidArgumentException('Delay need to be an integer value between 1 and 3600 seconds');
       }
+
+      if (isset($this->data['first_attempt_delay']) && (!is_int($this->data['first_attempt_delay']) || $this->data['first_attempt_delay'] < 0 || $this->data['first_attempt_delay'] > 3600)) {
+        throw new InvalidArgumentException('First job delay need to be an integer value between 0 and 3600 seconds');
+      }
     }
 
     /**
@@ -100,6 +104,16 @@
     public function getDelay()
     {
       return isset($this->data['delay']) ? $this->data['delay'] : 0;
+    }
+
+    /**
+     * Return first job delay
+     *
+     * @return integer|null
+     */
+    public function getFirstJobDelay()
+    {
+      return array_key_exists('first_attempt_delay', $this->data) ? $this->data['first_attempt_delay'] : $this->getDelay();
     }
 
     /**

@@ -55,7 +55,7 @@
     {
       $job_data = $job->getData();
 
-      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (type, priority, data, available_at) VALUES (?, ?, ?, ?)', get_class($job), $job_data['priority'], json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getDelay()));
+      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (type, priority, data, available_at) VALUES (?, ?, ?, ?)', get_class($job), $job_data['priority'], json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
       return $this->connection->lastInsertId();
     }
 
@@ -97,7 +97,7 @@
         if (($previous_attempts + 1) >= $job->getAttempts()) {
           $this->deleteByJobId($job_id);
         } else {
-          $this->prepreForNextAttempt($job_id, $job->getDelay());
+          $this->prepareForNextAttempt($job_id, $job->getDelay());
         }
       }
 
@@ -144,7 +144,7 @@
      * @param integer $job_id
      * @param integer $delay
      */
-    public function prepreForNextAttempt($job_id, $delay = 0)
+    public function prepareForNextAttempt($job_id, $delay = 0)
     {
       $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = `attempts` + 1 WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $job_id);
     }

@@ -33,6 +33,9 @@
       $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
     }
 
+    /**
+     * Test if job failure reason is properly logged
+     */
     public function testJobFailureLogsReason()
     {
       $this->assertRecordsCount(0);

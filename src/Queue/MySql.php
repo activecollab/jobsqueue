@@ -51,7 +51,7 @@
           `failed_at` datetime DEFAULT NULL,
           PRIMARY KEY (`id`),
           KEY `type` (`type`),
-          KEY `reserved_at` (`failed_at`)
+          KEY `failed_at` (`failed_at`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
       }
     }

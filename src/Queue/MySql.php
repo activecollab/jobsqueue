@@ -274,6 +274,21 @@
     }
 
     /**
+     * Check stuck jobs
+     */
+    public function checkStuckJobs()
+    {
+    }
+
+    /**
+     * Clean up the queue
+     */
+    public function cleanUp()
+    {
+      $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `failed_at` < ?', date('Y-m-d H:i:s', strtotime('-7 days')));
+    }
+
+    /**
      * @var callable
      */
     private $on_job_failure;

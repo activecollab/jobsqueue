@@ -55,4 +55,14 @@
      * @return integer
      */
     public function countFailedByType($type1);
+
+    /**
+     * Check stuck jobs
+     */
+    public function checkStuckJobs();
+
+    /**
+     * Clean up the queue
+     */
+    public function cleanUp();
   }

@@ -81,11 +81,7 @@
     {
       try {
         $result = $job->execute();
-
-        if ($job_id = $job->getQueueId()) {
-          $this->deleteByJobId($job_id);
-        }
-
+        $this->deleteJob($job);
         return $result;
       } catch (\Exception $e) {
         $this->failJob($job, $e);
@@ -161,24 +157,28 @@
     }
 
     /**
-     * Log failed job
+     * Log failed job and delete it from the main queue
      *
      * @param Job $job
      */
     public function logFailedJob(Job $job)
     {
-      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`) VALUES (?, ?, ?)', get_class($job), serialize($job->getData()), date('Y-m-d H:i:s'));
-      $this->deleteByJobId($job->getQueueId());
+      $this->connection->transact(function() use ($job) {
+        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`) VALUES (?, ?, ?)', get_class($job), serialize($job->getData()), date('Y-m-d H:i:s'));
+        $this->deleteJob($job);
+      });
     }
 
     /**
-     * Delete by job ID
+     * Delete a job
      *
-     * @param integer $job_id
+     * @param Job $job
      */
-    public function deleteByJobId($job_id)
+    public function deleteJob($job)
     {
-      $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+      if ($job_id = $job->getQueueId()) {
+        $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+      }
     }
 
     /**

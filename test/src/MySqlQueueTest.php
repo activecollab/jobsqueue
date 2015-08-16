@@ -37,6 +37,36 @@
     }
 
     /**
+     * Test count jobs
+     */
+    public function testCountJobs()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
+      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
+
+      $this->assertEquals(3, $this->dispatcher->getQueue()->count());
+    }
+
+    /**
+     * Test count jobs by type
+     */
+    public function testCountJobsByType()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
+      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
+
+      $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Inc'));
+      $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing', 'ActiveCollab\JobsQueue\Test\Jobs\Inc'));
+      $this->assertEquals(0, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing'));
+    }
+
+    /**
      * Make sure that full job class is recorded
      */
     public function testFullJobClassIsRecorded()

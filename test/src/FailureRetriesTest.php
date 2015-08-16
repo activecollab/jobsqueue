@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\JobsQueue\Test;
 
+  use ActiveCollab\JobsQueue\Queue\MySql;
   use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 
   /**
@@ -30,6 +31,28 @@
 
       $this->assertEquals(0, $this->dispatcher->getQueue()->count());
       $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
+    }
+
+    public function testJobFailureLogsReason()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Failing()));
+
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+      $this->assertEquals(1, $next_in_line->getQueueId());
+
+      $this->dispatcher->getQueue()->execute($next_in_line);
+
+      $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Failing', $this->last_failed_job);
+      $this->assertEquals('Built to fail!', $this->last_failure_message);
+
+      $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+      $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
+
+      $this->assertEquals('Built to fail!', $this->connection->executeFirstCell('SELECT `reason` FROM `' . MySql::TABLE_NAME_FAILED . '` WHERE `id` = ?', 1));
     }
 
     /**

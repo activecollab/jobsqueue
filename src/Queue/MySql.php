@@ -50,6 +50,7 @@
           `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
           `data` text CHARACTER SET utf8 NOT NULL,
           `failed_at` datetime DEFAULT NULL,
+          `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
           PRIMARY KEY (`id`),
           KEY `type` (`type`),
           KEY `failed_at` (`failed_at`)
@@ -67,7 +68,7 @@
     {
       $job_data = $job->getData();
 
-      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (type, priority, data, available_at) VALUES (?, ?, ?, ?)', get_class($job), $job_data['priority'], json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
+      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `priority`, `data`, `available_at`) VALUES (?, ?, ?, ?)', get_class($job), $job_data['priority'], json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
       return $this->connection->lastInsertId();
     }
 
@@ -103,7 +104,7 @@
         $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
 
         if (($previous_attempts + 1) >= $job->getAttempts()) {
-          $this->logFailedJob($job);
+          $this->logFailedJob($job, ($reason instanceof Exception ? $reason->getMessage() : ''));
         } else {
           $this->prepareForNextAttempt($job_id, $job->getDelay());
         }
@@ -171,12 +172,13 @@
     /**
      * Log failed job and delete it from the main queue
      *
-     * @param Job $job
+     * @param Job    $job
+     * @param string $reason
      */
-    public function logFailedJob(Job $job)
+    public function logFailedJob(Job $job, $reason)
     {
-      $this->connection->transact(function() use ($job) {
-        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`) VALUES (?, ?, ?)', get_class($job), serialize($job->getData()), date('Y-m-d H:i:s'));
+      $this->connection->transact(function() use ($job, $reason) {
+        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', get_class($job), serialize($job->getData()), date('Y-m-d H:i:s'), $reason);
         $this->deleteJob($job);
       });
     }

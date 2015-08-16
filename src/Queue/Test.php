@@ -10,9 +10,14 @@
   class Test implements Queue
   {
     /**
-     * @var array
+     * @var Job[]
      */
-    private $data = [];
+    private $jobs = [];
+
+    /**
+     * @var Job[]
+     */
+    private $failed_jobs = [];
 
     /**
      * @var bool
@@ -27,7 +32,7 @@
      */
     public function enqueue(Job $job)
     {
-      $this->data[] = $job;
+      $this->jobs[] = $job;
 
       if (!$this->needs_sort) {
         $this->needs_sort = true;
@@ -54,15 +59,15 @@
      */
     public function nextInLine()
     {
-      if (empty($this->data)) {
+      if (empty($this->jobs)) {
         return null;
       }
 
       if ($this->needs_sort) {
-        $this->sortByPriority($this->data);
+        $this->sortByPriority($this->jobs);
       }
 
-      return $this->data[0];
+      return $this->jobs[0];
     }
 
     /**
@@ -79,7 +84,53 @@
      */
     public function count()
     {
-      return count($this->data);
+      return count($this->jobs);
+    }
+
+    /**
+     * @param  string  $type1
+     * @return integer
+     */
+    public function countByType($type1)
+    {
+      $count = 0;
+
+      $types = func_get_args();
+
+      foreach ($this->jobs as $job) {
+        if (in_array(get_class($job), $types)) {
+          $count++;
+        }
+      }
+
+      return $count;
+    }
+
+    /**
+     * @return integer
+     */
+    public function countFailed()
+    {
+      return count($this->failed_jobs);
+    }
+
+    /**
+     * @param  string  $type1
+     * @return integer
+     */
+    public function countFailedByType($type1)
+    {
+      $count = 0;
+
+      $types = func_get_args();
+
+      foreach ($this->failed_jobs as $job) {
+        if (in_array(get_class($job), $types)) {
+          $count++;
+        }
+      }
+
+      return $count;
     }
 
     /**

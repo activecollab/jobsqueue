@@ -68,6 +68,7 @@
     public function tearDown()
     {
       $this->connection->execute('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
+      $this->connection->execute('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME_FAILED . '`');
       $this->link->close();
 
       $this->last_failed_job = $this->last_failure_message = null;

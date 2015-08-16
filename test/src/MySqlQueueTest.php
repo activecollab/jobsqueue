@@ -18,7 +18,7 @@
     public function testJobsQueueTableIsCreated()
     {
       $result = $this->link->query('SHOW TABLES');
-      $this->assertEquals(1, $result->num_rows);
+      $this->assertEquals(2, $result->num_rows);
       $this->assertEquals(MySql::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
     }
 
@@ -34,6 +34,36 @@
       $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
 
       $this->assertRecordsCount(3);
+    }
+
+    /**
+     * Test count jobs
+     */
+    public function testCountJobs()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
+      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
+
+      $this->assertEquals(3, $this->dispatcher->getQueue()->count());
+    }
+
+    /**
+     * Test count jobs by type
+     */
+    public function testCountJobsByType()
+    {
+      $this->assertRecordsCount(0);
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
+      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
+
+      $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Inc'));
+      $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing', 'ActiveCollab\JobsQueue\Test\Jobs\Inc'));
+      $this->assertEquals(0, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing'));
     }
 
     /**

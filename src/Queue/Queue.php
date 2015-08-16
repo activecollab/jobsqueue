@@ -38,4 +38,21 @@
      * @param callable|null $callback
      */
     public function onJobFailure(callable $callback = null);
+
+    /**
+     * @param  string  $type1
+     * @return integer
+     */
+    public function countByType($type1);
+
+    /**
+     * @return integer
+     */
+    public function countFailed();
+
+    /**
+     * @param  string  $type1
+     * @return integer
+     */
+    public function countFailedByType($type1);
   }

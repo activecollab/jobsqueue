@@ -12,6 +12,7 @@
   class MySql implements Queue
   {
     const TABLE_NAME = 'jobs_queue';
+    const TABLE_NAME_FAILED = 'jobs_queue_failed';
 
     /**
      * @var Connection
@@ -20,13 +21,13 @@
 
     /**
      * @param Connection $connection
-     * @param bool|true  $create_table_if_missing
+     * @param bool|true  $create_tables_if_missing
      */
-    public function __construct(Connection &$connection, $create_table_if_missing = true)
+    public function __construct(Connection &$connection, $create_tables_if_missing = true)
     {
       $this->connection = $connection;
 
-      if ($create_table_if_missing) {
+      if ($create_tables_if_missing) {
         $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
@@ -41,6 +42,16 @@
           KEY `type` (`type`),
           KEY `priority` (`priority`),
           KEY `reserved_at` (`reserved_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+        $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+          `data` text CHARACTER SET utf8 NOT NULL,
+          `failed_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          KEY `type` (`type`),
+          KEY `reserved_at` (`failed_at`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
       }
     }
@@ -70,11 +81,7 @@
     {
       try {
         $result = $job->execute();
-
-        if ($job_id = $job->getQueueId()) {
-          $this->deleteByJobId($job_id);
-        }
-
+        $this->deleteJob($job);
         return $result;
       } catch (\Exception $e) {
         $this->failJob($job, $e);
@@ -95,7 +102,7 @@
         $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
 
         if (($previous_attempts + 1) >= $job->getAttempts()) {
-          $this->deleteByJobId($job_id);
+          $this->logFailedJob($job);
         } else {
           $this->prepareForNextAttempt($job_id, $job->getDelay());
         }
@@ -150,13 +157,28 @@
     }
 
     /**
-     * Delete by job ID
+     * Log failed job and delete it from the main queue
      *
-     * @param integer $job_id
+     * @param Job $job
      */
-    public function deleteByJobId($job_id)
+    public function logFailedJob(Job $job)
     {
-      $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+      $this->connection->transact(function() use ($job) {
+        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`) VALUES (?, ?, ?)', get_class($job), serialize($job->getData()), date('Y-m-d H:i:s'));
+        $this->deleteJob($job);
+      });
+    }
+
+    /**
+     * Delete a job
+     *
+     * @param Job $job
+     */
+    public function deleteJob($job)
+    {
+      if ($job_id = $job->getQueueId()) {
+        $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+      }
     }
 
     /**
@@ -215,6 +237,40 @@
     public function count()
     {
       return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '`');
+    }
+
+    /**
+     * @param  string  $type1
+     * @return integer
+     */
+    public function countByType($type1)
+    {
+      if (func_num_args()) {
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` IN ?', func_get_args());
+      } else {
+        return 0;
+      }
+    }
+
+    /**
+     * @return integer
+     */
+    public function countFailed()
+    {
+      return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '`');
+    }
+
+    /**
+     * @param  string  $type1
+     * @return integer
+     */
+    public function countFailedByType($type1)
+    {
+      if (func_num_args()) {
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` IN ?', func_get_args());
+      } else {
+        return 0;
+      }
     }
 
     /**

@@ -106,7 +106,7 @@
         if (($previous_attempts + 1) >= $job->getAttempts()) {
           $this->logFailedJob($job, ($reason instanceof Exception ? $reason->getMessage() : ''));
         } else {
-          $this->prepareForNextAttempt($job_id, $job->getDelay());
+          $this->prepareForNextAttempt($job_id, $previous_attempts, $job->getDelay());
         }
       }
 
@@ -162,11 +162,12 @@
      * Increase number of attempts by job ID
      *
      * @param integer $job_id
+     * @param integer $previous_attempts
      * @param integer $delay
      */
-    public function prepareForNextAttempt($job_id, $delay = 0)
+    public function prepareForNextAttempt($job_id, $previous_attempts, $delay = 0)
     {
-      $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = `attempts` + 1 WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $job_id);
+      $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $previous_attempts + 1, $job_id);
     }
 
     /**

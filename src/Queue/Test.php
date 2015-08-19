@@ -148,9 +148,9 @@
     }
 
     /**
-     * @var callable
+     * @var callable[]
      */
-    private $on_job_failure;
+    private $on_job_failure = [];
 
     /**
      * What to do when job fails
@@ -159,6 +159,6 @@
      */
     public function onJobFailure(callable $callback = null)
     {
-      $this->on_job_failure = $callback;
+      $this->on_job_failure[] = $callback;
     }
   }

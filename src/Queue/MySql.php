@@ -110,8 +110,10 @@
         }
       }
 
-      if ($this->on_job_failure && is_callable($this->on_job_failure)) {
-        call_user_func($this->on_job_failure, $job, $reason);
+      if (!empty($this->on_job_failure)) {
+        foreach ($this->on_job_failure as $callback) {
+          call_user_func($callback, $job, $reason);
+        }
       }
     }
 
@@ -309,9 +311,9 @@
     }
 
     /**
-     * @var callable
+     * @var callable[]
      */
-    private $on_job_failure;
+    private $on_job_failure = [];
 
     /**
      * What to do when job fails
@@ -320,6 +322,6 @@
      */
     public function onJobFailure(callable $callback = null)
     {
-      $this->on_job_failure = $callback;
+      $this->on_job_failure[] = $callback;
     }
   }

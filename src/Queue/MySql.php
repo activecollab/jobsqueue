@@ -57,6 +57,23 @@
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
       }
     }
+
+    /**
+     * @var array
+     */
+    private $extract_properties_to_fields = [ 'priority' ];
+
+    /**
+     * Extract property value to field value
+     *
+     * @param string $property
+     */
+    public function extractPropertyToField($property)
+    {
+      if (!in_array($property, $this->extract_properties_to_fields)) {
+        $this->extract_properties_to_fields[] = $property;
+      }
+    }
     
     /**
      * Add a job to the queue
@@ -68,7 +85,16 @@
     {
       $job_data = $job->getData();
 
-      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `priority`, `data`, `available_at`) VALUES (?, ?, ?, ?)', get_class($job), $job_data['priority'], json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
+      $extract = [];
+
+      foreach ($this->extract_properties_to_fields as $property) {
+        $extract['`' . $property . '`'] = $this->connection->escapeValue($job->getData()[$property]);
+      }
+
+      $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
+      $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
+
+      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?' . $extract_values . ')', get_class($job), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
       return $this->connection->lastInsertId();
     }
 

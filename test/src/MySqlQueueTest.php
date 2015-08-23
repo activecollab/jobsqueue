@@ -245,6 +245,38 @@
     }
 
     /**
+     * Test if nextInLine works fine when another worker process "snatches" the job (returns NULL)
+     */
+    public function testJobSnatching()
+    {
+      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
+
+      $snatch_reservation_key = sha1('something completely random');
+      $captured_job_id = 0;
+      $captured_reservation_key = '';
+
+      // Simulate job snatching done by a different worker process
+      $this->dispatcher->getQueue()->onReservationKeyReady(function($job_id, $reservation_key) use ($snatch_reservation_key, &$captured_job_id, &$captured_reservation_key) {
+        $captured_job_id = $job_id;
+        $captured_reservation_key = $reservation_key;
+
+        $this->connection->execute('UPDATE `jobs_queue` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $snatch_reservation_key, date('Y-m-d H:i:s'), $job_id);
+      });
+
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+
+      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+      $this->assertSame(1, $captured_job_id);
+      $this->assertEquals(40, strlen($captured_reservation_key));
+      $this->assertNotEquals($snatch_reservation_key, $captured_reservation_key);
+
+      $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
+      $this->assertEquals($snatch_reservation_key, $this->connection->executeFirstCell('SELECT `reservation_key` FROM `jobs_queue` WHERE `id` = ?', $captured_job_id));
+      $this->assertNull($next_in_line);
+    }
+
+    /**
      * Test if queue instance is properly set
      */
     public function testJobGetsQueueProperlySet()

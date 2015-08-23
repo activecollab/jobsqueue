@@ -239,6 +239,27 @@
     }
 
     /**
+     * @var callable|null
+     */
+    private $on_reservation_key_ready;
+
+    /**
+     * Callback that is called when reservation key is prepared for a particular job, but not yet set
+     *
+     * This callback is useful for testing job snatching when we have multiple workers
+     *
+     * @param callable|null $callback
+     */
+    public function onReservationKeyReady(callable $callback = null)
+    {
+      if ($callback === null || is_callable($callback)) {
+        $this->on_reservation_key_ready = $callback;
+      } else {
+        throw new \InvalidArgumentException('Callable or NULL expected');
+      }
+    }
+
+    /**
      * Reserve next job ID
      *
      * @return int|null
@@ -249,6 +270,10 @@
 
       if ($job_id = $this->connection->executeFirstCell('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 1', $timestamp)) {
         $reservation_key = $this->prepareNewReservationKey();
+
+        if ($this->on_reservation_key_ready) {
+          call_user_func($this->on_reservation_key_ready, $job_id, $reservation_key);
+        }
 
         $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
 

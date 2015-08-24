@@ -127,6 +127,23 @@
     }
 
     /**
+     * Test if invalid JSON data is treated as a reason for job to fail
+     */
+    public function testJobDataCanBeBrokenJson()
+    {
+      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+
+      $this->connection->execute('UPDATE `jobs_queue` SET `data` = ? WHERE `id` = ?', 'broken JSON', 1);
+
+      $job = $this->dispatcher->getQueue()->getJobById(1);
+
+      $this->assertNull($job);
+      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
+      $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue_failed`'));
+      $this->assertContains('Failed to parse JSON', $this->connection->executeFirstCell('SELECT `reason` FROM `jobs_queue_failed` WHERE `id` = ?', 1));
+    }
+
+    /**
      * Test if new jobs are instantly available
      */
     public function testNewJobsAreAvailableInstantly()

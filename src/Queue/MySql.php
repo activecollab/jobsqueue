@@ -152,7 +152,14 @@
     public function getJobById($job_id)
     {
       if ($row = $this->connection->executeFirstRow('SELECT `id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
-        return $this->getJobFromRow($row);
+        try {
+          return $this->getJobFromRow($row);
+        } catch (Exception $e) {
+          $this->connection->transact(function() use ($row, $e) {
+            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+            $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
+          });
+        }
       }
 
       return null;

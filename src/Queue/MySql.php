@@ -175,8 +175,20 @@
     {
       $type = $row['type'];
 
+      $data = json_decode($row['data'], true);
+
+      if (json_last_error()) {
+        $error_message = 'Failed to parse JSON';
+
+        if (function_exists('json_last_error_msg')) {
+          $error_message .= '. Reason: ' . json_last_error_msg();
+        }
+
+        throw new RuntimeException($error_message);
+      }
+
       /** @var Job $job */
-      $job = new $type(json_decode($row['data'], true));
+      $job = new $type($data);
       $job->setQueue($this, (integer) $row['id']);
 
       return $job;

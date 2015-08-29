@@ -33,7 +33,7 @@
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
           `priority` int(10) unsigned DEFAULT '0',
-          `data` text CHARACTER SET utf8 NOT NULL,
+          `data` longtext CHARACTER SET utf8 NOT NULL,
           `available_at` datetime DEFAULT NULL,
           `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
           `reserved_at` datetime DEFAULT NULL,
@@ -48,7 +48,7 @@
         $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-          `data` text CHARACTER SET utf8 NOT NULL,
+          `data` longtext CHARACTER SET utf8 NOT NULL,
           `failed_at` datetime DEFAULT NULL,
           `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
           PRIMARY KEY (`id`),
@@ -367,7 +367,16 @@
     {
       if ($rows = $this->connection->execute('SELECT * FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
         foreach ($rows as $row) {
-          $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
+          try {
+            $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
+          } catch (Exception $e) {
+            $this->connection->beginWork();
+
+            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+            $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
+            
+            $this->connection->commit();
+          }
         }
       }
     }

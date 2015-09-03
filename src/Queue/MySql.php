@@ -312,7 +312,7 @@
     private function prepareNewReservationKey()
     {
       do {
-        $reservation_key = sha1(microtime());
+        $reservation_key = sha1(microtime(true) . mt_rand(10000, 90000));
       } while($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `reservation_key` = ?', $reservation_key));
 
       return $reservation_key;

@@ -226,7 +226,7 @@
     public function logFailedJob(Job $job, $reason)
     {
       $this->connection->transact(function() use ($job, $reason) {
-        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', get_class($job), serialize($job->getData()), date('Y-m-d H:i:s'), $reason);
+        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', get_class($job), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
         $this->deleteJob($job);
       });
     }
@@ -316,6 +316,78 @@
       } while($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `reservation_key` = ?', $reservation_key));
 
       return $reservation_key;
+    }
+
+    /**
+     * Restore failed job by job ID and optionally update job properties
+     *
+     * @param  mixed      $job_id
+     * @param  array|null $update_data
+     * @return Job
+     */
+    public function restoreFailedJobById($job_id, array $update_data = null)
+    {
+      $job = null;
+
+      if ($row = $this->connection->executeFirstRow('SELECT `type`, `data` FROM `'  . self::TABLE_NAME_FAILED .'` WHERE `id` = ?', $job_id)) {
+        $this->connection->transact(function() use (&$job, $job_id, $update_data, $row) {
+          $job_type = $row['type'];
+
+          if (!class_exists($job_type)) {
+            throw new RuntimeException("Can't restore a job. Type '$job_type' not found");
+          }
+
+          if ($row['data']) {
+            if (mb_substr($row['data'], 0, 1) == '{') {
+              $data = json_decode($row['data'], true);
+
+              if (json_last_error()) {
+                $error_message = 'Failed to parse JSON';
+
+                if (function_exists('json_last_error_msg')) {
+                  $error_message .= '. Reason: ' . json_last_error_msg();
+                }
+
+                throw new RuntimeException($error_message);
+              }
+            } else {
+              $data = unserialize($row['data']);
+            }
+          }
+
+          if (empty($data)) {
+            $data = [];
+          }
+
+          if ($update_data && is_array($update_data) && count($update_data)) {
+            $data = array_merge($data, $update_data);
+          }
+
+          $job = new $job_type($data);
+
+          $this->enqueue($job);
+          $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id);
+        });
+      } else {
+        throw new RuntimeException("Failed job #{$job_id} not found");
+      }
+
+      return $job;
+    }
+
+    /**
+     * Restore failed jobs by job type
+     *
+     * @param string     $job_type
+     * @param array|null $update_data
+     */
+    public function restoreFailedJobsByType($job_type, array $update_data = null)
+    {
+      if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', "%$job_type%")) {
+        foreach ($job_ids as $job_id) {
+          $this->restoreFailedJobById($job_id, $update_data);
+        }
+      }
     }
 
     /**

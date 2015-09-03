@@ -77,13 +77,23 @@
     }
 
     /**
-     * Check number of records in memories table
+     * Check number of records in jobs queue table
      *
      * @param integer $expected
      */
     protected function assertRecordsCount($expected)
     {
       $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '`'));
+    }
+
+    /**
+     * Check number of records in failed jobs queue table
+     *
+     * @param integer $expected
+     */
+    protected function assertFailedRecordsCount($expected)
+    {
+      $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME_FAILED . '`'));
     }
 
     /**

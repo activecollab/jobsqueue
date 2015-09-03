@@ -80,6 +80,27 @@
     }
 
     /**
+     * Restore failed job by job ID and optionally update job properties
+     *
+     * @param  mixed      $job_id
+     * @param  array|null $update_data
+     * @return Job
+     */
+    public function restoreFailedJobById($job_id, array $update_data = null)
+    {
+    }
+
+    /**
+     * Restore failed jobs by job type
+     *
+     * @param string     $job_type
+     * @param array|null $update_data
+     */
+    public function restoreFailedJobsByType($job_type, array $update_data = null)
+    {
+    }
+
+    /**
      * @return int
      */
     public function count()

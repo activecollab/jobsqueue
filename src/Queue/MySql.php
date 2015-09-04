@@ -287,17 +287,19 @@
     {
       $timestamp = date('Y-m-d H:i:s');
 
-      if ($job_id = $this->connection->executeFirstCell('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 1', $timestamp)) {
-        $reservation_key = $this->prepareNewReservationKey();
+      if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100', $timestamp)) {
+        foreach ($job_ids as $job_id) {
+          $reservation_key = $this->prepareNewReservationKey();
 
-        if ($this->on_reservation_key_ready) {
-          call_user_func($this->on_reservation_key_ready, $job_id, $reservation_key);
-        }
+          if ($this->on_reservation_key_ready) {
+            call_user_func($this->on_reservation_key_ready, $job_id, $reservation_key);
+          }
 
-        $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
+          $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
 
-        if ($this->connection->affectedRows() === 1) {
-          return $job_id;
+          if ($this->connection->affectedRows() === 1) {
+            return $job_id;
+          }
         }
       }
 

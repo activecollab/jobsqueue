@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\JobsQueue\Queue;
 
+  use ActiveCollab\DatabaseConnection\ConnectionInterface;
   use ActiveCollab\JobsQueue\Jobs\Job;
   use ActiveCollab\DatabaseConnection\Connection;
   use Exception;
@@ -16,15 +17,15 @@
     const TABLE_NAME_FAILED = 'jobs_queue_failed';
 
     /**
-     * @var Connection
+     * @var ConnectionInterface
      */
     private $connection;
 
     /**
-     * @param Connection $connection
-     * @param bool|true  $create_tables_if_missing
+     * @param ConnectionInterface $connection
+     * @param bool|true           $create_tables_if_missing
      */
-    public function __construct(Connection &$connection, $create_tables_if_missing = true)
+    public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true)
     {
       $this->connection = $connection;
 

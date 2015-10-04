@@ -32,15 +32,15 @@ use ActiveCollab\JobsQueue\Jobs\Job;
 
 class Inc extends Job
 {
-  /**
-   * Increment a number
-   *
-   * @return integer
-   */
-  public function execute()
-  {
-    return $this->getData()['number'] + 1;
-  }
+    /**
+     * Increment a number
+     *
+     * @return integer
+     */
+    public function execute()
+    {
+      return $this->getData()['number'] + 1;
+    }
 }
 ```
 
@@ -56,17 +56,17 @@ use ActiveCollab\JobsQueue\Queue\MySql;
 use mysqli;
 use RuntimeException;
 
-$database_link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
+$database_link = new MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
 
 if ($database_link->connect_error) {
-  throw new RuntimeException('Failed to connect to database. MySQL said: ' . $database_link->connect_error);
+    throw new RuntimeException('Failed to connect to database. MySQL said: ' . $database_link->connect_error);
 }
 
 $queue = new MySql($database_link);
 
 // Not required but gives you flexibility with failure handling
 $queue->onJobFailure(function(Job $job, Exception $reason) {
-  throw new Exception('Job ' . get_class($job) . ' failed', 0, $reason);
+    throw new Exception('Job ' . get_class($job) . ' failed', 0, $reason);
 });
 
 $dispatcher = new Dispatcher($queue);
@@ -93,15 +93,17 @@ $result = $dispatcher->execute(new Inc([ 'number' => 123 ]));
 
 When constructing a new `Job` instance, you can set an array of job data, as well as following job properties:
 
-1. `attempts` - Number of attempts before job is considered to fail and is removed from the queue. Value can be between 1 and 256. Default is 1 (try once and fail if it does not go well),
-2. `delay` - Number of seconds to wait before first execution, as well as retries if the job fails and needs to be retried. Value can be between 1 and 3600 (one hour). Default is 0 (no delay),
-3. `priority` - Value between 0 and 4294967295 that determins how important the job is (a job with higher value has higher priority). Default is 0 (job is not a priority).
+1. `priority` - Value between 0 and 4294967295 that determins how important the job is (a job with higher value has higher priority). Default is 0 (job is not a priority).
+2. `attempts` - Number of attempts before job is considered to fail and is removed from the queue. Value can be between 1 and 256. Default is 1 (try once and fail if it does not go well),
+3. `delay` - Number of seconds to wait before first execution (in case when `first_attempt_delay` is not set), as well as retries if the job fails and needs to be retried. Value can be between 1 and 3600 (one hour). Default is 0 (no delay),
+4. `first_attempt_delay` - Number of seconds to wait for first execution,
 
 ```php
 $job = new Inc([
-  'number' => 123,
-  'priority' => Job::HAS_HIGHEST_PRIORITY,
-  'attempts' => 5,
-  'delay' => 5,
+    'number' => 123,
+    'priority'            => Job::HAS_HIGHEST_PRIORITY,
+    'attempts'            => 5,
+    'delay'               => 5,
+    'first_attempt_delay' => 1
 ]);
 ```

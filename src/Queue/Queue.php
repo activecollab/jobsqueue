@@ -1,14 +1,14 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Queue;
+namespace ActiveCollab\JobsQueue\Queue;
 
-  use Countable, ActiveCollab\JobsQueue\Jobs\Job;
+use Countable, ActiveCollab\JobsQueue\Jobs\Job;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Queue
-   */
-  interface Queue extends Countable
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Queue
+ */
+interface Queue extends Countable
+{
     /**
      * Add a job to the queue
      *
@@ -20,7 +20,7 @@
     /**
      * Execute a job now (sync, waits for a response)
      *
-     * @param  Job   $job
+     * @param  Job $job
      * @return mixed
      */
     public function execute(Job $job);
@@ -57,7 +57,7 @@
     public function restoreFailedJobsByType($job_type, array $update_data = null);
 
     /**
-     * @param  string  $type1
+     * @param  string $type1
      * @return integer
      */
     public function countByType($type1);
@@ -82,4 +82,4 @@
      * Clean up the queue
      */
     public function cleanUp();
-  }
+}

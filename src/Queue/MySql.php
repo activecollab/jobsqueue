@@ -1,18 +1,17 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Queue;
+namespace ActiveCollab\JobsQueue\Queue;
 
-  use ActiveCollab\DatabaseConnection\ConnectionInterface;
-  use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\DatabaseConnection\Connection;
-  use Exception;
-  use RuntimeException;
+use ActiveCollab\DatabaseConnection\ConnectionInterface;
+use ActiveCollab\JobsQueue\Jobs\Job;
+use Exception;
+use RuntimeException;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Queue
-   */
-  class MySql implements Queue
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Queue
+ */
+class MySql implements Queue
+{
     const TABLE_NAME = 'jobs_queue';
     const TABLE_NAME_FAILED = 'jobs_queue_failed';
 
@@ -27,42 +26,42 @@
      */
     public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true)
     {
-      $this->connection = $connection;
+        $this->connection = $connection;
 
-      if ($create_tables_if_missing) {
-        $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-          `priority` int(10) unsigned DEFAULT '0',
-          `data` longtext CHARACTER SET utf8 NOT NULL,
-          `available_at` datetime DEFAULT NULL,
-          `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-          `reserved_at` datetime DEFAULT NULL,
-          `attempts` smallint(6) DEFAULT '0',
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `reservation_key` (`reservation_key`),
-          KEY `type` (`type`),
-          KEY `priority` (`priority`),
-          KEY `reserved_at` (`reserved_at`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+        if ($create_tables_if_missing) {
+            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
+                `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                `priority` int(10) unsigned DEFAULT '0',
+                `data` longtext CHARACTER SET utf8 NOT NULL,
+                `available_at` datetime DEFAULT NULL,
+                `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                `reserved_at` datetime DEFAULT NULL,
+                `attempts` smallint(6) DEFAULT '0',
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `reservation_key` (`reservation_key`),
+                KEY `type` (`type`),
+                KEY `priority` (`priority`),
+                KEY `reserved_at` (`reserved_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
-        $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-          `data` longtext CHARACTER SET utf8 NOT NULL,
-          `failed_at` datetime DEFAULT NULL,
-          `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-          PRIMARY KEY (`id`),
-          KEY `type` (`type`),
-          KEY `failed_at` (`failed_at`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
-      }
+            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
+                `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                `data` longtext CHARACTER SET utf8 NOT NULL,
+                `failed_at` datetime DEFAULT NULL,
+                `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                PRIMARY KEY (`id`),
+                KEY `type` (`type`),
+                KEY `failed_at` (`failed_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+        }
     }
 
     /**
      * @var array
      */
-    private $extract_properties_to_fields = [ 'priority' ];
+    private $extract_properties_to_fields = ['priority'];
 
     /**
      * Extract property value to field value
@@ -71,52 +70,54 @@
      */
     public function extractPropertyToField($property)
     {
-      if (!in_array($property, $this->extract_properties_to_fields)) {
-        $this->extract_properties_to_fields[] = $property;
-      }
+        if (!in_array($property, $this->extract_properties_to_fields)) {
+            $this->extract_properties_to_fields[] = $property;
+        }
     }
-    
+
     /**
      * Add a job to the queue
      *
-     * @param  Job     $job
+     * @param  Job $job
      * @return integer
      */
     public function enqueue(Job $job)
     {
-      $job_data = $job->getData();
+        $job_data = $job->getData();
 
-      $extract = [];
+        $extract = [];
 
-      foreach ($this->extract_properties_to_fields as $property) {
-        $extract['`' . $property . '`'] = $this->connection->escapeValue($job->getData()[$property]);
-      }
+        foreach ($this->extract_properties_to_fields as $property) {
+            $extract[ '`' . $property . '`' ] = $this->connection->escapeValue($job->getData()[ $property ]);
+        }
 
-      $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
-      $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
+        $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
+        $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
 
-      $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?' . $extract_values . ')', get_class($job), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
-      return $this->connection->lastInsertId();
+        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?' . $extract_values . ')', get_class($job), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
+
+        return $this->connection->lastInsertId();
     }
 
     /**
      * Run job now (sync, waits for a response)
      *
-     * @param  Job              $job
+     * @param  Job $job
      * @return mixed
      * @throws RuntimeException
      */
     public function execute(Job $job)
     {
-      try {
-        $result = $job->execute();
-        $this->deleteJob($job);
-        return $result;
-      } catch (\Exception $e) {
-        $this->failJob($job, $e);
-      }
+        try {
+            $result = $job->execute();
+            $this->deleteJob($job);
 
-      return null;
+            return $result;
+        } catch (\Exception $e) {
+            $this->failJob($job, $e);
+        }
+
+        return null;
     }
 
     /**
@@ -127,43 +128,43 @@
      */
     private function failJob(Job $job, Exception $reason = null)
     {
-      if ($job_id = $job->getQueueId()) {
-        $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
+        if ($job_id = $job->getQueueId()) {
+            $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
 
-        if (($previous_attempts + 1) >= $job->getAttempts()) {
-          $this->logFailedJob($job, ($reason instanceof Exception ? $reason->getMessage() : ''));
-        } else {
-          $this->prepareForNextAttempt($job_id, $previous_attempts, $job->getDelay());
+            if (($previous_attempts + 1) >= $job->getAttempts()) {
+                $this->logFailedJob($job, ($reason instanceof Exception ? $reason->getMessage() : ''));
+            } else {
+                $this->prepareForNextAttempt($job_id, $previous_attempts, $job->getDelay());
+            }
         }
-      }
 
-      if (!empty($this->on_job_failure)) {
-        foreach ($this->on_job_failure as $callback) {
-          call_user_func($callback, $job, $reason);
+        if (!empty($this->on_job_failure)) {
+            foreach ($this->on_job_failure as $callback) {
+                call_user_func($callback, $job, $reason);
+            }
         }
-      }
     }
 
     /**
      * Return job by ID
      *
-     * @param  integer  $job_id
+     * @param  integer $job_id
      * @return Job|null
      */
     public function getJobById($job_id)
     {
-      if ($row = $this->connection->executeFirstRow('SELECT `id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
-        try {
-          return $this->getJobFromRow($row);
-        } catch (Exception $e) {
-          $this->connection->transact(function() use ($row, $e) {
-            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-            $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
-          });
+        if ($row = $this->connection->executeFirstRow('SELECT `id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
+            try {
+                return $this->getJobFromRow($row);
+            } catch (Exception $e) {
+                $this->connection->transact(function () use ($row, $e) {
+                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+                    $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
+                });
+            }
         }
-      }
 
-      return null;
+        return null;
     }
 
     /**
@@ -174,25 +175,25 @@
      */
     private function getJobFromRow(array $row)
     {
-      $type = $row['type'];
+        $type = $row['type'];
 
-      $data = json_decode($row['data'], true);
+        $data = json_decode($row['data'], true);
 
-      if (json_last_error()) {
-        $error_message = 'Failed to parse JSON';
+        if (json_last_error()) {
+            $error_message = 'Failed to parse JSON';
 
-        if (function_exists('json_last_error_msg')) {
-          $error_message .= '. Reason: ' . json_last_error_msg();
+            if (function_exists('json_last_error_msg')) {
+                $error_message .= '. Reason: ' . json_last_error_msg();
+            }
+
+            throw new RuntimeException($error_message);
         }
 
-        throw new RuntimeException($error_message);
-      }
+        /** @var Job $job */
+        $job = new $type($data);
+        $job->setQueue($this, (integer)$row['id']);
 
-      /** @var Job $job */
-      $job = new $type($data);
-      $job->setQueue($this, (integer) $row['id']);
-
-      return $job;
+        return $job;
     }
 
     /**
@@ -203,7 +204,7 @@
      */
     private function getPreviousAttemptsByJobId($job_id)
     {
-      return (integer) $this->connection->executeFirstCell('SELECT `attempts` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+        return (integer)$this->connection->executeFirstCell('SELECT `attempts` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
 
     /**
@@ -215,7 +216,7 @@
      */
     public function prepareForNextAttempt($job_id, $previous_attempts, $delay = 0)
     {
-      $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $previous_attempts + 1, $job_id);
+        $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $previous_attempts + 1, $job_id);
     }
 
     /**
@@ -226,10 +227,10 @@
      */
     public function logFailedJob(Job $job, $reason)
     {
-      $this->connection->transact(function() use ($job, $reason) {
-        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', get_class($job), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
-        $this->deleteJob($job);
-      });
+        $this->connection->transact(function () use ($job, $reason) {
+            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', get_class($job), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
+            $this->deleteJob($job);
+        });
     }
 
     /**
@@ -239,9 +240,9 @@
      */
     public function deleteJob($job)
     {
-      if ($job_id = $job->getQueueId()) {
-        $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
-      }
+        if ($job_id = $job->getQueueId()) {
+            $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+        }
     }
 
     /**
@@ -251,11 +252,11 @@
      */
     public function nextInLine()
     {
-      if ($job_id = $this->reserveNextJob()) {
-        return $this->getJobById($job_id);
-      } else {
-        return null;
-      }
+        if ($job_id = $this->reserveNextJob()) {
+            return $this->getJobById($job_id);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -272,11 +273,11 @@
      */
     public function onReservationKeyReady(callable $callback = null)
     {
-      if ($callback === null || is_callable($callback)) {
-        $this->on_reservation_key_ready = $callback;
-      } else {
-        throw new \InvalidArgumentException('Callable or NULL expected');
-      }
+        if ($callback === null || is_callable($callback)) {
+            $this->on_reservation_key_ready = $callback;
+        } else {
+            throw new \InvalidArgumentException('Callable or NULL expected');
+        }
     }
 
     /**
@@ -286,25 +287,25 @@
      */
     public function reserveNextJob()
     {
-      $timestamp = date('Y-m-d H:i:s');
+        $timestamp = date('Y-m-d H:i:s');
 
-      if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100', $timestamp)) {
-        foreach ($job_ids as $job_id) {
-          $reservation_key = $this->prepareNewReservationKey();
+        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100', $timestamp)) {
+            foreach ($job_ids as $job_id) {
+                $reservation_key = $this->prepareNewReservationKey();
 
-          if ($this->on_reservation_key_ready) {
-            call_user_func($this->on_reservation_key_ready, $job_id, $reservation_key);
-          }
+                if ($this->on_reservation_key_ready) {
+                    call_user_func($this->on_reservation_key_ready, $job_id, $reservation_key);
+                }
 
-          $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
+                $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
 
-          if ($this->connection->affectedRows() === 1) {
-            return $job_id;
-          }
+                if ($this->connection->affectedRows() === 1) {
+                    return $job_id;
+                }
+            }
         }
-      }
 
-      return null;
+        return null;
     }
 
     /**
@@ -314,11 +315,11 @@
      */
     private function prepareNewReservationKey()
     {
-      do {
-        $reservation_key = sha1(microtime(true) . mt_rand(10000, 90000));
-      } while($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `reservation_key` = ?', $reservation_key));
+        do {
+            $reservation_key = sha1(microtime(true) . mt_rand(10000, 90000));
+        } while ($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `reservation_key` = ?', $reservation_key));
 
-      return $reservation_key;
+        return $reservation_key;
     }
 
     /**
@@ -330,52 +331,52 @@
      */
     public function restoreFailedJobById($job_id, array $update_data = null)
     {
-      $job = null;
+        $job = null;
 
-      if ($row = $this->connection->executeFirstRow('SELECT `type`, `data` FROM `'  . self::TABLE_NAME_FAILED .'` WHERE `id` = ?', $job_id)) {
-        $this->connection->transact(function() use (&$job, $job_id, $update_data, $row) {
-          $job_type = $row['type'];
+        if ($row = $this->connection->executeFirstRow('SELECT `type`, `data` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id)) {
+            $this->connection->transact(function () use (&$job, $job_id, $update_data, $row) {
+                $job_type = $row['type'];
 
-          if (!class_exists($job_type)) {
-            throw new RuntimeException("Can't restore a job. Type '$job_type' not found");
-          }
-
-          if ($row['data']) {
-            if (mb_substr($row['data'], 0, 1) == '{') {
-              $data = json_decode($row['data'], true);
-
-              if (json_last_error()) {
-                $error_message = 'Failed to parse JSON';
-
-                if (function_exists('json_last_error_msg')) {
-                  $error_message .= '. Reason: ' . json_last_error_msg();
+                if (!class_exists($job_type)) {
+                    throw new RuntimeException("Can't restore a job. Type '$job_type' not found");
                 }
 
-                throw new RuntimeException($error_message);
-              }
-            } else {
-              $data = unserialize($row['data']);
-            }
-          }
+                if ($row['data']) {
+                    if (mb_substr($row['data'], 0, 1) == '{') {
+                        $data = json_decode($row['data'], true);
 
-          if (empty($data)) {
-            $data = [];
-          }
+                        if (json_last_error()) {
+                            $error_message = 'Failed to parse JSON';
 
-          if ($update_data && is_array($update_data) && count($update_data)) {
-            $data = array_merge($data, $update_data);
-          }
+                            if (function_exists('json_last_error_msg')) {
+                                $error_message .= '. Reason: ' . json_last_error_msg();
+                            }
 
-          $job = new $job_type($data);
+                            throw new RuntimeException($error_message);
+                        }
+                    } else {
+                        $data = unserialize($row['data']);
+                    }
+                }
 
-          $this->enqueue($job);
-          $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id);
-        });
-      } else {
-        throw new RuntimeException("Failed job #{$job_id} not found");
-      }
+                if (empty($data)) {
+                    $data = [];
+                }
 
-      return $job;
+                if ($update_data && is_array($update_data) && count($update_data)) {
+                    $data = array_merge($data, $update_data);
+                }
+
+                $job = new $job_type($data);
+
+                $this->enqueue($job);
+                $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id);
+            });
+        } else {
+            throw new RuntimeException("Failed job #{$job_id} not found");
+        }
+
+        return $job;
     }
 
     /**
@@ -386,11 +387,11 @@
      */
     public function restoreFailedJobsByType($job_type, array $update_data = null)
     {
-      if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', "%$job_type%")) {
-        foreach ($job_ids as $job_id) {
-          $this->restoreFailedJobById($job_id, $update_data);
+        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', "%$job_type%")) {
+            foreach ($job_ids as $job_id) {
+                $this->restoreFailedJobById($job_id, $update_data);
+            }
         }
-      }
     }
 
     /**
@@ -398,20 +399,20 @@
      */
     public function count()
     {
-      return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '`');
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '`');
     }
 
     /**
-     * @param  string  $type1
+     * @param  string $type1
      * @return integer
      */
     public function countByType($type1)
     {
-      if (func_num_args()) {
-        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` IN ?', func_get_args());
-      } else {
-        return 0;
-      }
+        if (func_num_args()) {
+            return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` IN ?', func_get_args());
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -419,20 +420,20 @@
      */
     public function countFailed()
     {
-      return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '`');
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '`');
     }
 
     /**
-     * @param  string  $type1
+     * @param  string $type1
      * @return integer
      */
     public function countFailedByType($type1)
     {
-      if (func_num_args()) {
-        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` IN ?', func_get_args());
-      } else {
-        return 0;
-      }
+        if (func_num_args()) {
+            return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` IN ?', func_get_args());
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -440,20 +441,20 @@
      */
     public function checkStuckJobs()
     {
-      if ($rows = $this->connection->execute('SELECT * FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
-        foreach ($rows as $row) {
-          try {
-            $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
-          } catch (Exception $e) {
-            $this->connection->beginWork();
+        if ($rows = $this->connection->execute('SELECT * FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
+            foreach ($rows as $row) {
+                try {
+                    $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
+                } catch (Exception $e) {
+                    $this->connection->beginWork();
 
-            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-            $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
-            
-            $this->connection->commit();
-          }
+                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+                    $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
+
+                    $this->connection->commit();
+                }
+            }
         }
-      }
     }
 
     /**
@@ -461,7 +462,7 @@
      */
     public function cleanUp()
     {
-      $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `failed_at` < ?', date('Y-m-d H:i:s', strtotime('-7 days')));
+        $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `failed_at` < ?', date('Y-m-d H:i:s', strtotime('-7 days')));
     }
 
     /**
@@ -476,6 +477,6 @@
      */
     public function onJobFailure(callable $callback = null)
     {
-      $this->on_job_failure[] = $callback;
+        $this->on_job_failure[] = $callback;
     }
-  }
+}

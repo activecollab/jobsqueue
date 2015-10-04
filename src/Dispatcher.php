@@ -1,16 +1,16 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue;
+namespace ActiveCollab\JobsQueue;
 
-  use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\JobsQueue\Queue\Queue;
-  use InvalidArgumentException;
+use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Queue\Queue;
+use InvalidArgumentException;
 
-  /**
-   * @package ActiveCollab\JobsQueue
-   */
-  class Dispatcher
-  {
+/**
+ * @package ActiveCollab\JobsQueue
+ */
+class Dispatcher
+{
     const DEFAULT_QUEUE = 'jobs';
 
     /**
@@ -23,28 +23,32 @@
      */
     public function __construct($queue = null)
     {
-      if ($queue instanceof Queue) {
-        $this->queues[self::DEFAULT_QUEUE] = $queue;
-      } else if (is_array($queue)) {
-        foreach ($queue as $k => $v) {
-          $this->addQueue($k, $v);
+        if ($queue instanceof Queue) {
+            $this->queues[ self::DEFAULT_QUEUE ] = $queue;
+        } else {
+            if (is_array($queue)) {
+                foreach ($queue as $k => $v) {
+                    $this->addQueue($k, $v);
+                }
+            } else {
+                if ($queue !== null) {
+                    throw new \InvalidArgumentException('Queue is expected to be a Queue isntance or array of Queue instances');
+                }
+            }
         }
-      } else if ($queue !== null) {
-        throw new \InvalidArgumentException('Queue is expected to be a Queue isntance or array of Queue instances');
-      }
     }
 
     /**
-     * @param $queue_name
+     * @param       $queue_name
      * @param Queue $queue
      */
     public function addQueue($queue_name, Queue $queue)
     {
-      if (isset($this->queues[$queue_name])) {
-        throw new \InvalidArgumentException("Queue '$queue_name' already added");
-      } else {
-        $this->queues[$queue_name] = $queue;
-      }
+        if (isset($this->queues[ $queue_name ])) {
+            throw new \InvalidArgumentException("Queue '$queue_name' already added");
+        } else {
+            $this->queues[ $queue_name ] = $queue;
+        }
     }
 
     /**
@@ -56,7 +60,7 @@
      */
     public function dispatch(Job $job, $queue_name = self::DEFAULT_QUEUE)
     {
-      return $this->getQueue($queue_name)->enqueue($job);
+        return $this->getQueue($queue_name)->enqueue($job);
     }
 
     /**
@@ -68,7 +72,7 @@
      */
     public function execute(Job $job, $queue_name = self::DEFAULT_QUEUE)
     {
-      return $this->getQueue($queue_name)->execute($job);
+        return $this->getQueue($queue_name)->execute($job);
     }
 
     /**
@@ -77,10 +81,10 @@
      */
     public function &getQueue($queue_name = self::DEFAULT_QUEUE)
     {
-      if (isset($this->queues[$queue_name])) {
-        return $this->queues[$queue_name];
-      } else {
-        throw new InvalidArgumentException("Queue $queue_name' is not specified");
-      }
+        if (isset($this->queues[ $queue_name ])) {
+            return $this->queues[ $queue_name ];
+        } else {
+            throw new InvalidArgumentException("Queue $queue_name' is not specified");
+        }
     }
-  }
+}

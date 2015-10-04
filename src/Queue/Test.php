@@ -1,14 +1,14 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Queue;
+namespace ActiveCollab\JobsQueue\Queue;
 
-  use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\Job;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Queue
-   */
-  class Test implements Queue
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Queue
+ */
+class Test implements Queue
+{
     /**
      * @var Job[]
      */
@@ -27,29 +27,29 @@
     /**
      * Add a job to the queue
      *
-     * @param  Job     $job
+     * @param  Job $job
      * @return integer
      */
     public function enqueue(Job $job)
     {
-      $this->jobs[] = $job;
+        $this->jobs[] = $job;
 
-      if (!$this->needs_sort) {
-        $this->needs_sort = true;
-      }
+        if (!$this->needs_sort) {
+            $this->needs_sort = true;
+        }
 
-      return $this->count() - 1;
+        return $this->count() - 1;
     }
 
     /**
      * Run job now (sync, waits for a response)
      *
-     * @param  Job   $job
+     * @param  Job $job
      * @return mixed
      */
     public function execute(Job $job)
     {
-      return $job->execute();
+        return $job->execute();
     }
 
     /**
@@ -59,15 +59,15 @@
      */
     public function nextInLine()
     {
-      if (empty($this->jobs)) {
-        return null;
-      }
+        if (empty($this->jobs)) {
+            return null;
+        }
 
-      if ($this->needs_sort) {
-        $this->sortByPriority($this->jobs);
-      }
+        if ($this->needs_sort) {
+            $this->sortByPriority($this->jobs);
+        }
 
-      return $this->jobs[0];
+        return $this->jobs[0];
     }
 
     /**
@@ -105,26 +105,26 @@
      */
     public function count()
     {
-      return count($this->jobs);
+        return count($this->jobs);
     }
 
     /**
-     * @param  string  $type1
+     * @param  string $type1
      * @return integer
      */
     public function countByType($type1)
     {
-      $count = 0;
+        $count = 0;
 
-      $types = func_get_args();
+        $types = func_get_args();
 
-      foreach ($this->jobs as $job) {
-        if (in_array(get_class($job), $types)) {
-          $count++;
+        foreach ($this->jobs as $job) {
+            if (in_array(get_class($job), $types)) {
+                $count++;
+            }
         }
-      }
 
-      return $count;
+        return $count;
     }
 
     /**
@@ -132,26 +132,26 @@
      */
     public function countFailed()
     {
-      return count($this->failed_jobs);
+        return count($this->failed_jobs);
     }
 
     /**
-     * @param  string  $type1
+     * @param  string $type1
      * @return integer
      */
     public function countFailedByType($type1)
     {
-      $count = 0;
+        $count = 0;
 
-      $types = func_get_args();
+        $types = func_get_args();
 
-      foreach ($this->failed_jobs as $job) {
-        if (in_array(get_class($job), $types)) {
-          $count++;
+        foreach ($this->failed_jobs as $job) {
+            if (in_array(get_class($job), $types)) {
+                $count++;
+            }
         }
-      }
 
-      return $count;
+        return $count;
     }
 
     /**
@@ -180,6 +180,6 @@
      */
     public function onJobFailure(callable $callback = null)
     {
-      $this->on_job_failure[] = $callback;
+        $this->on_job_failure[] = $callback;
     }
-  }
+}

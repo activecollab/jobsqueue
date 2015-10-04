@@ -1,30 +1,30 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Test\Jobs\Failing;
-  use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Test\Jobs\Failing;
+use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class DelayedJobsTest extends AbstractMySqlQueueTest
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class DelayedJobsTest extends AbstractMySqlQueueTest
+{
     /**
      * Test getting a delayed job
      */
     public function testGettingDelayedJob()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123, 'delay' => 1 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'delay' => 2])));
 
-      $this->assertNull($this->dispatcher->getQueue()->nextInLine());
+        $this->assertNull($this->dispatcher->getQueue()->nextInLine());
 
-      sleep(1);
+        sleep(2);
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
     }
 
     /**
@@ -32,41 +32,41 @@
      */
     public function testDelayIsAppliedToFailedAttempts()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      // Set delay of two seconds, because we sometimes got nextInLine() when job was set in one second, and we got to
-      // the next second during assertRecordsCount() step
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Failing([ 'delay' => 2, 'attempts' => 2 ])));
+        // Set delay of two seconds, because we sometimes got nextInLine() when job was set in one second, and we got to
+        // the next second during assertRecordsCount() step
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Failing(['delay' => 2, 'attempts' => 2])));
 
-      $this->assertRecordsCount(1);
+        $this->assertRecordsCount(1);
 
-      // First attempt
-      $this->assertNull($this->dispatcher->getQueue()->nextInLine());
+        // First attempt
+        $this->assertNull($this->dispatcher->getQueue()->nextInLine());
 
-      sleep(2);
+        sleep(2);
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
 
-      $this->dispatcher->getQueue()->execute($next_in_line);
+        $this->dispatcher->getQueue()->execute($next_in_line);
 
-      // Second attempt
-      $this->assertRecordsCount(1);
-      $this->assertAttempts(1, $next_in_line->getQueueId());
+        // Second attempt
+        $this->assertRecordsCount(1);
+        $this->assertAttempts(1, $next_in_line->getQueueId());
 
-      $this->assertNull($this->dispatcher->getQueue()->nextInLine()); // Not yet available
+        $this->assertNull($this->dispatcher->getQueue()->nextInLine()); // Not yet available
 
-      sleep(2);
+        sleep(2);
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
 
-      $this->dispatcher->getQueue()->execute($next_in_line);
-      $this->assertRecordsCount(0);
+        $this->dispatcher->getQueue()->execute($next_in_line);
+        $this->assertRecordsCount(0);
     }
 
     /**
@@ -74,46 +74,46 @@
      */
     public function testFirstAttemptCanHaveDifferentDelayThanFailedAttempts()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      // Set delay of two seconds, because we sometimes got nextInLine() when job was set in one second, and we got to
-      // the next second during assertRecordsCount() step
-      $failing_job_with_instant_first_attempt = new Failing([
+        // Set delay of two seconds, because we sometimes got nextInLine() when job was set in one second, and we got to
+        // the next second during assertRecordsCount() step
+        $failing_job_with_instant_first_attempt = new Failing([
         'delay' => 2,
         'attempts' => 2,
         'first_attempt_delay' => 0,
-      ]);
+        ]);
 
-      $this->assertEquals(0, $failing_job_with_instant_first_attempt->getFirstJobDelay());
-      $this->assertEquals(2, $failing_job_with_instant_first_attempt->getDelay());
+        $this->assertEquals(0, $failing_job_with_instant_first_attempt->getFirstJobDelay());
+        $this->assertEquals(2, $failing_job_with_instant_first_attempt->getDelay());
 
-      // Enqueue
-      $this->assertEquals(1, $this->dispatcher->dispatch($failing_job_with_instant_first_attempt));
+        // Enqueue
+        $this->assertEquals(1, $this->dispatcher->dispatch($failing_job_with_instant_first_attempt));
 
-      $this->assertRecordsCount(1);
+        $this->assertRecordsCount(1);
 
-      // First attempt
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        // First attempt
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
 
-      $this->dispatcher->getQueue()->execute($next_in_line);
+        $this->dispatcher->getQueue()->execute($next_in_line);
 
-      // Second attempt
-      $this->assertRecordsCount(1);
-      $this->assertAttempts(1, $next_in_line->getQueueId());
+        // Second attempt
+        $this->assertRecordsCount(1);
+        $this->assertAttempts(1, $next_in_line->getQueueId());
 
-      $this->assertNull($this->dispatcher->getQueue()->nextInLine()); // Not yet available
+        $this->assertNull($this->dispatcher->getQueue()->nextInLine()); // Not yet available
 
-      sleep(2);
+        sleep(2);
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
 
-      $this->dispatcher->getQueue()->execute($next_in_line);
-      $this->assertRecordsCount(0);
+        $this->dispatcher->getQueue()->execute($next_in_line);
+        $this->assertRecordsCount(0);
     }
-  }
+}

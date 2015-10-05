@@ -3,7 +3,7 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
-use ActiveCollab\JobsQueue\Queue\MySql;
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use DateTime;
 
@@ -19,7 +19,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $result = $this->link->query('SHOW TABLES');
         $this->assertEquals(2, $result->num_rows);
-        $this->assertEquals(MySql::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
+        $this->assertEquals(MySqlQueue::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
     }
 
     /**
@@ -73,7 +73,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -90,7 +90,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -107,7 +107,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -175,7 +175,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -193,7 +193,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'delay' => 5])));
 
         /** @var DateTime $available_at */
-        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
+        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', 1);
 
         $this->assertInstanceOf('DateTime', $available_at);
         $this->assertGreaterThan(time(), $available_at->getTimestamp());
@@ -216,7 +216,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->dispatch($inc_job_with_no_first_attempt_delay));
 
         /** @var DateTime $available_at */
-        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
+        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', 1);
 
         $this->assertInstanceOf('DateTime', $available_at);
         $this->assertLessThanOrEqual(time(), $available_at->getTimestamp());
@@ -229,7 +229,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -249,7 +249,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -330,7 +330,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
 
         $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
 
-        $this->assertInstanceOf('ActiveCollab\JobsQueue\Queue\MySql', $next_in_line->getQueue());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Queue\MySqlQueue', $next_in_line->getQueue());
         $this->assertEquals(1, $next_in_line->getQueueId());
     }
 

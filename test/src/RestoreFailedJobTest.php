@@ -2,7 +2,7 @@
 
   namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Queue\MySql;
+  use ActiveCollab\JobsQueue\Queue\MySqlQueue;
   use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 
   /**
@@ -41,7 +41,7 @@
      */
     public function testExceptinOnInvalidJobType()
     {
-      $this->connection->execute('UPDATE `' . MySql::TABLE_NAME_FAILED . '` SET `type` = ? WHERE `id` = ?', 'ThisClassDoesNotExist', 1);
+      $this->connection->execute('UPDATE `' . MySqlQueue::TABLE_NAME_FAILED . '` SET `type` = ? WHERE `id` = ?', 'ThisClassDoesNotExist', 1);
       $this->dispatcher->getQueue()->restoreFailedJobById(1);
     }
 
@@ -50,7 +50,7 @@
      */
     public function testExceptionOnInvalidJson()
     {
-      $this->connection->execute('UPDATE `' . MySql::TABLE_NAME_FAILED . '` SET `data` = ? WHERE `id` = ?', '{invalidJSON', 1);
+      $this->connection->execute('UPDATE `' . MySqlQueue::TABLE_NAME_FAILED . '` SET `data` = ? WHERE `id` = ?', '{invalidJSON', 1);
 
       $this->dispatcher->getQueue()->restoreFailedJobById(1234);
     }

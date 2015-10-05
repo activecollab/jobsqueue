@@ -5,7 +5,7 @@ namespace ActiveCollab\JobsQueue\Test;
 use ActiveCollab\DatabaseConnection\Connection;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Jobs\Job;
-use ActiveCollab\JobsQueue\Queue\MySql;
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use mysqli;
 use Exception;
 use RuntimeException;
@@ -49,9 +49,9 @@ abstract class AbstractMySqlQueueTest extends TestCase
         }
 
         $this->connection = new Connection($this->link);
-        $this->connection->execute('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
+        $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME . '`');
 
-        $queue = new MySql($this->connection);
+        $queue = new MySqlQueue($this->connection);
         $queue->onJobFailure(function (Job $job, Exception $reason) {
             $this->last_failed_job = get_class($job);
             $this->last_failure_message = $reason->getMessage();
@@ -67,8 +67,8 @@ abstract class AbstractMySqlQueueTest extends TestCase
      */
     public function tearDown()
     {
-        $this->connection->execute('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME . '`');
-        $this->connection->execute('DROP TABLE IF EXISTS `' . MySql::TABLE_NAME_FAILED . '`');
+        $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME . '`');
+        $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME_FAILED . '`');
         $this->link->close();
 
         $this->last_failed_job = $this->last_failure_message = null;
@@ -83,7 +83,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
      */
     protected function assertRecordsCount($expected)
     {
-        $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME . '`'));
+        $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::TABLE_NAME . '`'));
     }
 
     /**
@@ -93,7 +93,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
      */
     protected function assertFailedRecordsCount($expected)
     {
-        $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySql::TABLE_NAME_FAILED . '`'));
+        $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::TABLE_NAME_FAILED . '`'));
     }
 
     /**
@@ -104,7 +104,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
      */
     protected function assertAttempts($expected, $job_id)
     {
-        $result = $this->connection->executeFirstCell('SELECT `attempts` FROM `' . MySql::TABLE_NAME . "` WHERE id = ?", $job_id);
+        $result = $this->connection->executeFirstCell('SELECT `attempts` FROM `' . MySqlQueue::TABLE_NAME . "` WHERE id = ?", $job_id);
 
         if ($expected === null) {
             $this->assertEmpty($result);

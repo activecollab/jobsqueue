@@ -10,7 +10,7 @@ use RuntimeException;
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
-class MySql implements QueueInterface
+class MySqlQueue implements QueueInterface
 {
     const TABLE_NAME = 'jobs_queue';
     const TABLE_NAME_FAILED = 'jobs_queue_failed';

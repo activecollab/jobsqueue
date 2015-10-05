@@ -3,7 +3,7 @@
   namespace ActiveCollab\JobsQueue\Test;
 
   use ActiveCollab\JobsQueue\Dispatcher;
-  use ActiveCollab\JobsQueue\Queue\Test;
+  use ActiveCollab\JobsQueue\Queue\TestQueue;
 
   /**
    * @package ActiveCollab\JobsQueue\Test
@@ -24,8 +24,8 @@
      */
     public function testDespatcherWithDefaultQueue()
     {
-      $dispatcher = new Dispatcher(new Test());
-      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\Test', $dispatcher->getQueue());
+      $dispatcher = new Dispatcher(new TestQueue());
+      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\TestQueue', $dispatcher->getQueue());
     }
 
     /**
@@ -34,14 +34,14 @@
     public function testDispatcherWithNamedQueues()
     {
       $dispatcher = new Dispatcher([
-        'first' => new Test(),
-        'second' => new Test(),
-        'third' => new Test(),
+        'first' => new TestQueue(),
+        'second' => new TestQueue(),
+        'third' => new TestQueue(),
       ]);
 
-      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\Test', $dispatcher->getQueue('first'));
-      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\Test', $dispatcher->getQueue('second'));
-      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\Test', $dispatcher->getQueue('third'));
+      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\TestQueue', $dispatcher->getQueue('first'));
+      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\TestQueue', $dispatcher->getQueue('second'));
+      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\TestQueue', $dispatcher->getQueue('third'));
     }
 
     /**
@@ -58,8 +58,8 @@
     public function testAddDefaultQueue()
     {
       $dispatcher = new Dispatcher();
-      $dispatcher->addQueue(Dispatcher::DEFAULT_QUEUE, new Test());
-      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\Test', $dispatcher->getQueue());
+      $dispatcher->addQueue(Dispatcher::DEFAULT_QUEUE, new TestQueue());
+      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\TestQueue', $dispatcher->getQueue());
     }
 
     /**
@@ -68,8 +68,8 @@
     public function testAddNamedQueue()
     {
       $dispatcher = new Dispatcher();
-      $dispatcher->addQueue('example_queue', new Test());
-      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\Test', $dispatcher->getQueue('example_queue'));
+      $dispatcher->addQueue('example_queue', new TestQueue());
+      $this->assertInstanceOf('\ActiveCollab\JobsQueue\Queue\TestQueue', $dispatcher->getQueue('example_queue'));
     }
 
     /**
@@ -77,8 +77,8 @@
      */
     public function testExceptionOnAddExistingQueue()
     {
-      $dispatcher = new Dispatcher([ 'example_queue' => new Test() ]);
-      $dispatcher->addQueue('example_queue', new Test());
+      $dispatcher = new Dispatcher([ 'example_queue' => new TestQueue() ]);
+      $dispatcher->addQueue('example_queue', new TestQueue());
     }
 
     /**
@@ -86,7 +86,7 @@
      */
     public function testExceptionOnInvalidQueueName()
     {
-      $dispatcher = new Dispatcher(new Test());
+      $dispatcher = new Dispatcher(new TestQueue());
       $dispatcher->getQueue('this queue does not exist');
     }
   }

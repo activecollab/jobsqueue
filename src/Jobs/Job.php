@@ -2,7 +2,7 @@
 
 namespace ActiveCollab\JobsQueue\Jobs;
 
-use ActiveCollab\JobsQueue\Queue\Queue;
+use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use JsonSerializable;
 use InvalidArgumentException;
 
@@ -121,12 +121,12 @@ abstract class Job implements JsonSerializable
     }
 
     /**
-     * @var Queue
+     * @var QueueInterface
      */
     private $queue;
 
     /**
-     * @return Queue
+     * @return QueueInterface
      */
     public function &getQueue()
     {
@@ -151,10 +151,10 @@ abstract class Job implements JsonSerializable
     /**
      * Set job queue ID
      *
-     * @param Queue $queue
+     * @param QueueInterface $queue
      * @param mixed $queue_id
      */
-    public function setQueue(Queue &$queue, $queue_id)
+    public function setQueue(QueueInterface &$queue, $queue_id)
     {
         $this->queue = $queue;
 

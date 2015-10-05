@@ -3,7 +3,7 @@
 namespace ActiveCollab\JobsQueue;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
-use ActiveCollab\JobsQueue\Queue\Queue;
+use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use InvalidArgumentException;
 
 /**
@@ -14,16 +14,16 @@ class Dispatcher
     const DEFAULT_QUEUE = 'jobs';
 
     /**
-     * @var Queue[]
+     * @var QueueInterface[]
      */
     private $queues = [];
 
     /**
-     * @param Queue|Queue[]|null $queue
+     * @param QueueInterface|QueueInterface[]|null $queue
      */
     public function __construct($queue = null)
     {
-        if ($queue instanceof Queue) {
+        if ($queue instanceof QueueInterface) {
             $this->queues[ self::DEFAULT_QUEUE ] = $queue;
         } else {
             if (is_array($queue)) {
@@ -40,9 +40,9 @@ class Dispatcher
 
     /**
      * @param       $queue_name
-     * @param Queue $queue
+     * @param QueueInterface $queue
      */
-    public function addQueue($queue_name, Queue $queue)
+    public function addQueue($queue_name, QueueInterface $queue)
     {
         if (isset($this->queues[ $queue_name ])) {
             throw new \InvalidArgumentException("Queue '$queue_name' already added");
@@ -76,8 +76,21 @@ class Dispatcher
     }
 
     /**
+     * Return true if job of the given type and with the given properties exists in queue
+     *
+     * @param  string     $job_type
+     * @param  array|null $properties
+     * @param  string     $queue_name
+     * @return bool
+     */
+    public function exists($job_type, array $properties = null, $queue_name = self::DEFAULT_QUEUE)
+    {
+        return $this->getQueue($queue_name)->exists($job_type, $properties);
+    }
+
+    /**
      * @param  string $queue_name
-     * @return Queue
+     * @return QueueInterface
      */
     public function &getQueue($queue_name = self::DEFAULT_QUEUE)
     {

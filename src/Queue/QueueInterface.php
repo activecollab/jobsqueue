@@ -7,7 +7,7 @@ use Countable, ActiveCollab\JobsQueue\Jobs\Job;
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
-interface Queue extends Countable
+interface QueueInterface extends Countable
 {
     /**
      * Add a job to the queue
@@ -24,6 +24,15 @@ interface Queue extends Countable
      * @return mixed
      */
     public function execute(Job $job);
+
+    /**
+     * Return true if there's an active job of the give type with the given properties
+     *
+     * @param  string     $job_type
+     * @param  array|null $properties
+     * @return boolean
+     */
+    public function exists($job_type, array $properties = null);
 
     /**
      * Return Job that is next in line to be executed

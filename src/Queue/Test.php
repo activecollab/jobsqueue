@@ -7,7 +7,7 @@ use ActiveCollab\JobsQueue\Jobs\Job;
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
-class Test implements Queue
+class Test implements QueueInterface
 {
     /**
      * @var Job[]
@@ -50,6 +50,17 @@ class Test implements Queue
     public function execute(Job $job)
     {
         return $job->execute();
+    }
+
+    /**
+     * Return true if there's an active job of the give type with the given properties
+     *
+     * @param  string     $job_type
+     * @param  array|null $properties
+     * @return boolean
+     */
+    public function exists($job_type, array $properties = null)
+    {
     }
 
     /**

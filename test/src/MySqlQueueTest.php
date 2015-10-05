@@ -1,25 +1,25 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\JobsQueue\Queue\MySql;
-  use ActiveCollab\JobsQueue\Test\Jobs\Inc;
-  use DateTime;
+use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Queue\MySql;
+use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use DateTime;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class MySqlQueueTest extends AbstractMySqlQueueTest
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class MySqlQueueTest extends AbstractMySqlQueueTest
+{
     /**
      * Test if job queue table is prepared for testing
      */
     public function testJobsQueueTableIsCreated()
     {
-      $result = $this->link->query('SHOW TABLES');
-      $this->assertEquals(2, $result->num_rows);
-      $this->assertEquals(MySql::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
+        $result = $this->link->query('SHOW TABLES');
+        $this->assertEquals(2, $result->num_rows);
+        $this->assertEquals(MySql::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
     }
 
     /**
@@ -27,13 +27,13 @@
      */
     public function testJobsAreAddedToTheQueue()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
-      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
-      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+        $this->assertEquals(2, $this->dispatcher->dispatch(new Inc(['number' => 456])));
+        $this->assertEquals(3, $this->dispatcher->dispatch(new Inc(['number' => 789])));
 
-      $this->assertRecordsCount(3);
+        $this->assertRecordsCount(3);
     }
 
     /**
@@ -41,13 +41,13 @@
      */
     public function testCountJobs()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
-      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
-      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+        $this->assertEquals(2, $this->dispatcher->dispatch(new Inc(['number' => 456])));
+        $this->assertEquals(3, $this->dispatcher->dispatch(new Inc(['number' => 789])));
 
-      $this->assertEquals(3, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(3, $this->dispatcher->getQueue()->count());
     }
 
     /**
@@ -55,15 +55,15 @@
      */
     public function testCountJobsByType()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
-      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
-      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+        $this->assertEquals(2, $this->dispatcher->dispatch(new Inc(['number' => 456])));
+        $this->assertEquals(3, $this->dispatcher->dispatch(new Inc(['number' => 789])));
 
-      $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Inc'));
-      $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing', 'ActiveCollab\JobsQueue\Test\Jobs\Inc'));
-      $this->assertEquals(0, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing'));
+        $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Inc'));
+        $this->assertEquals(3, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing', 'ActiveCollab\JobsQueue\Test\Jobs\Inc'));
+        $this->assertEquals(0, $this->dispatcher->getQueue()->countByType('ActiveCollab\JobsQueue\Test\Jobs\Failing'));
     }
 
     /**
@@ -71,16 +71,16 @@
      */
     public function testFullJobClassIsRecorded()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
-      $this->assertInstanceOf('mysqli_result', $result);
-      $this->assertEquals(1, $result->num_rows);
+        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $this->assertInstanceOf('mysqli_result', $result);
+        $this->assertEquals(1, $result->num_rows);
 
-      $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('type', $row);
-      $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Inc', $row['type']);
+        $this->assertArrayHasKey('type', $row);
+        $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Inc', $row['type']);
     }
 
     /**
@@ -88,16 +88,16 @@
      */
     public function testPriorityIsProperlySetFromData()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
-      $this->assertInstanceOf('mysqli_result', $result);
-      $this->assertEquals(1, $result->num_rows);
+        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $this->assertInstanceOf('mysqli_result', $result);
+        $this->assertEquals(1, $result->num_rows);
 
-      $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('priority', $row);
-      $this->assertEquals((string) Job::HAS_HIGHEST_PRIORITY, $row['priority']);
+        $this->assertArrayHasKey('priority', $row);
+        $this->assertEquals((string)Job::HAS_HIGHEST_PRIORITY, $row['priority']);
     }
 
     /**
@@ -105,25 +105,25 @@
      */
     public function testJobDataIsSerializedToJson()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
-      $this->assertInstanceOf('mysqli_result', $result);
-      $this->assertEquals(1, $result->num_rows);
+        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $this->assertInstanceOf('mysqli_result', $result);
+        $this->assertEquals(1, $result->num_rows);
 
-      $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('data', $row);
-      $this->assertStringStartsWith('{', $row['data']);
-      $this->assertStringEndsWith('}', $row['data']);
+        $this->assertArrayHasKey('data', $row);
+        $this->assertStringStartsWith('{', $row['data']);
+        $this->assertStringEndsWith('}', $row['data']);
 
-      $decoded_data = json_decode($row['data'], true);
-      $this->assertInternalType('array', $decoded_data);
+        $decoded_data = json_decode($row['data'], true);
+        $this->assertInternalType('array', $decoded_data);
 
-      $this->assertArrayHasKey('number', $decoded_data);
-      $this->assertEquals(123, $decoded_data['number']);
-      $this->assertArrayHasKey('priority', $decoded_data);
-      $this->assertEquals(Job::NOT_A_PRIORITY, $decoded_data['priority']);
+        $this->assertArrayHasKey('number', $decoded_data);
+        $this->assertEquals(123, $decoded_data['number']);
+        $this->assertArrayHasKey('priority', $decoded_data);
+        $this->assertEquals(Job::NOT_A_PRIORITY, $decoded_data['priority']);
     }
 
     /**
@@ -131,16 +131,41 @@
      */
     public function testJobDataCanBeBrokenJson()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $this->connection->execute('UPDATE `jobs_queue` SET `data` = ? WHERE `id` = ?', 'broken JSON', 1);
+        $this->connection->execute('UPDATE `jobs_queue` SET `data` = ? WHERE `id` = ?', 'broken JSON', 1);
 
-      $job = $this->dispatcher->getQueue()->getJobById(1);
+        $job = $this->dispatcher->getQueue()->getJobById(1);
 
-      $this->assertNull($job);
-      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
-      $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue_failed`'));
-      $this->assertContains('Failed to parse JSON', $this->connection->executeFirstCell('SELECT `reason` FROM `jobs_queue_failed` WHERE `id` = ?', 1));
+        $this->assertNull($job);
+        $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
+        $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue_failed`'));
+        $this->assertContains('Failed to parse JSON', $this->connection->executeFirstCell('SELECT `reason` FROM `jobs_queue_failed` WHERE `id` = ?', 1));
+    }
+
+    /**
+     * Test check for existing job
+     */
+    public function testCheckForExistingJob()
+    {
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'extra' => true])));
+
+        $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Something'));
+        $this->assertTrue($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc'));
+    }
+
+    /**
+     * Test check for existing job
+     */
+    public function testCheckForExistingJobWithMatchigProperties()
+    {
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'extra' => true])));
+
+        $this->assertTrue($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 123]));
+        $this->assertTrue($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 123, 'extra' => true]));
+        $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => '123']));
+        $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 123, 'extra' => false]));
+        $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 234]));
     }
 
     /**
@@ -148,16 +173,16 @@
      */
     public function testNewJobsAreAvailableInstantly()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
-      $this->assertInstanceOf('mysqli_result', $result);
-      $this->assertEquals(1, $result->num_rows);
+        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $this->assertInstanceOf('mysqli_result', $result);
+        $this->assertEquals(1, $result->num_rows);
 
-      $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('available_at', $row);
-      $this->assertEquals(time(), strtotime($row['available_at']));
+        $this->assertArrayHasKey('available_at', $row);
+        $this->assertEquals(time(), strtotime($row['available_at']));
     }
 
     /**
@@ -165,13 +190,13 @@
      */
     public function testNewJobsCanBeDelayed()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123, 'delay' => 5 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'delay' => 5])));
 
-      /** @var DateTime $available_at */
-      $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
+        /** @var DateTime $available_at */
+        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
 
-      $this->assertInstanceOf('DateTime', $available_at);
-      $this->assertGreaterThan(time(), $available_at->getTimestamp());
+        $this->assertInstanceOf('DateTime', $available_at);
+        $this->assertGreaterThan(time(), $available_at->getTimestamp());
     }
 
     /**
@@ -179,22 +204,22 @@
      */
     public function testNewJobsCanBeDelayedWithFirstAttemptExecutedNow()
     {
-      $inc_job_with_no_first_attempt_delay = new Inc([
-        'number' => 123,
-        'delay' => 5,
-        'first_attempt_delay' => 0
-      ]);
+        $inc_job_with_no_first_attempt_delay = new Inc([
+            'number' => 123,
+            'delay' => 5,
+            'first_attempt_delay' => 0,
+        ]);
 
-      $this->assertEquals(5, $inc_job_with_no_first_attempt_delay->getDelay());
-      $this->assertEquals(0, $inc_job_with_no_first_attempt_delay->getFirstJobDelay());
+        $this->assertEquals(5, $inc_job_with_no_first_attempt_delay->getDelay());
+        $this->assertEquals(0, $inc_job_with_no_first_attempt_delay->getFirstJobDelay());
 
-      $this->assertEquals(1, $this->dispatcher->dispatch($inc_job_with_no_first_attempt_delay));
+        $this->assertEquals(1, $this->dispatcher->dispatch($inc_job_with_no_first_attempt_delay));
 
-      /** @var DateTime $available_at */
-      $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
+        /** @var DateTime $available_at */
+        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySql::TABLE_NAME . '` WHERE `id` = ?', 1);
 
-      $this->assertInstanceOf('DateTime', $available_at);
-      $this->assertLessThanOrEqual(time(), $available_at->getTimestamp());
+        $this->assertInstanceOf('DateTime', $available_at);
+        $this->assertLessThanOrEqual(time(), $available_at->getTimestamp());
     }
 
     /**
@@ -202,19 +227,19 @@
      */
     public function testJobsAreNotReservedByDefault()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
-      $this->assertInstanceOf('mysqli_result', $result);
-      $this->assertEquals(1, $result->num_rows);
+        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $this->assertInstanceOf('mysqli_result', $result);
+        $this->assertEquals(1, $result->num_rows);
 
-      $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('reservation_key', $row);
-      $this->assertNull($row['reservation_key']);
+        $this->assertArrayHasKey('reservation_key', $row);
+        $this->assertNull($row['reservation_key']);
 
-      $this->assertArrayHasKey('reserved_at', $row);
-      $this->assertNull($row['reserved_at']);
+        $this->assertArrayHasKey('reserved_at', $row);
+        $this->assertNull($row['reserved_at']);
     }
 
     /**
@@ -222,16 +247,16 @@
      */
     public function testAttemptsAreZeroByDefault()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
-      $this->assertInstanceOf('mysqli_result', $result);
-      $this->assertEquals(1, $result->num_rows);
+        $result = $this->link->query('SELECT * FROM `' . MySql::TABLE_NAME . '` WHERE id = 1');
+        $this->assertInstanceOf('mysqli_result', $result);
+        $this->assertEquals(1, $result->num_rows);
 
-      $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
 
-      $this->assertArrayHasKey('attempts', $row);
-      $this->assertEquals('0', $row['attempts']);
+        $this->assertArrayHasKey('attempts', $row);
+        $this->assertEquals('0', $row['attempts']);
     }
 
     /**
@@ -239,8 +264,8 @@
      */
     public function testNextInLineReturnsNullOnNoJobs()
     {
-      $this->assertRecordsCount(0);
-      $this->assertNull($this->dispatcher->getQueue()->nextInLine());
+        $this->assertRecordsCount(0);
+        $this->assertNull($this->dispatcher->getQueue()->nextInLine());
     }
 
     /**
@@ -248,17 +273,17 @@
      */
     public function testNextInLine()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
-      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+        $this->assertEquals(2, $this->dispatcher->dispatch(new Inc(['number' => 456])));
 
-      $this->assertRecordsCount(2);
+        $this->assertRecordsCount(2);
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
     }
 
     /**
@@ -266,31 +291,31 @@
      */
     public function testJobSnatching()
     {
-      $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
+        $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
 
-      $snatch_reservation_key = sha1('something completely random');
-      $captured_job_id = 0;
-      $captured_reservation_key = '';
+        $snatch_reservation_key = sha1('something completely random');
+        $captured_job_id = 0;
+        $captured_reservation_key = '';
 
-      // Simulate job snatching done by a different worker process
-      $this->dispatcher->getQueue()->onReservationKeyReady(function($job_id, $reservation_key) use ($snatch_reservation_key, &$captured_job_id, &$captured_reservation_key) {
-        $captured_job_id = $job_id;
-        $captured_reservation_key = $reservation_key;
+        // Simulate job snatching done by a different worker process
+        $this->dispatcher->getQueue()->onReservationKeyReady(function ($job_id, $reservation_key) use ($snatch_reservation_key, &$captured_job_id, &$captured_reservation_key) {
+            $captured_job_id = $job_id;
+            $captured_reservation_key = $reservation_key;
 
-        $this->connection->execute('UPDATE `jobs_queue` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $snatch_reservation_key, date('Y-m-d H:i:s'), $job_id);
-      });
+            $this->connection->execute('UPDATE `jobs_queue` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $snatch_reservation_key, date('Y-m-d H:i:s'), $job_id);
+        });
 
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertSame(1, $captured_job_id);
-      $this->assertEquals(40, strlen($captured_reservation_key));
-      $this->assertNotEquals($snatch_reservation_key, $captured_reservation_key);
+        $this->assertSame(1, $captured_job_id);
+        $this->assertEquals(40, strlen($captured_reservation_key));
+        $this->assertNotEquals($snatch_reservation_key, $captured_reservation_key);
 
-      $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
-      $this->assertEquals($snatch_reservation_key, $this->connection->executeFirstCell('SELECT `reservation_key` FROM `jobs_queue` WHERE `id` = ?', $captured_job_id));
-      $this->assertNull($next_in_line);
+        $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
+        $this->assertEquals($snatch_reservation_key, $this->connection->executeFirstCell('SELECT `reservation_key` FROM `jobs_queue` WHERE `id` = ?', $captured_job_id));
+        $this->assertNull($next_in_line);
     }
 
     /**
@@ -298,15 +323,15 @@
      */
     public function testJobGetsQueueProperlySet()
     {
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
-      $this->assertRecordsCount(1);
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+        $this->assertRecordsCount(1);
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Queue\MySql', $next_in_line->getQueue());
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Queue\MySql', $next_in_line->getQueue());
+        $this->assertEquals(1, $next_in_line->getQueueId());
     }
 
     /**
@@ -314,18 +339,18 @@
      */
     public function testPriorityJobsAreFrontInLine()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
-      $this->assertEquals(2, $this->dispatcher->dispatch(new Inc([ 'number' => 456, 'priority' => Job::HAS_PRIORITY ])));
-      $this->assertEquals(3, $this->dispatcher->dispatch(new Inc([ 'number' => 789, 'priority' => Job::HAS_PRIORITY ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+        $this->assertEquals(2, $this->dispatcher->dispatch(new Inc(['number' => 456, 'priority' => Job::HAS_PRIORITY])));
+        $this->assertEquals(3, $this->dispatcher->dispatch(new Inc(['number' => 789, 'priority' => Job::HAS_PRIORITY])));
 
-      $this->assertRecordsCount(3);
+        $this->assertRecordsCount(3);
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
-      $this->assertEquals(2, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+        $this->assertEquals(2, $next_in_line->getQueueId());
     }
 
     /**
@@ -333,18 +358,18 @@
      */
     public function testExecuteJobRemovesItFromQueue()
     {
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
 
-      $this->assertEquals(1, $this->dispatcher->dispatch(new Inc([ 'number' => 123 ])));
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-      $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-      $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
-      $this->assertEquals(1, $next_in_line->getQueueId());
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
 
-      $job_execution_result = $this->dispatcher->getQueue()->execute($next_in_line);
-      $this->assertEquals(124, $job_execution_result);
+        $job_execution_result = $this->dispatcher->getQueue()->execute($next_in_line);
+        $this->assertEquals(124, $job_execution_result);
 
-      $this->assertRecordsCount(0);
+        $this->assertRecordsCount(0);
     }
-  }
+}

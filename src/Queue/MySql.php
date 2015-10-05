@@ -10,7 +10,7 @@ use RuntimeException;
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
-class MySql implements Queue
+class MySql implements QueueInterface
 {
     const TABLE_NAME = 'jobs_queue';
     const TABLE_NAME_FAILED = 'jobs_queue_failed';
@@ -121,6 +121,45 @@ class MySql implements Queue
     }
 
     /**
+     * Return true if there's an active job of the give type with the given properties
+     *
+     * @param  string     $job_type
+     * @param  array|null $properties
+     * @return boolean
+     */
+    public function exists($job_type, array $properties = null)
+    {
+        if (empty($properties)) {
+            return (boolean) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` = ?', $job_type);
+        } else {
+            if ($rows = $this->connection->execute('SELECT `data` FROM `' . self::TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
+                foreach ($rows as $row) {
+                    try {
+                        $data = $this->jsonDecode($row['data']);
+
+                        $all_properties_found = true;
+
+                        foreach ($properties as $k => $v) {
+                            if (!(array_key_exists($k, $data) && $data[$k] === $v)) {
+                                $all_properties_found = false;
+                                break;
+                            }
+                        }
+
+                        if ($all_properties_found) {
+                            return true;
+                        }
+                    } catch (RuntimeException $e) {
+
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
+
+    /**
      * Handle a job failure (attempts, removal from queue, exception handling etc)
      *
      * @param Job            $job
@@ -177,21 +216,9 @@ class MySql implements Queue
     {
         $type = $row['type'];
 
-        $data = json_decode($row['data'], true);
-
-        if (json_last_error()) {
-            $error_message = 'Failed to parse JSON';
-
-            if (function_exists('json_last_error_msg')) {
-                $error_message .= '. Reason: ' . json_last_error_msg();
-            }
-
-            throw new RuntimeException($error_message);
-        }
-
         /** @var Job $job */
-        $job = new $type($data);
-        $job->setQueue($this, (integer)$row['id']);
+        $job = new $type($this->jsonDecode($row['data']));
+        $job->setQueue($this, (integer) $row['id']);
 
         return $job;
     }
@@ -343,17 +370,7 @@ class MySql implements Queue
 
                 if ($row['data']) {
                     if (mb_substr($row['data'], 0, 1) == '{') {
-                        $data = json_decode($row['data'], true);
-
-                        if (json_last_error()) {
-                            $error_message = 'Failed to parse JSON';
-
-                            if (function_exists('json_last_error_msg')) {
-                                $error_message .= '. Reason: ' . json_last_error_msg();
-                            }
-
-                            throw new RuntimeException($error_message);
-                        }
+                        $data = $this->jsonDecode($row['data']);
                     } else {
                         $data = unserialize($row['data']);
                     }
@@ -478,5 +495,29 @@ class MySql implements Queue
     public function onJobFailure(callable $callback = null)
     {
         $this->on_job_failure[] = $callback;
+    }
+
+    /**
+     * Decode JSON and throw an exception in case of any error
+     *
+     * @param  string           $serialized_data
+     * @return mixed
+     * @throws RuntimeException
+     */
+    private function jsonDecode($serialized_data)
+    {
+        $data = json_decode($serialized_data, true);
+
+        if (json_last_error()) {
+            $error_message = 'Failed to parse JSON';
+
+            if (function_exists('json_last_error_msg')) {
+                $error_message .= '. Reason: ' . json_last_error_msg();
+            }
+
+            throw new RuntimeException($error_message);
+        }
+
+        return $data;
     }
 }

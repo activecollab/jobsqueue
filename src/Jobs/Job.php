@@ -3,18 +3,13 @@
 namespace ActiveCollab\JobsQueue\Jobs;
 
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use JsonSerializable;
 use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue\Jobs
  */
-abstract class Job implements JsonSerializable
+abstract class Job implements JobInterface
 {
-    const NOT_A_PRIORITY = 0;
-    const HAS_PRIORITY = 256;
-    const HAS_HIGHEST_PRIORITY = 4294967295; // UNSIGNED INT https://dev.mysql.com/doc/refman/5.0/en/integer-types.html
-
     /**
      * @var array
      */

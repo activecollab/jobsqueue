@@ -3,6 +3,7 @@
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 
 /**
  * @package ActiveCollab\JobsQueue\Queue
@@ -27,10 +28,10 @@ class TestQueue implements QueueInterface
     /**
      * Add a job to the queue
      *
-     * @param  Job $job
+     * @param  JobInterface $job
      * @return integer
      */
-    public function enqueue(Job $job)
+    public function enqueue(JobInterface $job)
     {
         $this->jobs[] = $job;
 
@@ -44,10 +45,10 @@ class TestQueue implements QueueInterface
     /**
      * Run job now (sync, waits for a response)
      *
-     * @param  Job $job
+     * @param  JobInterface $job
      * @return mixed
      */
-    public function execute(Job $job)
+    public function execute(JobInterface $job)
     {
         return $job->execute();
     }

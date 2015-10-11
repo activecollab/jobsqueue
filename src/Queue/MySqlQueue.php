@@ -3,6 +3,7 @@
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use Exception;
 use RuntimeException;
@@ -78,10 +79,10 @@ class MySqlQueue implements QueueInterface
     /**
      * Add a job to the queue
      *
-     * @param  Job $job
+     * @param  JobInterface $job
      * @return integer
      */
-    public function enqueue(Job $job)
+    public function enqueue(JobInterface $job)
     {
         $job_data = $job->getData();
 
@@ -102,11 +103,11 @@ class MySqlQueue implements QueueInterface
     /**
      * Run job now (sync, waits for a response)
      *
-     * @param  Job $job
+     * @param  JobInterface     $job
      * @return mixed
      * @throws RuntimeException
      */
-    public function execute(Job $job)
+    public function execute(JobInterface $job)
     {
         try {
             $result = $job->execute();
@@ -162,10 +163,10 @@ class MySqlQueue implements QueueInterface
     /**
      * Handle a job failure (attempts, removal from queue, exception handling etc)
      *
-     * @param Job            $job
+     * @param JobInterface   $job
      * @param Exception|null $reason
      */
-    private function failJob(Job $job, Exception $reason = null)
+    private function failJob(JobInterface $job, Exception $reason = null)
     {
         if ($job_id = $job->getQueueId()) {
             $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
@@ -187,8 +188,8 @@ class MySqlQueue implements QueueInterface
     /**
      * Return job by ID
      *
-     * @param  integer $job_id
-     * @return Job|null
+     * @param  integer           $job_id
+     * @return JobInterface|null
      */
     public function getJobById($job_id)
     {
@@ -209,8 +210,8 @@ class MySqlQueue implements QueueInterface
     /**
      * Hydrate a job based on row data
      *
-     * @param  array $row
-     * @return Job
+     * @param  array        $row
+     * @return JobInterface
      */
     private function getJobFromRow(array $row)
     {
@@ -249,10 +250,10 @@ class MySqlQueue implements QueueInterface
     /**
      * Log failed job and delete it from the main queue
      *
-     * @param Job    $job
-     * @param string $reason
+     * @param JobInterface $job
+     * @param string      $reason
      */
-    public function logFailedJob(Job $job, $reason)
+    public function logFailedJob(JobInterface $job, $reason)
     {
         $this->connection->transact(function () use ($job, $reason) {
             $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', get_class($job), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
@@ -263,7 +264,7 @@ class MySqlQueue implements QueueInterface
     /**
      * Delete a job
      *
-     * @param Job $job
+     * @param JobInterface $job
      */
     public function deleteJob($job)
     {
@@ -275,7 +276,7 @@ class MySqlQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
-     * @return Job|null
+     * @return JobInterface|null
      */
     public function nextInLine()
     {
@@ -352,9 +353,9 @@ class MySqlQueue implements QueueInterface
     /**
      * Restore failed job by job ID and optionally update job properties
      *
-     * @param  mixed      $job_id
-     * @param  array|null $update_data
-     * @return Job
+     * @param  mixed        $job_id
+     * @param  array|null   $update_data
+     * @return JobInterface
      */
     public function restoreFailedJobById($job_id, array $update_data = null)
     {

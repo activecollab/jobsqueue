@@ -2,17 +2,15 @@
 
 namespace ActiveCollab\JobsQueue;
 
-use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue
  */
-class Dispatcher
+class Dispatcher implements DispatcherInterface
 {
-    const DEFAULT_QUEUE = 'jobs';
-
     /**
      * @var QueueInterface[]
      */
@@ -54,11 +52,11 @@ class Dispatcher
     /**
      * Add a job to the queue
      *
-     * @param  Job    $job
-     * @param  string $queue_name
+     * @param  JobInterface $job
+     * @param  string       $queue_name
      * @return mixed
      */
-    public function dispatch(Job $job, $queue_name = self::DEFAULT_QUEUE)
+    public function dispatch(JobInterface $job, $queue_name = self::DEFAULT_QUEUE)
     {
         return $this->getQueue($queue_name)->enqueue($job);
     }
@@ -66,11 +64,11 @@ class Dispatcher
     /**
      * Execute a job now (sync, waits for a response)
      *
-     * @param  Job    $job
-     * @param  string $queue_name
+     * @param  JobInterface $job
+     * @param  string       $queue_name
      * @return mixed
      */
-    public function execute(Job $job, $queue_name = self::DEFAULT_QUEUE)
+    public function execute(JobInterface $job, $queue_name = self::DEFAULT_QUEUE)
     {
         return $this->getQueue($queue_name)->execute($job);
     }

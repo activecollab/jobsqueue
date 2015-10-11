@@ -20,6 +20,19 @@ interface JobInterface extends  JsonSerializable
     public function execute();
 
     /**
+     * @return string
+     */
+    public function getChannel();
+
+    /**
+     * Set job channel when it is known
+     *
+     * @param  string $channel
+     * @return $this
+     */
+    public function &setChannel($channel);
+
+    /**
      * @return array
      */
     public function getData();
@@ -65,10 +78,10 @@ interface JobInterface extends  JsonSerializable
     public function getQueueId();
 
     /**
-     * Set job queue ID
+     * Set job queue
      *
      * @param QueueInterface $queue
      * @param mixed $queue_id
      */
-    public function setQueue(QueueInterface &$queue, $queue_id);
+    public function &setQueue(QueueInterface &$queue, $queue_id);
 }

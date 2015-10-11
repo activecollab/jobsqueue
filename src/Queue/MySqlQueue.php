@@ -50,6 +50,7 @@ class MySqlQueue implements QueueInterface
             $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
                 `data` longtext CHARACTER SET utf8 NOT NULL,
                 `failed_at` datetime DEFAULT NULL,
                 `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
@@ -207,7 +208,7 @@ class MySqlQueue implements QueueInterface
      */
     public function getJobById($job_id)
     {
-        if ($row = $this->connection->executeFirstRow('SELECT `id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
+        if ($row = $this->connection->executeFirstRow('SELECT `id`, `channel`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
             try {
                 return $this->getJobFromRow($row);
             } catch (Exception $e) {
@@ -233,6 +234,7 @@ class MySqlQueue implements QueueInterface
 
         /** @var Job $job */
         $job = new $type($this->jsonDecode($row['data']));
+        $job->setChannel($row['channel']);
         $job->setQueue($this, (integer) $row['id']);
 
         return $job;
@@ -270,7 +272,7 @@ class MySqlQueue implements QueueInterface
     public function logFailedJob(JobInterface $job, $reason)
     {
         $this->connection->transact(function () use ($job, $reason) {
-            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', get_class($job), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
+            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', get_class($job), $job->getChannel(), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
             $this->deleteJob($job);
         });
     }
@@ -378,12 +380,18 @@ class MySqlQueue implements QueueInterface
     {
         $job = null;
 
-        if ($row = $this->connection->executeFirstRow('SELECT `type`, `data` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id)) {
+        if ($row = $this->connection->executeFirstRow('SELECT `type`, `channel`, `data` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id)) {
             $this->connection->transact(function () use (&$job, $job_id, $update_data, $row) {
                 $job_type = $row['type'];
 
                 if (!class_exists($job_type)) {
                     throw new RuntimeException("Can't restore a job. Type '$job_type' not found");
+                }
+
+                $channel = $row['channel'];
+
+                if (empty($channel)) {
+                    $channel = QueueInterface::MAIN_CHANNEL;
                 }
 
                 if ($row['data']) {
@@ -404,7 +412,7 @@ class MySqlQueue implements QueueInterface
 
                 $job = new $job_type($data);
 
-                $this->enqueue($job);
+                $this->enqueue($job, $channel);
                 $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id);
             });
         } else {
@@ -483,7 +491,7 @@ class MySqlQueue implements QueueInterface
                 } catch (Exception $e) {
                     $this->connection->beginWork();
 
-                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
                     $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
 
                     $this->connection->commit();

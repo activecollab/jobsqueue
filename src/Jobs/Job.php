@@ -68,6 +68,34 @@ abstract class Job implements JobInterface
     }
 
     /**
+     * @var string
+     */
+    private $channel;
+
+    /**
+     * Get job channel, if known
+     *
+     * @return string
+     */
+    public function getChannel()
+    {
+        return $this->channel;
+    }
+
+    /**
+     * Set job channel when it is known
+     *
+     * @param  string $channel
+     * @return $this
+     */
+    public function &setChannel($channel)
+    {
+        $this->channel = $channel;
+
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getData()
@@ -144,12 +172,13 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Set job queue ID
+     * Set job queue
      *
-     * @param QueueInterface $queue
-     * @param mixed $queue_id
+     * @param  QueueInterface $queue
+     * @param  mixed          $queue_id
+     * @return $this
      */
-    public function setQueue(QueueInterface &$queue, $queue_id)
+    public function &setQueue(QueueInterface &$queue, $queue_id)
     {
         $this->queue = $queue;
 
@@ -158,5 +187,7 @@ abstract class Job implements JobInterface
         } else {
             throw new InvalidArgumentException('Queue ID is expected to be sacalar or empty value');
         }
+
+        return $this;
     }
 }

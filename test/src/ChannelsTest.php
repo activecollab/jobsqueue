@@ -2,8 +2,10 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -113,6 +115,9 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->getQueue()->countByChannel('third'));
     }
 
+    /**
+     * Test next in line from any channel
+     */
     public function testNextInLineFromAnyChannel()
     {
         $this->dispatcher->registerChannels('second', 'third');
@@ -128,6 +133,9 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $next_in_line->getData()['number']);
     }
 
+    /**
+     * test next in line from a single channel
+     */
     public function testNextInLineFromSingleChannel()
     {
         $this->dispatcher->registerChannels('second', 'third');
@@ -143,6 +151,9 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertEquals(3, $next_in_line->getData()['number']);
     }
 
+    /**
+     * Test next in line form a list of channels (order of channel names should not be relevant)
+     */
     public function testNextInLineFromMultipleChannels()
     {
         $this->dispatcher->registerChannels('second', 'third');
@@ -158,13 +169,65 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertEquals(2, $next_in_line->getData()['number']);
     }
 
-//    public function testFailedJobKeepsChannel()
-//    {
-//
-//    }
-//
-//    public function testRestoredFailedJobKeepsChannel()
-//    {
-//
-//    }
+    /**
+     * Test if failed jobs keep their channel information
+     */
+    public function testFailedJobKeepsChannel()
+    {
+        $this->dispatcher->registerChannels('second');
+
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Failing(), 'second'));
+
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
+
+        $this->dispatcher->getQueue()->execute($next_in_line);
+
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
+
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME_FAILED . '`');
+
+        $this->assertInternalType('array', $job);
+        $this->assertEquals('second', $job['channel']);
+    }
+
+    /**
+     * Test if failed job restoration keeps the original job channel
+     */
+    public function testRestoredFailedJobKeepsChannel()
+    {
+        $this->dispatcher->registerChannels('second');
+
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Failing(), 'second'));
+
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
+
+        $this->dispatcher->getQueue()->execute($next_in_line);
+
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
+
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME_FAILED . '`');
+
+        $this->assertInternalType('array', $job);
+        $this->assertEquals('second', $job['channel']);
+
+        $this->dispatcher->getQueue()->restoreFailedJobById(1);
+
+        $this->assertEquals(1, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(0, $this->dispatcher->getQueue()->countFailed());
+
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '`');
+
+        $this->assertInternalType('array', $job);
+        $this->assertEquals('second', $job['channel']);
+    }
 }

@@ -80,10 +80,10 @@ class TestQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
-     * @param  array|null        $from_channels
+     * @param  string            ...$from_channels
      * @return JobInterface|null
      */
-    public function nextInLine(array $from_channels = null)
+    public function nextInLine()
     {
         if (empty($this->jobs)) {
             return null;

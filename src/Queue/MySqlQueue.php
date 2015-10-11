@@ -290,12 +290,12 @@ class MySqlQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
-     * @param  array|null        $from_channels
+     * @param  string            ...$from_channels
      * @return JobInterface|null
      */
-    public function nextInLine(array $from_channels = null)
+    public function nextInLine()
     {
-        if ($job_id = $this->reserveNextJob($from_channels)) {
+        if ($job_id = $this->reserveNextJob(func_get_args())) {
             return $this->getJobById($job_id);
         } else {
             return null;

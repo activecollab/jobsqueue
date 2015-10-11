@@ -37,7 +37,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertFalse($this->dispatcher->isChannelRegistered('old'));
         $this->assertFalse($this->dispatcher->isChannelRegistered('new'));
 
-        $this->dispatcher->registerChannels(['old', 'new']);
+        $this->dispatcher->registerChannels('old', 'new');
 
         $this->assertTrue($this->dispatcher->isChannelRegistered('old'));
         $this->assertTrue($this->dispatcher->isChannelRegistered('new'));
@@ -99,7 +99,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
      */
     public function testDispatchJobToMultipleChannels()
     {
-        $this->dispatcher->registerChannels(['second', 'third']);
+        $this->dispatcher->registerChannels('second', 'third');
 
         $job = new Inc(['number' => 123]);
 
@@ -115,7 +115,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
 
     public function testNextInLineFromAnyChannel()
     {
-        $this->dispatcher->registerChannels(['second', 'third']);
+        $this->dispatcher->registerChannels('second', 'third');
 
         $this->dispatcher->dispatch(new Inc(['number' => 1]), QueueInterface::MAIN_CHANNEL);
         $this->dispatcher->dispatch(new Inc(['number' => 2]), 'second');
@@ -130,14 +130,14 @@ class ChannelsTest extends AbstractMySqlQueueTest
 
     public function testNextInLineFromSingleChannel()
     {
-        $this->dispatcher->registerChannels(['second', 'third']);
+        $this->dispatcher->registerChannels('second', 'third');
 
         $this->dispatcher->dispatch(new Inc(['number' => 1]), QueueInterface::MAIN_CHANNEL);
         $this->dispatcher->dispatch(new Inc(['number' => 2]), 'second');
         $this->dispatcher->dispatch(new Inc(['number' => 3]), 'third');
 
         /** @var Inc $next_in_line */
-        $next_in_line = $this->dispatcher->getQueue()->nextInLine(['third']);
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine('third');
 
         $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
         $this->assertEquals(3, $next_in_line->getData()['number']);
@@ -145,14 +145,14 @@ class ChannelsTest extends AbstractMySqlQueueTest
 
     public function testNextInLineFromMultipleChannels()
     {
-        $this->dispatcher->registerChannels(['second', 'third']);
+        $this->dispatcher->registerChannels('second', 'third');
 
         $this->dispatcher->dispatch(new Inc(['number' => 1]), QueueInterface::MAIN_CHANNEL);
         $this->dispatcher->dispatch(new Inc(['number' => 2]), 'second');
         $this->dispatcher->dispatch(new Inc(['number' => 3]), 'third');
 
         /** @var Inc $next_in_line */
-        $next_in_line = $this->dispatcher->getQueue()->nextInLine(['third', 'second']);
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine('third', 'second');
 
         $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
         $this->assertEquals(2, $next_in_line->getData()['number']);

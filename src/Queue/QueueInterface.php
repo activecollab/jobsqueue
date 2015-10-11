@@ -40,11 +40,20 @@ interface QueueInterface extends Countable
     public function exists($job_type, array $properties = null);
 
     /**
+     * Return a total number of jobs that are in the given channel
+     *
+     * @param  string  $channel
+     * @return integer
+     */
+    public function countByChannel($channel);
+
+    /**
      * Return Job that is next in line to be executed
      *
+     * @param  array|null        $from_channels
      * @return JobInterface|null
      */
-    public function nextInLine();
+    public function nextInLine(array $from_channels = null);
 
     /**
      * What to do when job fails

@@ -97,7 +97,7 @@ class MySqlQueue implements QueueInterface
         $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
         $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
 
-        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?' . $extract_values . ')', get_class($job), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
+        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `channel`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
 
         return $this->connection->lastInsertId();
     }
@@ -122,6 +122,17 @@ class MySqlQueue implements QueueInterface
         }
 
         return null;
+    }
+
+    /**
+     * Return a total number of jobs that are in the given channel
+     *
+     * @param  string  $channel
+     * @return integer
+     */
+    public function countByChannel($channel)
+    {
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `channel` = ?', $channel);
     }
 
     /**
@@ -279,11 +290,12 @@ class MySqlQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
+     * @param  array|null        $from_channels
      * @return JobInterface|null
      */
-    public function nextInLine()
+    public function nextInLine(array $from_channels = null)
     {
-        if ($job_id = $this->reserveNextJob()) {
+        if ($job_id = $this->reserveNextJob($from_channels)) {
             return $this->getJobById($job_id);
         } else {
             return null;
@@ -314,13 +326,15 @@ class MySqlQueue implements QueueInterface
     /**
      * Reserve next job ID
      *
+     * @param  array|null $from_channels
      * @return int|null
      */
-    public function reserveNextJob()
+    public function reserveNextJob(array $from_channels = null)
     {
         $timestamp = date('Y-m-d H:i:s');
+        $channel_conditions = empty($from_channels) ? '' : $this->connection->prepareConditions(['`channel` IN ? AND ', $from_channels]);
 
-        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100', $timestamp)) {
+        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME . "` WHERE {$channel_conditions}`reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100", $timestamp)) {
             foreach ($job_ids as $job_id) {
                 $reservation_key = $this->prepareNewReservationKey();
 

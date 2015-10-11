@@ -56,6 +56,17 @@ class TestQueue implements QueueInterface
     }
 
     /**
+     * Return a total number of jobs that are in the given channel
+     *
+     * @param  string  $channel
+     * @return integer
+     */
+    public function countByChannel($channel)
+    {
+        return count($this->jobs);
+    }
+
+    /**
      * Return true if there's an active job of the give type with the given properties
      *
      * @param  string     $job_type
@@ -69,9 +80,10 @@ class TestQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
-     * @return Job|null
+     * @param  array|null        $from_channels
+     * @return JobInterface|null
      */
-    public function nextInLine()
+    public function nextInLine(array $from_channels = null)
     {
         if (empty($this->jobs)) {
             return null;

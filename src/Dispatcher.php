@@ -37,11 +37,7 @@ class Dispatcher implements DispatcherInterface
      */
     public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
-        if (empty($channel)) {
-            throw new InvalidArgumentException("Value '$channel' is not a valid channel name");
-        }
-
-        return $this->getQueue()->enqueue($job, $channel);
+        return $this->getQueue()->enqueue($job, $this->validateChannel($channel));
     }
 
     /**
@@ -53,11 +49,90 @@ class Dispatcher implements DispatcherInterface
      */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
-        if (empty($channel)) {
-            throw new InvalidArgumentException("Value '$channel' is not a valid channel name");
+        return $this->getQueue()->execute($job, $this->validateChannel($channel));
+    }
+
+    /**
+     * @var string[]
+     */
+    private $registered_channels = [QueueInterface::MAIN_CHANNEL];
+
+    /**
+     * Register multiple channels
+     *
+     * @param  array $channels
+     * @return $this
+     */
+    public function &registerChannels(array $channels)
+    {
+        foreach ($channels as $channel) {
+            $this->registerChannel($channel);
         }
 
-        return $this->getQueue()->execute($job, $channel);
+        return $this;
+    }
+
+    /**
+     * Register a single change
+     *
+     * @param  string $channel
+     * @return $this
+     */
+    public function &registerChannel($channel)
+    {
+        if (in_array($channel, $this->registered_channels)) {
+            throw new InvalidArgumentException("Channel '$channel' already registered");
+        }
+
+        $this->registered_channels[] = $channel;
+
+        return $this;
+    }
+
+    /**
+     * Return an array of registered channels
+     *
+     * @return array
+     */
+    public function getRegisteredChannels()
+    {
+        return $this->registered_channels;
+    }
+
+    /**
+     * Return true if $channel is registered
+     *
+     * @param  string  $channel
+     * @return boolean
+     */
+    public function isChannelRegistered($channel)
+    {
+        return in_array($channel, $this->registered_channels);
+    }
+
+    /**
+     * Make sure that we got a valid channel name
+     *
+     * @param  string $channel
+     * @return string
+     */
+    private function validateChannel($channel)
+    {
+        if (is_string($channel)) {
+            $channel = trim($channel);
+
+            if (empty($channel)) {
+                throw new InvalidArgumentException("Value '$channel' is not a valid channel name");
+            }
+
+            if (in_array($channel, $this->registered_channels)) {
+                return $channel;
+            } else {
+                throw new InvalidArgumentException("Channel '$channel' is not registered");
+            }
+        } else {
+            throw new InvalidArgumentException("Channel name needs to be a string value");
+        }
     }
 
     /**

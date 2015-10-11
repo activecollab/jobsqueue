@@ -92,22 +92,6 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testChannelCantBeEmptyOnDispatch()
-    {
-        $this->dispatcher->dispatch(new Inc(['number' => 123]), '');
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testChannelCantBeEmptyOnExecute()
-    {
-        $this->dispatcher->execute(new Inc(['number' => 123]), '');
-    }
-
-    /**
      * Test if priority is properly set
      */
     public function testPriorityIsProperlySetFromData()

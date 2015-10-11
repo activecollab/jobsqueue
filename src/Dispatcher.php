@@ -37,7 +37,11 @@ class Dispatcher implements DispatcherInterface
      */
     public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
-        return $this->getQueue()->enqueue($job);
+        if (empty($channel)) {
+            throw new InvalidArgumentException("Value '$channel' is not a valid channel name");
+        }
+
+        return $this->getQueue()->enqueue($job, $channel);
     }
 
     /**
@@ -49,7 +53,11 @@ class Dispatcher implements DispatcherInterface
      */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
-        return $this->getQueue()->execute($job);
+        if (empty($channel)) {
+            throw new InvalidArgumentException("Value '$channel' is not a valid channel name");
+        }
+
+        return $this->getQueue()->execute($job, $channel);
     }
 
     /**

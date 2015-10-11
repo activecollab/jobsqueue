@@ -33,6 +33,7 @@ class MySqlQueue implements QueueInterface
             $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
                 `priority` int(10) unsigned DEFAULT '0',
                 `data` longtext CHARACTER SET utf8 NOT NULL,
                 `available_at` datetime DEFAULT NULL,
@@ -80,9 +81,10 @@ class MySqlQueue implements QueueInterface
      * Add a job to the queue
      *
      * @param  JobInterface $job
+     * @param  string       $channel
      * @return integer
      */
-    public function enqueue(JobInterface $job)
+    public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         $job_data = $job->getData();
 
@@ -104,10 +106,11 @@ class MySqlQueue implements QueueInterface
      * Run job now (sync, waits for a response)
      *
      * @param  JobInterface     $job
+     * @param  string           $channel
      * @return mixed
      * @throws RuntimeException
      */
-    public function execute(JobInterface $job)
+    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         try {
             $result = $job->execute();

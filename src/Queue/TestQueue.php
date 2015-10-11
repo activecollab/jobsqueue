@@ -29,9 +29,10 @@ class TestQueue implements QueueInterface
      * Add a job to the queue
      *
      * @param  JobInterface $job
+     * @param  string       $channel
      * @return integer
      */
-    public function enqueue(JobInterface $job)
+    public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         $this->jobs[] = $job;
 
@@ -46,9 +47,10 @@ class TestQueue implements QueueInterface
      * Run job now (sync, waits for a response)
      *
      * @param  JobInterface $job
+     * @param  string       $channel
      * @return mixed
      */
-    public function execute(JobInterface $job)
+    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $job->execute();
     }

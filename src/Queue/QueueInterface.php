@@ -16,17 +16,19 @@ interface QueueInterface extends Countable
      * Add a job to the queue
      *
      * @param  JobInterface $job
+     * @param  string       $channel
      * @return mixed
      */
-    public function enqueue(JobInterface $job);
+    public function enqueue(JobInterface $job, $channel = self::MAIN_CHANNEL);
 
     /**
      * Execute a job now (sync, waits for a response)
      *
      * @param  JobInterface $job
+     * @param  $channel     $channel
      * @return mixed
      */
-    public function execute(JobInterface $job);
+    public function execute(JobInterface $job, $channel = self::MAIN_CHANNEL);
 
     /**
      * Return true if there's an active job of the give type with the given properties

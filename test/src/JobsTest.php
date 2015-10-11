@@ -1,16 +1,16 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Dispatcher;
-  use ActiveCollab\JobsQueue\Queue\TestQueue;
-  use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\Queue\TestQueue;
+use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class JobsTest extends TestCase
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class JobsTest extends TestCase
+{
     /**
      * @var Dispatcher
      */
@@ -21,11 +21,11 @@
      */
     public function setUp()
     {
-      parent::setUp();
+        parent::setUp();
 
-      $this->dispatcher = new Dispatcher(new TestQueue());
+        $this->dispatcher = new Dispatcher(new TestQueue());
 
-      $this->assertCount(0, $this->dispatcher->getQueue());
+        $this->assertCount(0, $this->dispatcher->getQueue());
     }
 
     /**
@@ -33,8 +33,8 @@
      */
     public function testDispatchAddsEventToTheQueue()
     {
-      $this->assertEquals(0, $this->dispatcher->dispatch(new Inc([ 'number' => 1245 ])));
-      $this->assertCount(1, $this->dispatcher->getQueue());
+        $this->assertEquals(0, $this->dispatcher->dispatch(new Inc(['number' => 1245])));
+        $this->assertCount(1, $this->dispatcher->getQueue());
     }
 
     /**
@@ -42,7 +42,7 @@
      */
     public function testRunExecutesImmediately()
     {
-      $this->assertEquals(1246, $this->dispatcher->execute(new Inc([ 'number' => 1245 ])));
-      $this->assertCount(0, $this->dispatcher->getQueue());
+        $this->assertEquals(1246, $this->dispatcher->execute(new Inc(['number' => 1245])));
+        $this->assertCount(0, $this->dispatcher->getQueue());
     }
-  }
+}

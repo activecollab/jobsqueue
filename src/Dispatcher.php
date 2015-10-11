@@ -12,40 +12,19 @@ use InvalidArgumentException;
 class Dispatcher implements DispatcherInterface
 {
     /**
-     * @var QueueInterface[]
+     * @var QueueInterface
      */
-    private $queues = [];
+    private $queue;
 
     /**
-     * @param QueueInterface|QueueInterface[]|null $queue
-     */
-    public function __construct($queue = null)
-    {
-        if ($queue instanceof QueueInterface) {
-            $this->queues[ self::DEFAULT_QUEUE ] = $queue;
-        } else {
-            if (is_array($queue)) {
-                foreach ($queue as $k => $v) {
-                    $this->addQueue($k, $v);
-                }
-            } else {
-                if ($queue !== null) {
-                    throw new \InvalidArgumentException('Queue is expected to be a Queue isntance or array of Queue instances');
-                }
-            }
-        }
-    }
-
-    /**
-     * @param       $queue_name
      * @param QueueInterface $queue
      */
-    public function addQueue($queue_name, QueueInterface $queue)
+    public function __construct($queue)
     {
-        if (isset($this->queues[ $queue_name ])) {
-            throw new \InvalidArgumentException("Queue '$queue_name' already added");
+        if ($queue instanceof QueueInterface) {
+            $this->queue = $queue;
         } else {
-            $this->queues[ $queue_name ] = $queue;
+            throw new InvalidArgumentException('Queue is expected to be a Queue isntance or array of Queue instances');
         }
     }
 
@@ -53,24 +32,24 @@ class Dispatcher implements DispatcherInterface
      * Add a job to the queue
      *
      * @param  JobInterface $job
-     * @param  string       $queue_name
+     * @param  string       $channel
      * @return mixed
      */
-    public function dispatch(JobInterface $job, $queue_name = self::DEFAULT_QUEUE)
+    public function dispatch(JobInterface $job, $channel = self::MAIN_CHANNEL)
     {
-        return $this->getQueue($queue_name)->enqueue($job);
+        return $this->getQueue()->enqueue($job);
     }
 
     /**
      * Execute a job now (sync, waits for a response)
      *
      * @param  JobInterface $job
-     * @param  string       $queue_name
+     * @param  string       $channel
      * @return mixed
      */
-    public function execute(JobInterface $job, $queue_name = self::DEFAULT_QUEUE)
+    public function execute(JobInterface $job, $channel = self::MAIN_CHANNEL)
     {
-        return $this->getQueue($queue_name)->execute($job);
+        return $this->getQueue()->execute($job);
     }
 
     /**
@@ -78,24 +57,20 @@ class Dispatcher implements DispatcherInterface
      *
      * @param  string     $job_type
      * @param  array|null $properties
-     * @param  string     $queue_name
      * @return bool
      */
-    public function exists($job_type, array $properties = null, $queue_name = self::DEFAULT_QUEUE)
+    public function exists($job_type, array $properties = null)
     {
-        return $this->getQueue($queue_name)->exists($job_type, $properties);
+        return $this->getQueue()->exists($job_type, $properties);
     }
 
     /**
-     * @param  string $queue_name
+     * Return queue instance
+     *
      * @return QueueInterface
      */
-    public function &getQueue($queue_name = self::DEFAULT_QUEUE)
+    public function &getQueue()
     {
-        if (isset($this->queues[ $queue_name ])) {
-            return $this->queues[ $queue_name ];
-        } else {
-            throw new InvalidArgumentException("Queue $queue_name' is not specified");
-        }
+        return $this->queue;
     }
 }

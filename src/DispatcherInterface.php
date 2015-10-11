@@ -11,44 +11,39 @@ use ActiveCollab\JobsQueue\Jobs\JobInterface;
 interface DispatcherInterface
 {
     const DEFAULT_QUEUE = 'jobs';
-
-    /**
-     * @param string         $queue_name
-     * @param QueueInterface $queue
-     */
-    public function addQueue($queue_name, QueueInterface $queue);
+    const MAIN_CHANNEL = 'main';
 
     /**
      * Add a job to the queue
      *
      * @param  JobInterface $job
-     * @param  string       $queue_name
+     * @param  string       $channel
      * @return mixed
      */
-    public function dispatch(JobInterface $job, $queue_name = self::DEFAULT_QUEUE);
+    public function dispatch(JobInterface $job, $channel = self::MAIN_CHANNEL);
 
     /**
      * Execute a job now (sync, waits for a response)
      *
      * @param  JobInterface $job
-     * @param  string       $queue_name
+     * @param  string       $channel
      * @return mixed
      */
-    public function execute(JobInterface $job, $queue_name = self::DEFAULT_QUEUE);
+    public function execute(JobInterface $job, $channel = self::MAIN_CHANNEL);
 
     /**
      * Return true if job of the given type and with the given properties exists in queue
      *
      * @param  string     $job_type
      * @param  array|null $properties
-     * @param  string     $queue_name
      * @return bool
      */
-    public function exists($job_type, array $properties = null, $queue_name = self::DEFAULT_QUEUE);
+    public function exists($job_type, array $properties = null);
 
     /**
-     * @param  string         $queue_name
+     * Return queue instance
+     *
      * @return QueueInterface
      */
-    public function &getQueue($queue_name = self::DEFAULT_QUEUE);
+    public function &getQueue();
 }

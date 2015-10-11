@@ -35,7 +35,7 @@ class Dispatcher implements DispatcherInterface
      * @param  string       $channel
      * @return mixed
      */
-    public function dispatch(JobInterface $job, $channel = self::MAIN_CHANNEL)
+    public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $this->getQueue()->enqueue($job);
     }
@@ -47,7 +47,7 @@ class Dispatcher implements DispatcherInterface
      * @param  string       $channel
      * @return mixed
      */
-    public function execute(JobInterface $job, $channel = self::MAIN_CHANNEL)
+    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $this->getQueue()->execute($job);
     }

@@ -10,9 +10,6 @@ use ActiveCollab\JobsQueue\Jobs\JobInterface;
  */
 interface DispatcherInterface
 {
-    const DEFAULT_QUEUE = 'jobs';
-    const MAIN_CHANNEL = 'main';
-
     /**
      * Add a job to the queue
      *
@@ -20,7 +17,7 @@ interface DispatcherInterface
      * @param  string       $channel
      * @return mixed
      */
-    public function dispatch(JobInterface $job, $channel = self::MAIN_CHANNEL);
+    public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL);
 
     /**
      * Execute a job now (sync, waits for a response)
@@ -29,7 +26,7 @@ interface DispatcherInterface
      * @param  string       $channel
      * @return mixed
      */
-    public function execute(JobInterface $job, $channel = self::MAIN_CHANNEL);
+    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL);
 
     /**
      * Return true if job of the given type and with the given properties exists in queue

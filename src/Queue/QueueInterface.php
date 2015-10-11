@@ -10,6 +10,8 @@ use Countable;
  */
 interface QueueInterface extends Countable
 {
+    const MAIN_CHANNEL = 'main';
+
     /**
      * Add a job to the queue
      *

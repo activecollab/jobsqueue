@@ -43,6 +43,7 @@ class MySqlQueue implements QueueInterface
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `reservation_key` (`reservation_key`),
                 KEY `type` (`type`),
+                KEY `channel` (`channel`),
                 KEY `priority` (`priority`),
                 KEY `reserved_at` (`reserved_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
@@ -56,6 +57,7 @@ class MySqlQueue implements QueueInterface
                 `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                 PRIMARY KEY (`id`),
                 KEY `type` (`type`),
+                KEY `channel` (`channel`),
                 KEY `failed_at` (`failed_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
         }

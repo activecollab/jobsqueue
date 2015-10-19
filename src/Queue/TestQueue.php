@@ -3,6 +3,7 @@
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 
 /**
  * @package ActiveCollab\JobsQueue\Queue
@@ -27,10 +28,11 @@ class TestQueue implements QueueInterface
     /**
      * Add a job to the queue
      *
-     * @param  Job $job
+     * @param  JobInterface $job
+     * @param  string       $channel
      * @return integer
      */
-    public function enqueue(Job $job)
+    public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         $this->jobs[] = $job;
 
@@ -44,12 +46,24 @@ class TestQueue implements QueueInterface
     /**
      * Run job now (sync, waits for a response)
      *
-     * @param  Job $job
+     * @param  JobInterface $job
+     * @param  string       $channel
      * @return mixed
      */
-    public function execute(Job $job)
+    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $job->execute();
+    }
+
+    /**
+     * Return a total number of jobs that are in the given channel
+     *
+     * @param  string  $channel
+     * @return integer
+     */
+    public function countByChannel($channel)
+    {
+        return count($this->jobs);
     }
 
     /**
@@ -66,7 +80,8 @@ class TestQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
-     * @return Job|null
+     * @param  string            ...$from_channels
+     * @return JobInterface|null
      */
     public function nextInLine()
     {

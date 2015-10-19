@@ -2,77 +2,137 @@
 
 namespace ActiveCollab\JobsQueue;
 
-use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue
  */
-class Dispatcher
+class Dispatcher implements DispatcherInterface
 {
-    const DEFAULT_QUEUE = 'jobs';
-
     /**
-     * @var QueueInterface[]
+     * @var QueueInterface
      */
-    private $queues = [];
+    private $queue;
 
     /**
-     * @param QueueInterface|QueueInterface[]|null $queue
-     */
-    public function __construct($queue = null)
-    {
-        if ($queue instanceof QueueInterface) {
-            $this->queues[ self::DEFAULT_QUEUE ] = $queue;
-        } else {
-            if (is_array($queue)) {
-                foreach ($queue as $k => $v) {
-                    $this->addQueue($k, $v);
-                }
-            } else {
-                if ($queue !== null) {
-                    throw new \InvalidArgumentException('Queue is expected to be a Queue isntance or array of Queue instances');
-                }
-            }
-        }
-    }
-
-    /**
-     * @param       $queue_name
      * @param QueueInterface $queue
      */
-    public function addQueue($queue_name, QueueInterface $queue)
+    public function __construct($queue)
     {
-        if (isset($this->queues[ $queue_name ])) {
-            throw new \InvalidArgumentException("Queue '$queue_name' already added");
+        if ($queue instanceof QueueInterface) {
+            $this->queue = $queue;
         } else {
-            $this->queues[ $queue_name ] = $queue;
+            throw new InvalidArgumentException('Queue is expected to be a Queue isntance or array of Queue instances');
         }
     }
 
     /**
      * Add a job to the queue
      *
-     * @param  Job    $job
-     * @param  string $queue_name
+     * @param  JobInterface $job
+     * @param  string       $channel
      * @return mixed
      */
-    public function dispatch(Job $job, $queue_name = self::DEFAULT_QUEUE)
+    public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
-        return $this->getQueue($queue_name)->enqueue($job);
+        return $this->getQueue()->enqueue($job, $this->validateChannel($channel));
     }
 
     /**
      * Execute a job now (sync, waits for a response)
      *
-     * @param  Job    $job
-     * @param  string $queue_name
+     * @param  JobInterface $job
+     * @param  string       $channel
      * @return mixed
      */
-    public function execute(Job $job, $queue_name = self::DEFAULT_QUEUE)
+    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
-        return $this->getQueue($queue_name)->execute($job);
+        return $this->getQueue()->execute($job, $this->validateChannel($channel));
+    }
+
+    /**
+     * @var string[]
+     */
+    private $registered_channels = [QueueInterface::MAIN_CHANNEL];
+
+    /**
+     * Register multiple channels
+     *
+     * @param  string ...$channels
+     * @return $this
+     */
+    public function &registerChannels()
+    {
+        foreach (func_get_args() as $channel) {
+            $this->registerChannel($channel);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Register a single change
+     *
+     * @param  string $channel
+     * @return $this
+     */
+    public function &registerChannel($channel)
+    {
+        if (in_array($channel, $this->registered_channels)) {
+            throw new InvalidArgumentException("Channel '$channel' already registered");
+        }
+
+        $this->registered_channels[] = $channel;
+
+        return $this;
+    }
+
+    /**
+     * Return an array of registered channels
+     *
+     * @return array
+     */
+    public function getRegisteredChannels()
+    {
+        return $this->registered_channels;
+    }
+
+    /**
+     * Return true if $channel is registered
+     *
+     * @param  string  $channel
+     * @return boolean
+     */
+    public function isChannelRegistered($channel)
+    {
+        return in_array($channel, $this->registered_channels);
+    }
+
+    /**
+     * Make sure that we got a valid channel name
+     *
+     * @param  string $channel
+     * @return string
+     */
+    private function validateChannel($channel)
+    {
+        if (is_string($channel)) {
+            $channel = trim($channel);
+
+            if (empty($channel)) {
+                throw new InvalidArgumentException("Value '$channel' is not a valid channel name");
+            }
+
+            if (in_array($channel, $this->registered_channels)) {
+                return $channel;
+            } else {
+                throw new InvalidArgumentException("Channel '$channel' is not registered");
+            }
+        } else {
+            throw new InvalidArgumentException("Channel name needs to be a string value");
+        }
     }
 
     /**
@@ -80,24 +140,20 @@ class Dispatcher
      *
      * @param  string     $job_type
      * @param  array|null $properties
-     * @param  string     $queue_name
      * @return bool
      */
-    public function exists($job_type, array $properties = null, $queue_name = self::DEFAULT_QUEUE)
+    public function exists($job_type, array $properties = null)
     {
-        return $this->getQueue($queue_name)->exists($job_type, $properties);
+        return $this->getQueue()->exists($job_type, $properties);
     }
 
     /**
-     * @param  string $queue_name
+     * Return queue instance
+     *
      * @return QueueInterface
      */
-    public function &getQueue($queue_name = self::DEFAULT_QUEUE)
+    public function &getQueue()
     {
-        if (isset($this->queues[ $queue_name ])) {
-            return $this->queues[ $queue_name ];
-        } else {
-            throw new InvalidArgumentException("Queue $queue_name' is not specified");
-        }
+        return $this->queue;
     }
 }

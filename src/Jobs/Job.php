@@ -3,18 +3,13 @@
 namespace ActiveCollab\JobsQueue\Jobs;
 
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use JsonSerializable;
 use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue\Jobs
  */
-abstract class Job implements JsonSerializable
+abstract class Job implements JobInterface
 {
-    const NOT_A_PRIORITY = 0;
-    const HAS_PRIORITY = 256;
-    const HAS_HIGHEST_PRIORITY = 4294967295; // UNSIGNED INT https://dev.mysql.com/doc/refman/5.0/en/integer-types.html
-
     /**
      * @var array
      */
@@ -70,6 +65,34 @@ abstract class Job implements JsonSerializable
     public function jsonSerialize()
     {
         return $this->data;
+    }
+
+    /**
+     * @var string
+     */
+    private $channel;
+
+    /**
+     * Get job channel, if known
+     *
+     * @return string
+     */
+    public function getChannel()
+    {
+        return $this->channel;
+    }
+
+    /**
+     * Set job channel when it is known
+     *
+     * @param  string $channel
+     * @return $this
+     */
+    public function &setChannel($channel)
+    {
+        $this->channel = $channel;
+
+        return $this;
     }
 
     /**
@@ -149,12 +172,13 @@ abstract class Job implements JsonSerializable
     }
 
     /**
-     * Set job queue ID
+     * Set job queue
      *
-     * @param QueueInterface $queue
-     * @param mixed $queue_id
+     * @param  QueueInterface $queue
+     * @param  mixed          $queue_id
+     * @return $this
      */
-    public function setQueue(QueueInterface &$queue, $queue_id)
+    public function &setQueue(QueueInterface &$queue, $queue_id)
     {
         $this->queue = $queue;
 
@@ -163,5 +187,7 @@ abstract class Job implements JsonSerializable
         } else {
             throw new InvalidArgumentException('Queue ID is expected to be sacalar or empty value');
         }
+
+        return $this;
     }
 }

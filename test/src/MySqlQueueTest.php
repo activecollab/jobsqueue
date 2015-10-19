@@ -4,6 +4,7 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use DateTime;
 
@@ -17,9 +18,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
      */
     public function testJobsQueueTableIsCreated()
     {
-        $result = $this->link->query('SHOW TABLES');
-        $this->assertEquals(2, $result->num_rows);
-        $this->assertEquals(MySqlQueue::TABLE_NAME, $result->fetch_assoc()['Tables_in_activecollab_jobs_queue_test']);
+        $this->assertContains(MySqlQueue::TABLE_NAME, $this->connection->getTableNames());
     }
 
     /**
@@ -73,14 +72,23 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
-        $this->assertInstanceOf('mysqli_result', $result);
-        $this->assertEquals(1, $result->num_rows);
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = ?', 1);
 
-        $row = $result->fetch_assoc();
+        $this->assertInternalType('array', $job);
+        $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Inc', $job['type']);
+    }
 
-        $this->assertArrayHasKey('type', $row);
-        $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Inc', $row['type']);
+    /**
+     * Test if channel is properly set
+     */
+    public function testChannelIsSet()
+    {
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = ?', 1);
+
+        $this->assertInternalType('array', $job);
+        $this->assertEquals(QueueInterface::MAIN_CHANNEL, $job['channel']);
     }
 
     /**

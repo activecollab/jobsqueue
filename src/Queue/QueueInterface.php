@@ -2,28 +2,33 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
-use Countable, ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use Countable;
 
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
 interface QueueInterface extends Countable
 {
+    const MAIN_CHANNEL = 'main';
+
     /**
      * Add a job to the queue
      *
-     * @param  Job   $job
+     * @param  JobInterface $job
+     * @param  string       $channel
      * @return mixed
      */
-    public function enqueue(Job $job);
+    public function enqueue(JobInterface $job, $channel = self::MAIN_CHANNEL);
 
     /**
      * Execute a job now (sync, waits for a response)
      *
-     * @param  Job $job
+     * @param  JobInterface $job
+     * @param  $channel     $channel
      * @return mixed
      */
-    public function execute(Job $job);
+    public function execute(JobInterface $job, $channel = self::MAIN_CHANNEL);
 
     /**
      * Return true if there's an active job of the give type with the given properties
@@ -35,9 +40,18 @@ interface QueueInterface extends Countable
     public function exists($job_type, array $properties = null);
 
     /**
+     * Return a total number of jobs that are in the given channel
+     *
+     * @param  string  $channel
+     * @return integer
+     */
+    public function countByChannel($channel);
+
+    /**
      * Return Job that is next in line to be executed
      *
-     * @return Job|null
+     * @param  string            ...$from_channels
+     * @return JobInterface|null
      */
     public function nextInLine();
 
@@ -51,9 +65,9 @@ interface QueueInterface extends Countable
     /**
      * Restore failed job by job ID and optionally update job properties
      *
-     * @param  mixed      $job_id
-     * @param  array|null $update_data
-     * @return Job
+     * @param  mixed        $job_id
+     * @param  array|null   $update_data
+     * @return JobInterface
      */
     public function restoreFailedJobById($job_id, array $update_data = null);
 

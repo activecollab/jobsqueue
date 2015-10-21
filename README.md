@@ -140,3 +140,18 @@ Information about jobs that launched processes can be found using `QueueInterfac
 print_r($dispatcher->getQueue()->getBackgroundProcesses());
 
 ```
+
+will output something like this:
+
+```
+Array
+(
+    [0] => Array
+        (
+            [id] => 1
+            [type] => ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher
+            [process_id] => 12345
+        )
+
+)
+```

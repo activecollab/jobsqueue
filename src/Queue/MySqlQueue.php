@@ -6,6 +6,8 @@ use ActiveCollab\DatabaseConnection\ConnectionInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use Exception;
+use LogicException;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -40,6 +42,7 @@ class MySqlQueue implements QueueInterface
                 `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
                 `reserved_at` datetime DEFAULT NULL,
                 `attempts` smallint(6) DEFAULT '0',
+                `process_id` int(10) unsigned DEFAULT '0',
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `reservation_key` (`reservation_key`),
                 KEY `type` (`type`),
@@ -479,6 +482,47 @@ class MySqlQueue implements QueueInterface
         } else {
             return 0;
         }
+    }
+
+    /**
+     * Let jobs report that they raised background process
+     *
+     * @param JobInterface $job
+     * @param integer      $process_id
+     */
+    public function reportBackgroundProcess(JobInterface $job, $process_id)
+    {
+        if ($job->getQueue() && get_class($job->getQueue()) == get_class($this)) {
+            if ($job_id = $job->getQueueId()) {
+                if (is_int($process_id) && $process_id > 0) {
+                    if ($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `id` = ? AND `reserved_at` IS NOT NULL', $job_id)) {
+                        $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `process_id` = ? WHERE `id` = ?', $process_id, $job_id);
+                    } else {
+                        throw new InvalidArgumentException('Job not found or not running');
+                    }
+                } else {
+                    throw new InvalidArgumentException('Process ID is required (a non-negative integer is expected)');
+                }
+            } else {
+                throw new InvalidArgumentException('Only enqueued jobs can report background processes');
+            }
+        } else {
+            throw new InvalidArgumentException('Job does not belong to this queue');
+        }
+    }
+
+    /**
+     * Return a list of background processes that jobs from this queue have launched
+     *
+     * @return array
+     */
+    public function getBackgroundProcesses()
+    {
+        if ($result = $this->connection->execute('SELECT `id`, `type`, `process_id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL AND `process_id` > ? ORDER BY `reserved_at`', 0)) {
+            return $result->toArray();
+        }
+
+        return [];
     }
 
     /**

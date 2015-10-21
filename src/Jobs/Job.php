@@ -4,6 +4,7 @@ namespace ActiveCollab\JobsQueue\Jobs;
 
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use InvalidArgumentException;
+use LogicException;
 
 /**
  * @package ActiveCollab\JobsQueue\Jobs
@@ -189,5 +190,23 @@ abstract class Job implements JobInterface
         }
 
         return $this;
+    }
+
+    /**
+     * Report that this job has launched a background process
+     *
+     * @param integer $process_id
+     */
+    protected function reportBackgroundProcess($process_id)
+    {
+        if (empty($this->queue) || empty($this->queue_id)) {
+            throw new LogicException('Background process can be reported only for enqueued jobs');
+        }
+
+        if (!is_int($process_id) || $process_id < 1) {
+            throw new InvalidArgumentException('Process ID is required');
+        }
+
+        $this->queue->reportBackgroundProcess($this, $process_id);
     }
 }

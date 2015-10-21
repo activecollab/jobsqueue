@@ -181,6 +181,25 @@ class TestQueue implements QueueInterface
     }
 
     /**
+     * Let jobs report that they raised background process
+     *
+     * @param JobInterface $job
+     * @param integer      $process_id
+     */
+    public function reportBackgroundProcess(JobInterface $job, $process_id)
+    {
+    }
+
+    /**
+     * Return a list of background processes that jobs from this queue have launched
+     *
+     * @return array
+     */
+    public function getBackgroundProcesses()
+    {
+    }
+
+    /**
      * Check stuck jobs
      */
     public function checkStuckJobs()

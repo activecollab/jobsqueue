@@ -156,4 +156,4 @@ Array
 )
 ```
 
-Note: Process reporting is running is not supported on Windows systems at the moment.
+Note: Process reporting and watching is not supported on Windows systems at the moment.

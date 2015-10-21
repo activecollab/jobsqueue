@@ -532,6 +532,10 @@ class MySqlQueue implements QueueInterface
     {
         if ($rows = $this->connection->execute('SELECT * FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
             foreach ($rows as $row) {
+                if ($row['process_id'] > 0 && $this->isProcessRunning($row['process_id'])) {
+                    continue; // Skip jobs that launched long running background processes
+                }
+
                 try {
                     $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
                 } catch (Exception $e) {
@@ -544,6 +548,17 @@ class MySqlQueue implements QueueInterface
                 }
             }
         }
+    }
+
+    /**
+     * Check if process with PID $process_id is running
+     *
+     * @param  integer $process_id
+     * @return bool
+     */
+    private function isProcessRunning($process_id)
+    {
+        return DIRECTORY_SEPARATOR != '\\' && posix_kill($process_id, 0); // Note: 0 signal does not kill the process, but kill will check for process existance
     }
 
     /**

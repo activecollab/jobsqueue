@@ -2,6 +2,7 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher;
 
 /**
@@ -17,7 +18,7 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
         $job_id = $this->dispatcher->dispatch(new ProcessLauncher());
 
         $this->assertSame(1, $job_id);
-        $this->assertSame(0, $this->connection->executeFirstCell('SELECT `process_id` FROM `jobs_queue` WHERE `id` = ?', $job_id));
+        $this->assertSame(0, $this->connection->executeFirstCell('SELECT `process_id` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', $job_id));
         $this->assertEmpty($this->dispatcher->getQueue()->getBackgroundProcesses());
     }
 
@@ -29,7 +30,7 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
         $job_id = $this->dispatcher->dispatch(new ProcessLauncher());
 
         $this->assertSame(1, $job_id);
-        $this->assertSame(0, $this->connection->executeFirstCell('SELECT `process_id` FROM `jobs_queue` WHERE `id` = ?', $job_id));
+        $this->assertSame(0, $this->connection->executeFirstCell('SELECT `process_id` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', $job_id));
 
         $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
@@ -37,7 +38,7 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
 
         $next_in_line->execute();
 
-        $this->assertSame(ProcessLauncher::TEST_PROCESS_ID, $this->connection->executeFirstCell('SELECT `process_id` FROM `jobs_queue` WHERE `id` = ?', $job_id));
+        $this->assertSame(ProcessLauncher::TEST_PROCESS_ID, $this->connection->executeFirstCell('SELECT `process_id` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', $job_id));
 
         $background_processes = $this->dispatcher->getQueue()->getBackgroundProcesses();
 

@@ -107,3 +107,36 @@ $job = new Inc([
     'first_attempt_delay' => 1
 ]);
 ```
+
+## Background Process
+
+Jobs can report that they launched a process:
+
+```php
+class ListAndForget extends Job
+{
+    /**
+     * Report that we launched a background process
+     */
+    public function execute()
+    {
+        $output = [];
+        exec("nohup ls -la > /dev/null 2>&1 & echo $!", $output);
+
+        $pid = (integer) $output[1];
+
+        if ($pid > 0) {
+            $this->reportBackgroundProcess($pid);
+        }
+    }
+}
+```
+
+When they do, queue clean up and maintenance routines will not consider this job as stuck as long as process with the given PID is running. When process is done (we can't find it), job is considered to be done.
+
+Information about jobs that launched processes can be found using `QueueInterface::getBackgroundProcesses()` method. This method returns an array of information, where each row contains job ID, job type and process ID:
+
+```php
+print_r($dispatcher->getQueue()->getBackgroundProcesses());
+
+```

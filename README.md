@@ -155,3 +155,5 @@ Array
 
 )
 ```
+
+Note: Process reporting is running is not supported on Windows systems at the moment.

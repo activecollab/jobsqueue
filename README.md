@@ -134,7 +134,7 @@ class ListAndForget extends Job
 
 When they do, queue clean up and maintenance routines will not consider this job as stuck as long as process with the given PID is running. When process is done (we can't find it), job is considered to be done.
 
-Information about jobs that launched processes can be found using `QueueInterface::getBackgroundProcesses()` method. This method returns an array of information, where each row contains a job ID, job type and process ID:
+Information about jobs that launched processes can be found using `QueueInterface::getBackgroundProcesses()` method. This method returns an array, where each record in an array contains a job ID, job type and process ID:
 
 ```php
 print_r($dispatcher->getQueue()->getBackgroundProcesses());

@@ -3,6 +3,8 @@
 namespace ActiveCollab\JobsQueue\Jobs;
 
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use ActiveCollab\JobsQueue\Signals\SignalInterface;
+use ActiveCollab\JobsQueue\Signals\ProcessLaunched;
 use InvalidArgumentException;
 use LogicException;
 
@@ -195,7 +197,8 @@ abstract class Job implements JobInterface
     /**
      * Report that this job has launched a background process
      *
-     * @param integer $process_id
+     * @param  integer                         $process_id
+     * @return SignalInterface|ProcessLaunched
      */
     protected function reportBackgroundProcess($process_id)
     {
@@ -208,5 +211,7 @@ abstract class Job implements JobInterface
         }
 
         $this->queue->reportBackgroundProcess($this, $process_id);
+
+        return new ProcessLaunched($process_id);
     }
 }

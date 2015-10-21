@@ -16,6 +16,6 @@ class ProcessLauncher extends Job
      */
     public function execute()
     {
-        $this->reportBackgroundProcess(self::TEST_PROCESS_ID);
+        return $this->reportBackgroundProcess(self::TEST_PROCESS_ID);
     }
 }

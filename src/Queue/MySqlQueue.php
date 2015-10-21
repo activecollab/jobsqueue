@@ -5,6 +5,7 @@ namespace ActiveCollab\JobsQueue\Queue;
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
 use LogicException;
 use InvalidArgumentException;
@@ -120,7 +121,10 @@ class MySqlQueue implements QueueInterface
     {
         try {
             $result = $job->execute();
-            $this->deleteJob($job);
+
+            if (!($result instanceof SignalInterface && $result->keepJobInQueue())) {
+                $this->deleteJob($job);
+            }
 
             return $result;
         } catch (\Exception $e) {

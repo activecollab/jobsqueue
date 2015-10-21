@@ -4,6 +4,7 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher;
+use ActiveCollab\JobsQueue\Signals\ProcessLaunched;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -23,6 +24,29 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
     }
 
     /**
+     * Test if queue keeps the job that launches a process
+     */
+    public function testProcessLauncherKeepsTheJob()
+    {
+        $job_id = $this->dispatcher->dispatch(new ProcessLauncher());
+
+        $this->assertSame(1, $job_id);
+        $this->assertSame(0, $this->connection->executeFirstCell('SELECT `process_id` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', $job_id));
+
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+        $this->assertInstanceOf('\ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher', $next_in_line);
+
+        /** @var ProcessLaunched $result */
+        $result = $this->dispatcher->getQueue()->execute($next_in_line);
+
+        $this->assertInstanceOf(ProcessLaunched::class, $result);
+        $this->assertEquals($result->getProcessId(), ProcessLauncher::TEST_PROCESS_ID);
+
+        $this->assertSame(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', $job_id));
+    }
+
+    /**
      * Test if new jobs have an empty process_id value
      */
     public function testProcessLauncherSetsProcessId()
@@ -36,7 +60,11 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
 
         $this->assertInstanceOf('\ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher', $next_in_line);
 
-        $next_in_line->execute();
+        /** @var ProcessLaunched $result */
+        $result = $this->dispatcher->getQueue()->execute($next_in_line);
+
+        $this->assertInstanceOf(ProcessLaunched::class, $result);
+        $this->assertEquals($result->getProcessId(), ProcessLauncher::TEST_PROCESS_ID);
 
         $this->assertSame(ProcessLauncher::TEST_PROCESS_ID, $this->connection->executeFirstCell('SELECT `process_id` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', $job_id));
 

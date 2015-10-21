@@ -129,4 +129,41 @@ class MySqlQueueMaintenanceTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->getQueue()->count());
         $this->assertEquals(0, $this->dispatcher->getQueue()->countFailed());
     }
+
+    /**
+     * Test if stuck jobs with process that's completed are considered successful
+     */
+    public function testJobsWithCompletedProcessesAreConsideredSuccessful()
+    {
+        $job_id = $this->dispatcher->dispatch(new ProcessLauncher());
+
+        $this->assertEquals(1, $job_id);
+        $this->assertEquals(1, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+
+        /** @var ProcessLauncher $reserved_but_not_going_to_be_executed */
+        $reserved_but_not_going_to_be_executed = $this->dispatcher->getQueue()->nextInLine();
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher', $reserved_but_not_going_to_be_executed);
+
+        $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL'));
+
+        $unused_process_id = 32767;
+
+        while (posix_kill($unused_process_id, 0)) {
+            $unused_process_id--;
+
+            if ($unused_process_id === 0) {
+                $this->fail('We have reached 0');
+                return;
+            }
+        }
+
+        // Lets simulate that job reported a background process and that it is
+        $this->connection->execute('UPDATE `' . MySqlQueue::TABLE_NAME . '` SET `reserved_at` = ?, `process_id` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() - 7200), $unused_process_id, 1);
+
+        $this->dispatcher->getQueue()->checkStuckJobs();
+
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(0, $this->dispatcher->getQueue()->countFailed());
+    }
 }

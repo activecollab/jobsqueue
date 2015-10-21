@@ -219,7 +219,7 @@ class MySqlQueue implements QueueInterface
             } catch (Exception $e) {
                 $this->connection->transact(function () use ($row, $e) {
                     $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-                    $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
+                    $this->deleteJobById($row['id']);
                 });
             }
         }
@@ -290,8 +290,18 @@ class MySqlQueue implements QueueInterface
     public function deleteJob($job)
     {
         if ($job_id = $job->getQueueId()) {
-            $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+            $this->deleteJobById($job_id);
         }
+    }
+
+    /**
+     * Delete job by ID, used internally
+     *
+     * @param integer $job_id
+     */
+    private function deleteJobById($job_id)
+    {
+        $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
 
     /**
@@ -532,19 +542,23 @@ class MySqlQueue implements QueueInterface
     {
         if ($rows = $this->connection->execute('SELECT * FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
             foreach ($rows as $row) {
-                if ($row['process_id'] > 0 && $this->isProcessRunning($row['process_id'])) {
-                    continue; // Skip jobs that launched long running background processes
-                }
+                if ($row['process_id'] > 0) {
+                    if ($this->isProcessRunning($row['process_id'])) {
+                        continue; // Skip jobs that launched long running background processes
+                    } else {
+                        $this->deleteJobById($row['id']); // Process done? Consider the job executed
+                    }
+                } else {
+                    try {
+                        $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
+                    } catch (Exception $e) {
+                        $this->connection->beginWork();
 
-                try {
-                    $this->failJob($this->getJobFromRow($row), new RuntimeException('Job stuck for more than an hour'));
-                } catch (Exception $e) {
-                    $this->connection->beginWork();
+                        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+                        $this->deleteJobById($row['id']);
 
-                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-                    $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $row['id']);
-
-                    $this->connection->commit();
+                        $this->connection->commit();
+                    }
                 }
             }
         }

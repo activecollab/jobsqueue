@@ -120,4 +120,40 @@ interface QueueInterface extends Countable
      * Clean up the queue
      */
     public function cleanUp();
+    /**
+     * Clear up the all failed jobs
+     */
+    public function clear();
+    /**
+     * Return all distinct reasons why a job of the given type failed us in the past
+     *
+     * @param string $job_type
+     * @returns array
+     */
+    public function getFailedJobReasons($job_type);
+    /**
+     * Search for a full job class name
+     *
+     * @param string $search_for
+     * @return mixed
+     * @throws \Exception
+     */
+    public function unfurlType($search_for);
+
+    /**
+     * Method that returns failed job statistics
+     * @return array Key is job type, value is an array where keys are dates and values are number of failed jobs on that particular day.
+     */
+    public function failedJobStatistics();
+
+    /**
+     * @return array where key is job type and value is number of jobs in the queue of that type.
+     */
+    public function countJobsByType();
+    /**
+     * Create one or more tables
+     * @param  list - string sql table definition
+     * @throws Exception
+     */
+    public function createTables();
 }

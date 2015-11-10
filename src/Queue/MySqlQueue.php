@@ -33,7 +33,7 @@ class MySqlQueue implements QueueInterface
         $this->connection = $connection;
 
         if ($create_tables_if_missing) {
-            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
+            $tables = ["CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                 `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
@@ -50,9 +50,8 @@ class MySqlQueue implements QueueInterface
                 KEY `channel` (`channel`),
                 KEY `priority` (`priority`),
                 KEY `reserved_at` (`reserved_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
-
-            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+            "CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                 `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
@@ -63,7 +62,24 @@ class MySqlQueue implements QueueInterface
                 KEY `type` (`type`),
                 KEY `channel` (`channel`),
                 KEY `failed_at` (`failed_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"];
+            call_user_func_array(array($this,'createTables'),$tables);
+        }
+    }
+
+    /**
+     * Create one or more tables
+     * @param  list - string sql table definition
+     * @throws Exception
+     */
+    public function createTables(){
+
+        try{
+            foreach(func_get_args() as $table_definition){
+                $this->connection->execute($table_definition);
+            }
+        }catch (\Exception $e){
+            throw new Exception('Error on create table execute. MySql error message:'.$e->getMessage());
         }
     }
 
@@ -625,4 +641,85 @@ class MySqlQueue implements QueueInterface
 
         return $data;
     }
+
+    /**
+     * Clear up the all failed jobs
+     */
+    public function clear(){
+        $this->connection->execute('TRUNCATE TABLE `jobs_queue_failed`');
+    }
+    /**
+     * Return all distinct reasons why a job of the given type failed us in the past
+     *
+     * @param string $job_type
+     * @returns array
+     */
+    public function getFailedJobReasons($job_type){
+        if ($result = $this->connection->execute('SELECT DISTINCT(`reason`) AS "reason" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` = ?', $job_type)) {
+            return $result->toArray();
+        }
+        return [];
+    }
+    /**
+     * Search for a full job class name
+     *
+     * @param string $search_for
+     * @return mixed
+     * @throws \Exception
+     */
+    public function unfurlType($search_for){
+        try{
+            $event_type_names = $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', '%' . $input->getArgument('type') . '%');
+        }catch (\Exception $e){
+
+            throw new \Exception('Error has occurred on search for full job class name. Error message'.$e->getMessage());
+        }
+
+        if (count($event_type_names) > 1) {
+            throw new \Exception('More than one job type found');
+        } elseif (count($event_type_names) == 0) {
+            throw new \Exception('No job type that matches type argument found under failed jobs');
+        }
+        return $event_type_names[0];
+
+    }
+    /**
+     * Method that returns failed job statistics
+     * @return array Key is job type, value is an array where keys are dates and values are number of failed jobs on that particular day.
+     */
+    public function failedJobStatistics(){
+        $result = [];
+        $event_types = $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '`');
+
+        if (count($event_types)) {
+            foreach ($event_types as $event_type) {
+                $result[$event_type] = $this->failedJobStatisticsByType($event_type);
+            }
+        }
+        return $result;
+    }
+    /**
+     * Method that returns failed job statistics
+     * @param $event_type
+     * @return array Returns array where keys are dates and values are number of failed jobs on that particular day.
+     */
+    public function failedJobStatisticsByType($event_type){
+        $result = [];
+        foreach ($this->connection->execute('SELECT DATE(`failed_at`) AS "date", COUNT(`id`) AS "failed_jobs_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` = ? GROUP BY DATE(`failed_at`)', $event_type) as $row) {
+            $result[[$row['date']]] = $row['failed_jobs_count'];
+        }
+        return $result;
+
+    }
+    /**
+     * @return array where key is job type and value is number of jobs in the queue of that type.
+     */
+    public function countJobsByType(){
+        $result = [];
+        foreach ($this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::TABLE_NAME .'` GROUP BY `type`') as $row) {
+            $result[[$row['type']]] = $row['queued_jobs_count'];
+        }
+        return $result;
+    }
+
 }

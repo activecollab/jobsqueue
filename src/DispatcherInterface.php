@@ -74,4 +74,11 @@ interface DispatcherInterface
      * @return boolean
      */
     public function isChannelRegistered($channel);
+    /**
+     * Search for a full job class name
+     *
+     * @param string $search_for
+     * @returns string
+     */
+    public function unfurlType($search_for);
 }

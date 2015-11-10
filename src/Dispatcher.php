@@ -156,4 +156,14 @@ class Dispatcher implements DispatcherInterface
     {
         return $this->queue;
     }
+    /**
+     * Search for a full job class name
+     *
+     * @param string $search_for
+     * @return mixed
+     * @throws \Exception
+     */
+    public function unfurlType($search_for){
+        return  $this->getQueue()->unfurlType($search_for);
+    }
 }

@@ -669,7 +669,7 @@ class MySqlQueue implements QueueInterface
      */
     public function unfurlType($search_for){
         try{
-            $event_type_names = $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', '%' . $input->getArgument('type') . '%');
+            $event_type_names = $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', '%' . $search_for . '%');
         }catch (\Exception $e){
 
             throw new \Exception('Error has occurred on search for full job class name. Error message'.$e->getMessage());

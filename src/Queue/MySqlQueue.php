@@ -2,7 +2,6 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
-use ActiveCollab\DatabaseConnection\ConnectionInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
@@ -705,19 +704,24 @@ class MySqlQueue implements QueueInterface
      */
     public function failedJobStatisticsByType($event_type){
         $result = [];
-        foreach ($this->connection->execute('SELECT DATE(`failed_at`) AS "date", COUNT(`id`) AS "failed_jobs_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` = ? GROUP BY DATE(`failed_at`)', $event_type) as $row) {
-            $result[[$row['date']]] = $row['failed_jobs_count'];
+        $job_rows = $this->connection->execute('SELECT DATE(`failed_at`) AS "date", COUNT(`id`) AS "failed_jobs_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` = ? GROUP BY DATE(`failed_at`)', $event_type);
+        if(count($job_rows)){
+            foreach ($job_rows as $row) {
+                $result[$row['date']] = $row['failed_jobs_count'];
+            }
         }
         return $result;
-
     }
     /**
      * @return array where key is job type and value is number of jobs in the queue of that type.
      */
     public function countJobsByType(){
         $result = [];
-        foreach ($this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::TABLE_NAME .'` GROUP BY `type`') as $row) {
-            $result[[$row['type']]] = $row['queued_jobs_count'];
+        $type_rows = $this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::TABLE_NAME . '` GROUP BY `type`');
+        if(count($type_rows)){
+            foreach ($type_rows as $row) {
+                $result[$row['type']] = $row['queued_jobs_count'];
+            }
         }
         return $result;
     }

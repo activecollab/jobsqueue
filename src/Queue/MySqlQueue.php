@@ -667,20 +667,7 @@ class MySqlQueue implements QueueInterface
      * @throws \Exception
      */
     public function unfurlType($search_for){
-        try{
-            $event_type_names = $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', '%' . $search_for . '%');
-        }catch (\Exception $e){
-
-            throw new \Exception('Error has occurred on search for full job class name. Error message'.$e->getMessage());
-        }
-
-        if (count($event_type_names) > 1) {
-            throw new \Exception('More than one job type found');
-        } elseif (count($event_type_names) == 0) {
-            throw new \Exception('No job type that matches type argument found under failed jobs');
-        }
-        return $event_type_names[0];
-
+        return $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', '%' . $search_for . '%');
     }
     /**
      * Method that returns failed job statistics

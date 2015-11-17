@@ -6,7 +6,6 @@ php:
 mysql:
   database: activecollab_jobs_queue_test
   username: root
-  password: pas$w0rd
   encoding: utf8mb4
 install: composer install --dev
 before_script:

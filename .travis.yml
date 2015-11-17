@@ -10,5 +10,6 @@ mysql:
 install: composer install --dev
 before_script:
   # create the database
-  - mysql -e 'create database activecollab_jobs_queue_test;'
+  - mysql -e 'create database IF NOT EXISTS activecollab_jobs_queue_test;'
+  - echo "USE mysql;UPDATE user SET password=PASSWORD('pas$w0rd') WHERE user='root';FLUSH PRIVILEGES;" | mysql -u root
 script: phpunit -c test/phpunit.xml

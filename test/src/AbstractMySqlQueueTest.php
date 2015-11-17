@@ -42,7 +42,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
     {
         parent::setUp();
 
-        $this->link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
+        $this->link = new \MySQLi('localhost', 'root', 'pas$w0rd', 'activecollab_jobs_queue_test');
 
         if ($this->link->connect_error) {
             throw new \RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);

@@ -2,11 +2,11 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
+use ActiveCollab\DatabaseConnection\ConnectionInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
-use LogicException;
 use InvalidArgumentException;
 use RuntimeException;
 

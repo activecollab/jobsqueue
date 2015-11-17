@@ -32,7 +32,17 @@ class MySqlQueue implements QueueInterface
         $this->connection = $connection;
 
         if ($create_tables_if_missing) {
-            $tables = ["CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
+            $this->createTables();
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createTables()
+    {
+        try {
+            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                 `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
@@ -49,8 +59,9 @@ class MySqlQueue implements QueueInterface
                 KEY `channel` (`channel`),
                 KEY `priority` (`priority`),
                 KEY `reserved_at` (`reserved_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
-            "CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                 `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
@@ -61,24 +72,13 @@ class MySqlQueue implements QueueInterface
                 KEY `type` (`type`),
                 KEY `channel` (`channel`),
                 KEY `failed_at` (`failed_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"];
-            call_user_func_array(array($this,'createTables'),$tables);
-        }
-    }
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
-    /**
-     * Create one or more tables
-     * @param  list - string sql table definition
-     * @throws Exception
-     */
-    public function createTables(){
-
-        try{
-            foreach(func_get_args() as $table_definition){
-                $this->connection->execute($table_definition);
+            foreach (func_get_args() as $additional_table) {
+                $this->connection->execute($additional_table);
             }
-        }catch (\Exception $e){
-            throw new Exception('Error on create table execute. MySql error message:'.$e->getMessage());
+        } catch (\Exception $e) {
+            throw new Exception('Error on create table execute. MySql error message:' . $e->getMessage());
         }
     }
 
@@ -127,8 +127,8 @@ class MySqlQueue implements QueueInterface
     /**
      * Run job now (sync, waits for a response)
      *
-     * @param  JobInterface     $job
-     * @param  string           $channel
+     * @param  JobInterface $job
+     * @param  string       $channel
      * @return mixed
      * @throws RuntimeException
      */
@@ -152,7 +152,7 @@ class MySqlQueue implements QueueInterface
     /**
      * Return a total number of jobs that are in the given channel
      *
-     * @param  string  $channel
+     * @param  string $channel
      * @return integer
      */
     public function countByChannel($channel)
@@ -170,7 +170,7 @@ class MySqlQueue implements QueueInterface
     public function exists($job_type, array $properties = null)
     {
         if (empty($properties)) {
-            return (boolean) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` = ?', $job_type);
+            return (boolean)$this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` = ?', $job_type);
         } else {
             if ($rows = $this->connection->execute('SELECT `data` FROM `' . self::TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
                 foreach ($rows as $row) {
@@ -180,7 +180,7 @@ class MySqlQueue implements QueueInterface
                         $all_properties_found = true;
 
                         foreach ($properties as $k => $v) {
-                            if (!(array_key_exists($k, $data) && $data[$k] === $v)) {
+                            if (!(array_key_exists($k, $data) && $data[ $k ] === $v)) {
                                 $all_properties_found = false;
                                 break;
                             }
@@ -227,7 +227,7 @@ class MySqlQueue implements QueueInterface
     /**
      * Return job by ID
      *
-     * @param  integer           $job_id
+     * @param  integer $job_id
      * @return JobInterface|null
      */
     public function getJobById($job_id)
@@ -249,7 +249,7 @@ class MySqlQueue implements QueueInterface
     /**
      * Hydrate a job based on row data
      *
-     * @param  array        $row
+     * @param  array $row
      * @return JobInterface
      */
     private function getJobFromRow(array $row)
@@ -259,7 +259,7 @@ class MySqlQueue implements QueueInterface
         /** @var Job $job */
         $job = new $type($this->jsonDecode($row['data']));
         $job->setChannel($row['channel']);
-        $job->setQueue($this, (integer) $row['id']);
+        $job->setQueue($this, (integer)$row['id']);
 
         return $job;
     }
@@ -291,7 +291,7 @@ class MySqlQueue implements QueueInterface
      * Log failed job and delete it from the main queue
      *
      * @param JobInterface $job
-     * @param string      $reason
+     * @param string       $reason
      */
     public function logFailedJob(JobInterface $job, $reason)
     {
@@ -326,7 +326,7 @@ class MySqlQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
-     * @param  string            ...$from_channels
+     * @param  string ...$from_channels
      * @return JobInterface|null
      */
     public function nextInLine()
@@ -406,8 +406,8 @@ class MySqlQueue implements QueueInterface
     /**
      * Restore failed job by job ID and optionally update job properties
      *
-     * @param  mixed        $job_id
-     * @param  array|null   $update_data
+     * @param  mixed      $job_id
+     * @param  array|null $update_data
      * @return JobInterface
      */
     public function restoreFailedJobById($job_id, array $update_data = null)
@@ -620,7 +620,7 @@ class MySqlQueue implements QueueInterface
     /**
      * Decode JSON and throw an exception in case of any error
      *
-     * @param  string           $serialized_data
+     * @param  string $serialized_data
      * @return mixed
      * @throws RuntimeException
      */
@@ -644,21 +644,26 @@ class MySqlQueue implements QueueInterface
     /**
      * Clear up the all failed jobs
      */
-    public function clear(){
+    public function clear()
+    {
         $this->connection->execute('TRUNCATE TABLE `jobs_queue_failed`');
     }
+
     /**
      * Return all distinct reasons why a job of the given type failed us in the past
      *
      * @param string $job_type
      * @returns array
      */
-    public function getFailedJobReasons($job_type){
+    public function getFailedJobReasons($job_type)
+    {
         if ($result = $this->connection->execute('SELECT DISTINCT(`reason`) AS "reason" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` = ?', $job_type)) {
             return $result->toArray();
         }
+
         return [];
     }
+
     /**
      * Search for a full job class name
      *
@@ -666,51 +671,62 @@ class MySqlQueue implements QueueInterface
      * @return mixed
      * @throws \Exception
      */
-    public function unfurlType($search_for){
+    public function unfurlType($search_for)
+    {
         return $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', '%' . $search_for . '%');
     }
+
     /**
      * Method that returns failed job statistics
+     *
      * @return array Key is job type, value is an array where keys are dates and values are number of failed jobs on that particular day.
      */
-    public function failedJobStatistics(){
+    public function failedJobStatistics()
+    {
         $result = [];
         $event_types = $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::TABLE_NAME_FAILED . '`');
 
         if (count($event_types)) {
             foreach ($event_types as $event_type) {
-                $result[$event_type] = $this->failedJobStatisticsByType($event_type);
+                $result[ $event_type ] = $this->failedJobStatisticsByType($event_type);
             }
         }
-        return $result;
-    }
-    /**
-     * Method that returns failed job statistics
-     * @param $event_type
-     * @return array Returns array where keys are dates and values are number of failed jobs on that particular day.
-     */
-    public function failedJobStatisticsByType($event_type){
-        $result = [];
-        $job_rows = $this->connection->execute('SELECT DATE(`failed_at`) AS "date", COUNT(`id`) AS "failed_jobs_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` = ? GROUP BY DATE(`failed_at`)', $event_type);
-        if(count($job_rows)){
-            foreach ($job_rows as $row) {
-                $result[$row['date']] = $row['failed_jobs_count'];
-            }
-        }
-        return $result;
-    }
-    /**
-     * @return array where key is job type and value is number of jobs in the queue of that type.
-     */
-    public function countJobsByType(){
-        $result = [];
-        $type_rows = $this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::TABLE_NAME . '` GROUP BY `type`');
-        if(count($type_rows)){
-            foreach ($type_rows as $row) {
-                $result[$row['type']] = $row['queued_jobs_count'];
-            }
-        }
+
         return $result;
     }
 
+    /**
+     * Method that returns failed job statistics
+     *
+     * @param $event_type
+     * @return array Returns array where keys are dates and values are number of failed jobs on that particular day.
+     */
+    public function failedJobStatisticsByType($event_type)
+    {
+        $result = [];
+        $job_rows = $this->connection->execute('SELECT DATE(`failed_at`) AS "date", COUNT(`id`) AS "failed_jobs_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` = ? GROUP BY DATE(`failed_at`)', $event_type);
+        if (count($job_rows)) {
+            foreach ($job_rows as $row) {
+                $result[ $row['date'] ] = $row['failed_jobs_count'];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array where key is job type and value is number of jobs in the queue of that type.
+     */
+    public function countJobsByType()
+    {
+        $result = [];
+        $type_rows = $this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::TABLE_NAME . '` GROUP BY `type`');
+        if (count($type_rows)) {
+            foreach ($type_rows as $row) {
+                $result[ $row['type'] ] = $row['queued_jobs_count'];
+            }
+        }
+
+        return $result;
+    }
 }

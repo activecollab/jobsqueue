@@ -152,8 +152,9 @@ interface QueueInterface extends Countable
     public function countJobsByType();
     /**
      * Create one or more tables
-     * @param  list - string sql table definition
-     * @throws Exception
+     *
+     * @param  string     ...$additional_tables
+     * @throws \Exception
      */
     public function createTables();
 }

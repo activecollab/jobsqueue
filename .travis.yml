@@ -10,5 +10,5 @@ mysql:
 install: composer install --dev
 before_script:
   # create the database
-  - mysql -e 'create database IF NOT EXISTS activecollab_jobs_queue_test;'
+  - mysql -e 'create database if not exists activecollab_jobs_queue_test;'
 script: phpunit -c test/phpunit.xml

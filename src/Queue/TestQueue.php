@@ -58,7 +58,7 @@ class TestQueue implements QueueInterface
     /**
      * Return a total number of jobs that are in the given channel
      *
-     * @param  string  $channel
+     * @param  string $channel
      * @return integer
      */
     public function countByChannel($channel)
@@ -80,7 +80,7 @@ class TestQueue implements QueueInterface
     /**
      * Return Job that is next in line to be executed
      *
-     * @param  string            ...$from_channels
+     * @param  string ...$from_channels
      * @return JobInterface|null
      */
     public function nextInLine()
@@ -227,27 +227,35 @@ class TestQueue implements QueueInterface
     {
         $this->on_job_failure[] = $callback;
     }
+
     /**
      * Create one or more tables
+     *
      * @param  list - string sql table definition
      * @throws Exception
      */
-    public function createTables(){
+    public function createTables()
+    {
     }
+
     /**
      * Clear up the all failed jobs
      */
-    public function clear(){
+    public function clear()
+    {
     }
+
     /**
      * Return all distinct reasons why a job of the given type failed us in the past
      *
      * @param string $job_type
      * @returns array
      */
-    public function getFailedJobReasons($job_type){
+    public function getFailedJobReasons($job_type)
+    {
         return [];
     }
+
     /**
      * Search for a full job class name
      *
@@ -255,27 +263,36 @@ class TestQueue implements QueueInterface
      * @return mixed
      * @throws \Exception
      */
-    public function unfurlType($search_for){
+    public function unfurlType($search_for)
+    {
     }
+
     /**
      * Method that returns failed job statistics
+     *
      * @return array Key is job type, value is an array where keys are dates and values are number of failed jobs on that particular day.
      */
-    public function failedJobStatistics(){
+    public function failedJobStatistics()
+    {
         return [];
     }
+
     /**
      * Method that returns failed job statistics
+     *
      * @param $event_type
      * @return array Returns array where keys are dates and values are number of failed jobs on that particular day.
      */
-    public function failedJobStatisticsByType($event_type){
+    public function failedJobStatisticsByType($event_type)
+    {
         return [];
     }
+
     /**
      * @return array where key is job type and value is number of jobs in the queue of that type.
      */
-    public function countJobsByType(){
+    public function countJobsByType()
+    {
         return [];
     }
 }

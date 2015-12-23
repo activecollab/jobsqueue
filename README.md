@@ -52,7 +52,7 @@ Now, lets create a dispatcher instance that manages one MySQL powered queue:
 <?php
 
 use ActiveCollab\JobsQueue\Dispatcher;
-use ActiveCollab\JobsQueue\Queue\MySql;
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use mysqli;
 use RuntimeException;
 
@@ -62,7 +62,7 @@ if ($database_link->connect_error) {
     throw new RuntimeException('Failed to connect to database. MySQL said: ' . $database_link->connect_error);
 }
 
-$queue = new MySql($database_link);
+$queue = new MySqlQueue($database_link);
 
 // Not required but gives you flexibility with failure handling
 $queue->onJobFailure(function(Job $job, Exception $reason) {

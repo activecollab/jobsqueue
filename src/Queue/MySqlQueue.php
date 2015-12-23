@@ -39,7 +39,7 @@ class MySqlQueue implements QueueInterface
     /**
      * {@inheritdoc}
      */
-    public function createTables()
+    public function createTables(...$additional_tables)
     {
         try {
             $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
@@ -74,7 +74,7 @@ class MySqlQueue implements QueueInterface
                 KEY `failed_at` (`failed_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
-            foreach (func_get_args() as $additional_table) {
+            foreach ($additional_tables as $additional_table) {
                 $this->connection->execute($additional_table);
             }
         } catch (\Exception $e) {
@@ -100,11 +100,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Add a job to the queue
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return integer
+     * {@inheritdoc}
      */
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -125,12 +121,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Run job now (sync, waits for a response)
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
-     * @throws RuntimeException
+     * {@inheritdoc}
      */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -150,10 +141,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Return a total number of jobs that are in the given channel
-     *
-     * @param  string $channel
-     * @return integer
+     * {@inheritdoc}
      */
     public function countByChannel($channel)
     {
@@ -161,11 +149,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Return true if there's an active job of the give type with the given properties
-     *
-     * @param  string     $job_type
-     * @param  array|null $properties
-     * @return boolean
+     * {@inheritdoc}
      */
     public function exists($job_type, array $properties = null)
     {
@@ -324,14 +308,11 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Return Job that is next in line to be executed
-     *
-     * @param  string ...$from_channels
-     * @return JobInterface|null
+     * {@inheritdoc}
      */
-    public function nextInLine()
+    public function nextInLine(...$from_channels)
     {
-        if ($job_id = $this->reserveNextJob(func_get_args())) {
+        if ($job_id = $this->reserveNextJob($from_channels)) {
             return $this->getJobById($job_id);
         } else {
             return null;
@@ -390,9 +371,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Prepare and return a new reservation key
-     *
-     * @return string
+     * {@inheritdoc}
      */
     private function prepareNewReservationKey()
     {
@@ -404,11 +383,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Restore failed job by job ID and optionally update job properties
-     *
-     * @param  mixed      $job_id
-     * @param  array|null $update_data
-     * @return JobInterface
+     * {@inheritdoc}
      */
     public function restoreFailedJobById($job_id, array $update_data = null)
     {
@@ -457,10 +432,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Restore failed jobs by job type
-     *
-     * @param string     $job_type
-     * @param array|null $update_data
+     * {@inheritdoc}
      */
     public function restoreFailedJobsByType($job_type, array $update_data = null)
     {
@@ -472,7 +444,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * @return int
+     * {@inheritdoc}
      */
     public function count()
     {
@@ -480,8 +452,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * @param  string $type1
-     * @return integer
+     * {@inheritdoc}
      */
     public function countByType($type1)
     {
@@ -493,7 +464,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * @return integer
+     * {@inheritdoc}
      */
     public function countFailed()
     {
@@ -501,8 +472,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * @param  string $type1
-     * @return integer
+     * {@inheritdoc}
      */
     public function countFailedByType($type1)
     {
@@ -514,10 +484,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Let jobs report that they raised background process
-     *
-     * @param JobInterface $job
-     * @param integer      $process_id
+     * {@inheritdoc}
      */
     public function reportBackgroundProcess(JobInterface $job, $process_id)
     {
@@ -541,9 +508,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Return a list of background processes that jobs from this queue have launched
-     *
-     * @return array
+     * {@inheritdoc}
      */
     public function getBackgroundProcesses()
     {
@@ -555,7 +520,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Check stuck jobs
+     * {@inheritdoc}
      */
     public function checkStuckJobs()
     {
@@ -595,7 +560,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Clean up the queue
+     * {@inheritdoc}
      */
     public function cleanUp()
     {
@@ -608,9 +573,7 @@ class MySqlQueue implements QueueInterface
     private $on_job_failure = [];
 
     /**
-     * What to do when job fails
-     *
-     * @param callable|null $callback
+     * {@inheritdoc}
      */
     public function onJobFailure(callable $callback = null)
     {
@@ -622,7 +585,6 @@ class MySqlQueue implements QueueInterface
      *
      * @param  string $serialized_data
      * @return mixed
-     * @throws RuntimeException
      */
     private function jsonDecode($serialized_data)
     {
@@ -642,7 +604,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Clear up the all failed jobs
+     * {@inheritdoc}
      */
     public function clear()
     {
@@ -650,10 +612,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Return all distinct reasons why a job of the given type failed us in the past
-     *
-     * @param string $job_type
-     * @returns array
+     * {@inheritdoc}
      */
     public function getFailedJobReasons($job_type)
     {
@@ -665,11 +624,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Search for a full job class name
-     *
-     * @param string $search_for
-     * @return mixed
-     * @throws \Exception
+     * {@inheritdoc}
      */
     public function unfurlType($search_for)
     {
@@ -677,9 +632,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Method that returns failed job statistics
-     *
-     * @return array Key is job type, value is an array where keys are dates and values are number of failed jobs on that particular day.
+     * {@inheritdoc}
      */
     public function failedJobStatistics()
     {
@@ -696,10 +649,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Method that returns failed job statistics
-     *
-     * @param $event_type
-     * @return array Returns array where keys are dates and values are number of failed jobs on that particular day.
+     * {@inheritdoc}
      */
     public function failedJobStatisticsByType($event_type)
     {
@@ -715,7 +665,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * @return array where key is job type and value is number of jobs in the queue of that type.
+     * {@inheritdoc}
      */
     public function countJobsByType()
     {

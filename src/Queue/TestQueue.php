@@ -26,11 +26,7 @@ class TestQueue implements QueueInterface
     private $needs_sort = false;
 
     /**
-     * Add a job to the queue
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return integer
+     * {@inheritdoc}
      */
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -44,11 +40,7 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Run job now (sync, waits for a response)
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
+     * {@inheritdoc}
      */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -56,10 +48,7 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Return a total number of jobs that are in the given channel
-     *
-     * @param  string $channel
-     * @return integer
+     * {@inheritdoc}
      */
     public function countByChannel($channel)
     {
@@ -67,23 +56,16 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Return true if there's an active job of the give type with the given properties
-     *
-     * @param  string     $job_type
-     * @param  array|null $properties
-     * @return boolean
+     * {@inheritdoc}
      */
     public function exists($job_type, array $properties = null)
     {
     }
 
     /**
-     * Return Job that is next in line to be executed
-     *
-     * @param  string ...$from_channels
-     * @return JobInterface|null
+     * {@inheritdoc}
      */
-    public function nextInLine()
+    public function nextInLine(...$from_channels)
     {
         if (empty($this->jobs)) {
             return null;
@@ -97,37 +79,28 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Sort jobs so priority ones are at the beginning of the array
-     *
-     * @param array $data
+     * {@inheritdoc}
      */
     private function sortByPriority(array &$data)
     {
     }
 
     /**
-     * Restore failed job by job ID and optionally update job properties
-     *
-     * @param  mixed      $job_id
-     * @param  array|null $update_data
-     * @return Job
+     * {@inheritdoc}
      */
     public function restoreFailedJobById($job_id, array $update_data = null)
     {
     }
 
     /**
-     * Restore failed jobs by job type
-     *
-     * @param string     $job_type
-     * @param array|null $update_data
+     * {@inheritdoc}
      */
     public function restoreFailedJobsByType($job_type, array $update_data = null)
     {
     }
 
     /**
-     * @return int
+     * {@inheritdoc}
      */
     public function count()
     {
@@ -135,8 +108,7 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * @param  string $type1
-     * @return integer
+     * {@inheritdoc}
      */
     public function countByType($type1)
     {
@@ -154,7 +126,7 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * @return integer
+     * {@inheritdoc}
      */
     public function countFailed()
     {
@@ -162,8 +134,7 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * @param  string $type1
-     * @return integer
+     * {@inheritdoc}
      */
     public function countFailedByType($type1)
     {
@@ -181,33 +152,28 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Let jobs report that they raised background process
-     *
-     * @param JobInterface $job
-     * @param integer      $process_id
+     * {@inheritdoc}
      */
     public function reportBackgroundProcess(JobInterface $job, $process_id)
     {
     }
 
     /**
-     * Return a list of background processes that jobs from this queue have launched
-     *
-     * @return array
+     * {@inheritdoc}
      */
     public function getBackgroundProcesses()
     {
     }
 
     /**
-     * Check stuck jobs
+     * {@inheritdoc}
      */
     public function checkStuckJobs()
     {
     }
 
     /**
-     * Clean up the queue
+     * {@inheritdoc}
      */
     public function cleanUp()
     {
@@ -219,9 +185,7 @@ class TestQueue implements QueueInterface
     private $on_job_failure = [];
 
     /**
-     * What to do when job fails
-     *
-     * @param callable|null $callback
+     * {@inheritdoc}
      */
     public function onJobFailure(callable $callback = null)
     {
@@ -229,27 +193,21 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Create one or more tables
-     *
-     * @param  list - string sql table definition
-     * @throws Exception
+     * {@inheritdoc}
      */
-    public function createTables()
+    public function createTables(...$additional_tables)
     {
     }
 
     /**
-     * Clear up the all failed jobs
+     * {@inheritdoc}
      */
     public function clear()
     {
     }
 
     /**
-     * Return all distinct reasons why a job of the given type failed us in the past
-     *
-     * @param string $job_type
-     * @returns array
+     * {@inheritdoc}
      */
     public function getFailedJobReasons($job_type)
     {
@@ -257,20 +215,14 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Search for a full job class name
-     *
-     * @param string $search_for
-     * @return mixed
-     * @throws \Exception
+     * {@inheritdoc}
      */
     public function unfurlType($search_for)
     {
     }
 
     /**
-     * Method that returns failed job statistics
-     *
-     * @return array Key is job type, value is an array where keys are dates and values are number of failed jobs on that particular day.
+     * {@inheritdoc}
      */
     public function failedJobStatistics()
     {
@@ -278,10 +230,7 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * Method that returns failed job statistics
-     *
-     * @param $event_type
-     * @return array Returns array where keys are dates and values are number of failed jobs on that particular day.
+     * {@inheritdoc}
      */
     public function failedJobStatisticsByType($event_type)
     {
@@ -289,7 +238,7 @@ class TestQueue implements QueueInterface
     }
 
     /**
-     * @return array where key is job type and value is number of jobs in the queue of that type.
+     * {@inheritdoc}
      */
     public function countJobsByType()
     {

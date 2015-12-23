@@ -74,11 +74,27 @@ interface DispatcherInterface
      * @return boolean
      */
     public function isChannelRegistered($channel);
+
+    /**
+     * @return boolean
+     */
+    public function getExceptionOnUnregisteredChannel();
+
+    /**
+     * Set if exception should be thrown when producer tries to add a job to an unregistered channel
+     *
+     * Default is TRUE. FALSE may be useful during testing and if there's only one channel used
+     *
+     * @param  boolean $value
+     * @return $this
+     */
+    public function &exceptionOnUnregisteredChannel($value = true);
+
     /**
      * Search for a full job class name
      *
-     * @param string $search_for
-     * @returns string
+     * @param  string $search_for
+     * @return string
      */
     public function unfurlType($search_for);
 }

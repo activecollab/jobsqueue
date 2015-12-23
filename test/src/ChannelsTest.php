@@ -83,9 +83,26 @@ class ChannelsTest extends AbstractMySqlQueueTest
     /**
      * @expectedException \InvalidArgumentException
      */
-    public function testJobCantBeDispatchedToAnUnknownChannel()
+    public function testJobCantBeDispatchedToAnUnknownChannelByDefault()
     {
         $this->dispatcher->dispatch(new Inc(['number' => 123]), 'not registered');
+    }
+
+    /**
+     * Test if we can turn off exception for unregistered channel
+     */
+    public function testJobDispatchedToUnknownChannelGoToDefaultChannel()
+    {
+        $this->assertTrue($this->dispatcher->getExceptionOnUnregisteredChannel());
+        $this->dispatcher->exceptionOnUnregisteredChannel(false);
+        $this->assertFalse($this->dispatcher->getExceptionOnUnregisteredChannel());
+
+        $job_id = $this->dispatcher->dispatch(new Inc(['number' => 123]), 'not registered');
+
+        $job = $this->dispatcher->getQueue()->getJobById($job_id);
+
+        $this->assertInstanceOf(Inc::class, $job);
+        $this->assertEquals(QueueInterface::MAIN_CHANNEL, $job->getChannel());
     }
 
     /**

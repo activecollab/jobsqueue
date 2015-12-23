@@ -111,6 +111,29 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
+     * @var bool
+     */
+    private $exception_on_unregistered_channel = true;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getExceptionOnUnregisteredChannel()
+    {
+        return $this->exception_on_unregistered_channel;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function &exceptionOnUnregisteredChannel($value = true)
+    {
+        $this->exception_on_unregistered_channel = (boolean) $value;
+
+        return $this;
+    }
+
+    /**
      * Make sure that we got a valid channel name
      *
      * @param  string $channel
@@ -128,7 +151,11 @@ class Dispatcher implements DispatcherInterface
             if (in_array($channel, $this->registered_channels)) {
                 return $channel;
             } else {
-                throw new InvalidArgumentException("Channel '$channel' is not registered");
+                if ($this->exception_on_unregistered_channel) {
+                    throw new InvalidArgumentException("Channel '$channel' is not registered");
+                } else {
+                    return QueueInterface::MAIN_CHANNEL;
+                }
             }
         } else {
             throw new InvalidArgumentException("Channel name needs to be a string value");

@@ -2,9 +2,7 @@
 
 [![Build Status](https://travis-ci.org/activecollab/jobsqueue.svg?branch=master)](https://travis-ci.org/activecollab/jobsqueue)
 
-Reason for existence: it's light, with very few dependencies. It can be used with cron + database powered queues for
-people who are not allowed to run a proper messaging or job management server. Or you can execute jobs through proper
-messaging or job manager with it.
+Reason for existence: it's light, with very few dependencies. It can be used with cron + database powered queues for people who are not allowed to run a proper messaging or job management server. Or you can execute jobs through proper messaging or job manager with it.
 
 To install it, use Composer:
 
@@ -106,6 +104,26 @@ $job = new Inc([
     'delay'               => 5,
     'first_attempt_delay' => 1
 ]);
+```
+
+## Channels
+
+In some situations, it is useful to have multiple channels and consumer listening on them. For example, you can have a consumer on a mailing server listening only on `mail` channel, but not listening on other channels (which jobs it is not suited to perform).
+
+By default, all jobs go to main channel (`QueueInterface::MAIN_CHANNEL`), but channel can be specified when job is added to the queue:
+
+```php
+$dispatcher->registerChannels('new');
+$dispatcher->execute(new Inc(['number' => 123]), 'new');
+```
+
+By default, dispatcher will throw an exception if you try to add a job to an unknown channel. This can be turned off:
+
+```php
+$dispatcher->exceptionOnUnregisteredChannel(false);
+
+// This job will end un in main channel, but no exception will be thrown
+$dispatcher->execute(new Inc(['number' => 123]), 'unknown channel');
 ```
 
 ## Background Process

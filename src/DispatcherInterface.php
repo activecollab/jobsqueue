@@ -47,10 +47,10 @@ interface DispatcherInterface
     /**
      * Register multiple channels
      *
-     * @param  string ...$channels
+     * @param  string[] ...$channels
      * @return $this
      */
-    public function &registerChannels();
+    public function &registerChannels(...$channels);
 
     /**
      * Register a single change

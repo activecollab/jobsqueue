@@ -60,12 +60,12 @@ class Dispatcher implements DispatcherInterface
     /**
      * Register multiple channels
      *
-     * @param  string ...$channels
+     * @param  string[] ...$channels
      * @return $this
      */
-    public function &registerChannels()
+    public function &registerChannels(...$channels)
     {
-        foreach (func_get_args() as $channel) {
+        foreach ($channels as $channel) {
             $this->registerChannel($channel);
         }
 

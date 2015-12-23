@@ -122,7 +122,7 @@ By default, dispatcher will throw an exception if you try to add a job to an unk
 ```php
 $dispatcher->exceptionOnUnregisteredChannel(false);
 
-// This job will end un in main channel, but no exception will be thrown
+// This job will end up in the 'main' channel, but exception will not be thrown
 $dispatcher->execute(new Inc(['number' => 123]), 'unknown channel');
 ```
 

@@ -1,6 +1,8 @@
 <?php
 
-defined('BASE_PATH') || define('BASE_PATH', realpath(__DIR__));
+/**
+ * Bootstrap test case
+ */
 
 date_default_timezone_set('GMT');
 

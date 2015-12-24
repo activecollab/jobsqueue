@@ -2,7 +2,7 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
-use ActiveCollab\DatabaseConnection\Connection;
+use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
@@ -21,7 +21,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
     protected $link;
 
     /**
-     * @var Connection
+     * @var MysqliConnection
      */
     protected $connection;
 
@@ -48,7 +48,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
             throw new \RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);
         }
 
-        $this->connection = new Connection($this->link);
+        $this->connection = new MysqliConnection($this->link);
         $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME . '`');
 
         $queue = new MySqlQueue($this->connection);
@@ -67,6 +67,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
      */
     public function tearDown()
     {
+        $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::BATCHES_TABLE_NAME . '`');
         $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME . '`');
         $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::TABLE_NAME_FAILED . '`');
         $this->link->close();

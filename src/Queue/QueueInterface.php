@@ -2,6 +2,8 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
+use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use Countable;
 
@@ -95,6 +97,22 @@ interface QueueInterface extends Countable
      * @return integer
      */
     public function countFailedByType($type1);
+
+    /**
+     * Create a new batch with the given name
+     *
+     * @param  DispatcherInterface $dispatcher
+     * @param  string              $name
+     * @return BatchInterface
+     */
+    public function createBatch(DispatcherInterface &$dispatcher, $name);
+
+    /**
+     * Return total number of batches in the queue
+     *
+     * @return integer
+     */
+    public function countBatches();
 
     /**
      * Let jobs report that they raised background process

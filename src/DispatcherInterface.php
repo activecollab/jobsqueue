@@ -2,23 +2,15 @@
 
 namespace ActiveCollab\JobsQueue;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 
 /**
  * @package ActiveCollab\JobsQueue
  */
-interface DispatcherInterface
+interface DispatcherInterface extends DispatchJobInterface
 {
-    /**
-     * Add a job to the queue
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
-     */
-    public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL);
-
     /**
      * Execute a job now (sync, waits for a response)
      *
@@ -27,6 +19,13 @@ interface DispatcherInterface
      * @return mixed
      */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL);
+
+    /**
+     * Execute next job in line of execution
+     *
+     * @param string[] ...$from_channels
+     */
+    public function executeNextInLine(...$from_channels);
 
     /**
      * Return true if job of the given type and with the given properties exists in queue
@@ -89,6 +88,20 @@ interface DispatcherInterface
      * @return $this
      */
     public function &exceptionOnUnregisteredChannel($value = true);
+
+    /**
+     * Create a job batch and optionally add jobs to it (via $add_jobs closure)
+     *
+     * @param  string         $name
+     * @param  callable|null  $add_jobs
+     * @return BatchInterface
+     */
+    public function batch($name, callable $add_jobs = null);
+
+    /**
+     * @return integer
+     */
+    public function countBatches();
 
     /**
      * Search for a full job class name

@@ -2,6 +2,7 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
+use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 
@@ -243,5 +244,21 @@ class TestQueue implements QueueInterface
     public function countJobsByType()
     {
         return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createBatch(DispatcherInterface &$dispatcher, $name)
+    {
+        throw new \LogicException('Method not implemented in test queue');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function countBatches()
+    {
+        return 0;
     }
 }

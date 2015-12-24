@@ -29,11 +29,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Add a job to the queue
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
+     * {@inheritdoc}
      */
     public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -41,15 +37,39 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Execute a job now (sync, waits for a response)
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
+     * {@inheritdoc}
      */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $this->getQueue()->execute($job, $this->validateChannel($channel));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function executeNextInLine(...$from_channels)
+    {
+        if ($job = $this->getQueue()->nextInLine(...$from_channels)) {
+            return $this->getQueue()->execute($job, $job->getChannel());
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function exists($job_type, array $properties = null)
+    {
+        return $this->getQueue()->exists($job_type, $properties);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function &getQueue()
+    {
+        return $this->queue;
     }
 
     /**
@@ -58,10 +78,7 @@ class Dispatcher implements DispatcherInterface
     private $registered_channels = [QueueInterface::MAIN_CHANNEL];
 
     /**
-     * Register multiple channels
-     *
-     * @param  string[] ...$channels
-     * @return $this
+     * {@inheritdoc}
      */
     public function &registerChannels(...$channels)
     {
@@ -73,10 +90,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Register a single change
-     *
-     * @param  string $channel
-     * @return $this
+     * {@inheritdoc}
      */
     public function &registerChannel($channel)
     {
@@ -90,9 +104,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Return an array of registered channels
-     *
-     * @return array
+     * {@inheritdoc}
      */
     public function getRegisteredChannels()
     {
@@ -100,10 +112,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Return true if $channel is registered
-     *
-     * @param  string  $channel
-     * @return boolean
+     * {@inheritdoc}
      */
     public function isChannelRegistered($channel)
     {
@@ -134,10 +143,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Make sure that we got a valid channel name
-     *
-     * @param  string $channel
-     * @return string
+     * {@inheritdoc}
      */
     private function validateChannel($channel)
     {
@@ -163,32 +169,31 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Return true if job of the given type and with the given properties exists in queue
-     *
-     * @param  string     $job_type
-     * @param  array|null $properties
-     * @return bool
+     * {@inheritdoc}
      */
-    public function exists($job_type, array $properties = null)
+    public function batch($name, callable $add_jobs = null)
     {
-        return $this->getQueue()->exists($job_type, $properties);
+        $batch = $this->getQueue()->createBatch($this, $name);
+
+        if ($add_jobs) {
+            call_user_func_array($add_jobs, [&$batch]);
+        }
+
+        $batch->commitDispatchedJobIds();
+
+        return $batch;
     }
 
     /**
-     * Return queue instance
-     *
-     * @return QueueInterface
+     * @return integer
      */
-    public function &getQueue()
+    public function countBatches()
     {
-        return $this->queue;
+        return $this->getQueue()->countBatches();
     }
+
     /**
-     * Search for a full job class name
-     *
-     * @param string $search_for
-     * @return mixed
-     * @throws \Exception
+     * {@inheritdoc}
      */
     public function unfurlType($search_for){
         return  $this->getQueue()->unfurlType($search_for);

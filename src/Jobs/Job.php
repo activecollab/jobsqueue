@@ -2,11 +2,13 @@
 
 namespace ActiveCollab\JobsQueue\Jobs;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use ActiveCollab\JobsQueue\Signals\ProcessLaunched;
 use InvalidArgumentException;
 use LogicException;
+use RuntimeException;
 
 /**
  * @package ActiveCollab\JobsQueue\Jobs
@@ -165,9 +167,7 @@ abstract class Job implements JobInterface
     private $queue_id;
 
     /**
-     * Return queueu ID that this job is encured under
-     *
-     * @return mixed
+     * {@inheritdoc}
      */
     public function getQueueId()
     {
@@ -175,11 +175,7 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Set job queue
-     *
-     * @param  QueueInterface $queue
-     * @param  mixed          $queue_id
-     * @return $this
+     * {@inheritdoc}
      */
     public function &setQueue(QueueInterface &$queue, $queue_id)
     {
@@ -192,6 +188,47 @@ abstract class Job implements JobInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @var integer
+     */
+    private $batch_id;
+
+    /**
+     * @return integer|null
+     */
+    public function getBatchId()
+    {
+        return $this->batch_id;
+    }
+
+    /**
+     * @param  integer|null $batch_id
+     * @return $this
+     */
+    public function &setBatchId($batch_id)
+    {
+        $this->batch_id = $batch_id === null ? null : (integer) $batch_id;
+
+        return $this;
+    }
+
+    /**
+     * @param  BatchInterface $batch
+     * @return $this
+     */
+    public function &setBatch(BatchInterface $batch)
+    {
+        if (empty($this->getQueueId())) {
+            if ($batch->getQueueId()) {
+                return $this->setBatchId($batch->getQueueId());
+            } else {
+                throw new RuntimeException("Can't set an unqueued batch");
+            }
+        } else {
+            throw new RuntimeException("Can't add already enqueued job to a batch");
+        }
     }
 
     /**

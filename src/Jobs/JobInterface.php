@@ -2,6 +2,7 @@
 
 namespace ActiveCollab\JobsQueue\Jobs;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use JsonSerializable;
 
@@ -71,11 +72,22 @@ interface JobInterface extends  JsonSerializable
     public function &getQueue();
 
     /**
-     * Return queueu ID that this job is encured under
+     * Return queue ID that this job is enqueued under
      *
      * @return mixed
      */
     public function getQueueId();
+
+    /**
+     * @return integer|null
+     */
+    public function getBatchId();
+
+    /**
+     * @param  BatchInterface $batch
+     * @return $this
+     */
+    public function &setBatch(BatchInterface $batch);
 
     /**
      * Set job queue

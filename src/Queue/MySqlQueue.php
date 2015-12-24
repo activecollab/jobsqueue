@@ -3,6 +3,8 @@
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
+use ActiveCollab\JobsQueue\Batches\MySqlBatch;
+use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
@@ -15,6 +17,7 @@ use RuntimeException;
  */
 class MySqlQueue implements QueueInterface
 {
+    const BATCHES_TABLE_NAME = 'job_batches';
     const TABLE_NAME = 'jobs_queue';
     const TABLE_NAME_FAILED = 'jobs_queue_failed';
 
@@ -42,10 +45,19 @@ class MySqlQueue implements QueueInterface
     public function createTables(...$additional_tables)
     {
         try {
+            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::BATCHES_TABLE_NAME . "` (
+                `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `name` varchar(191) NOT NULL DEFAULT '',
+                `jobs_count` int(10) unsigned NOT NULL DEFAULT '0',
+                `created_at` datetime DEFAULT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
             $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                 `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
+                `batch_id` int(10) unsigned,
                 `priority` int(10) unsigned DEFAULT '0',
                 `data` longtext CHARACTER SET utf8 NOT NULL,
                 `available_at` datetime DEFAULT NULL,
@@ -65,6 +77,7 @@ class MySqlQueue implements QueueInterface
                 `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                 `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
+                `batch_id` int(10) unsigned,
                 `data` longtext CHARACTER SET utf8 NOT NULL,
                 `failed_at` datetime DEFAULT NULL,
                 `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
@@ -115,7 +128,7 @@ class MySqlQueue implements QueueInterface
         $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
         $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
 
-        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `channel`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
+        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, $job->getBatchId(), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
 
         return $this->connection->lastInsertId();
     }
@@ -216,12 +229,12 @@ class MySqlQueue implements QueueInterface
      */
     public function getJobById($job_id)
     {
-        if ($row = $this->connection->executeFirstRow('SELECT `id`, `channel`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
+        if ($row = $this->connection->executeFirstRow('SELECT `id`, `channel`, `batch_id`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
             try {
                 return $this->getJobFromRow($row);
             } catch (Exception $e) {
                 $this->connection->transact(function () use ($row, $e) {
-                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `batch_id`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['channel'], $row['batch_id'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
                     $this->deleteJobById($row['id']);
                 });
             }
@@ -243,6 +256,7 @@ class MySqlQueue implements QueueInterface
         /** @var Job $job */
         $job = new $type($this->jsonDecode($row['data']));
         $job->setChannel($row['channel']);
+        $job->setBatchId($row['batch_id']);
         $job->setQueue($this, (integer)$row['id']);
 
         return $job;
@@ -280,7 +294,7 @@ class MySqlQueue implements QueueInterface
     public function logFailedJob(JobInterface $job, $reason)
     {
         $this->connection->transact(function () use ($job, $reason) {
-            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', get_class($job), $job->getChannel(), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
+            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `batch_id`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?, ?)', get_class($job), $job->getChannel(), $job->getBatchId(), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
             $this->deleteJob($job);
         });
     }
@@ -678,5 +692,27 @@ class MySqlQueue implements QueueInterface
         }
 
         return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createBatch(DispatcherInterface &$dispatcher, $name)
+    {
+        if ($name) {
+            $this->connection->execute('INSERT INTO `' . self::BATCHES_TABLE_NAME . '` (`name`, `created_at`) VALUES (?, UTC_TIMESTAMP())', $name);
+
+            return new MySqlBatch($dispatcher, $this->connection, $this->connection->lastInsertId(), $name);
+        } else {
+            throw new InvalidArgumentException('Batch name is required');
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function countBatches()
+    {
+        return $this->connection->count(self::BATCHES_TABLE_NAME);
     }
 }

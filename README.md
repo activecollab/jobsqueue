@@ -106,6 +106,27 @@ $job = new Inc([
 ]);
 ```
 
+## Batches
+
+Jobs can be added to the queue in batches. Once in a batch, job queue will execute them as any other job, but you will be able to track progress of batch:
+
+```php
+$batch = $dispatcher->batch('Testing batch', function(BatchInterface &$batch) {
+    for ($i = 1; $i <= 1000; $i++) {
+        $batch->dispatch(new Inc(['number' => $i]));
+    }
+});
+
+sleep(1);
+
+print $batch->countJobs() . " jobs in a batch\n";
+print $batch->countPendingJobs() . " batch jobs still pending for execution\n";
+print $batch->countFailedJobs() . " batch jobs have failed to complete\n";
+print $batch->countCompletedJobs() . " batch jobs were completed successfully\n";
+```
+
+All batches have name, so they are easy to find using command line tools.
+
 ## Channels
 
 In some situations, it is useful to have multiple channels and consumer listening on them. For example, you can have a consumer on a mailing server listening only on `mail` channel, but not listening on other channels (which jobs it is not suited to perform).

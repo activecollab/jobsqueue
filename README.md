@@ -98,7 +98,7 @@ When constructing a new `Job` instance, you can set an array of job data, as wel
 
 ```php
 $job = new Inc([
-    'number' => 123,
+    'number'              => 123,
     'priority'            => Job::HAS_HIGHEST_PRIORITY,
     'attempts'            => 5,
     'delay'               => 5,

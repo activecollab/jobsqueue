@@ -222,10 +222,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Return job by ID
-     *
-     * @param  integer $job_id
-     * @return JobInterface|null
+     * {@inheritdoc}
      */
     public function getJobById($job_id)
     {

@@ -50,6 +50,14 @@ interface QueueInterface extends Countable
     public function countByChannel($channel);
 
     /**
+     * Return job by ID
+     *
+     * @param  integer           $job_id
+     * @return JobInterface|null
+     */
+    public function getJobById($job_id);
+
+    /**
      * Return Job that is next in line to be executed
      *
      * @param  string[]          ...$from_channels

@@ -66,6 +66,13 @@ class TestQueue implements QueueInterface
     /**
      * {@inheritdoc}
      */
+    public function getJobById($job_id)
+    {
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function nextInLine(...$from_channels)
     {
         if (empty($this->jobs)) {

@@ -55,7 +55,7 @@ class FailureRetriesTest extends AbstractMySqlQueueTest
         $this->assertEquals(0, $this->dispatcher->getQueue()->count());
         $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
 
-        $this->assertEquals('Built to fail!', $this->connection->executeFirstCell('SELECT `reason` FROM `' . MySqlQueue::TABLE_NAME_FAILED . '` WHERE `id` = ?', 1));
+        $this->assertEquals('Built to fail!', $this->connection->executeFirstCell('SELECT `reason` FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` WHERE `id` = ?', 1));
     }
 
     /**

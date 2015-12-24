@@ -41,7 +41,7 @@
      */
     public function testExceptinOnInvalidJobType()
     {
-      $this->connection->execute('UPDATE `' . MySqlQueue::TABLE_NAME_FAILED . '` SET `type` = ? WHERE `id` = ?', 'ThisClassDoesNotExist', 1);
+      $this->connection->execute('UPDATE `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` SET `type` = ? WHERE `id` = ?', 'ThisClassDoesNotExist', 1);
       $this->dispatcher->getQueue()->restoreFailedJobById(1);
     }
 
@@ -50,7 +50,7 @@
      */
     public function testExceptionOnInvalidJson()
     {
-      $this->connection->execute('UPDATE `' . MySqlQueue::TABLE_NAME_FAILED . '` SET `data` = ? WHERE `id` = ?', '{invalidJSON', 1);
+      $this->connection->execute('UPDATE `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` SET `data` = ? WHERE `id` = ?', '{invalidJSON', 1);
 
       $this->dispatcher->getQueue()->restoreFailedJobById(1234);
     }

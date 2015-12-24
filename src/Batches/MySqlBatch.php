@@ -95,7 +95,7 @@ class MySqlBatch extends Batch
     public function countPendingJobs()
     {
         if ($queue_id = $this->getQueueId()) {
-            return (integer) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `batch_id` = ?', $queue_id);
+            return (integer) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE `batch_id` = ?', $queue_id);
         } else {
             throw new RuntimeException("Can't get number of jobs from an unsaved batch");
         }
@@ -115,7 +115,7 @@ class MySqlBatch extends Batch
     public function countFailedJobs()
     {
         if ($queue_id = $this->getQueueId()) {
-            return (integer) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::TABLE_NAME_FAILED . '` WHERE `batch_id` = ?', $queue_id);
+            return (integer) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` WHERE `batch_id` = ?', $queue_id);
         } else {
             throw new RuntimeException("Can't get number of jobs from an unsaved batch");
         }

@@ -206,7 +206,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertEquals(0, $this->dispatcher->getQueue()->count());
         $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
 
-        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME_FAILED . '`');
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '`');
 
         $this->assertInternalType('array', $job);
         $this->assertEquals('second', $job['channel']);
@@ -232,7 +232,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertEquals(0, $this->dispatcher->getQueue()->count());
         $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
 
-        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME_FAILED . '`');
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '`');
 
         $this->assertInternalType('array', $job);
         $this->assertEquals('second', $job['channel']);
@@ -242,7 +242,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->getQueue()->count());
         $this->assertEquals(0, $this->dispatcher->getQueue()->countFailed());
 
-        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '`');
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '`');
 
         $this->assertInternalType('array', $job);
         $this->assertEquals('second', $job['channel']);

@@ -1,10 +1,10 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Test;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  abstract class TestCase extends \PHPUnit_Framework_TestCase
-  {
-  }
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+abstract class TestCase extends \PHPUnit_Framework_TestCase
+{
+}

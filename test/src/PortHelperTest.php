@@ -1,21 +1,21 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Test\Jobs\PortHelperJob;
+use ActiveCollab\JobsQueue\Test\Jobs\PortHelperJob;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class PortHelperTest extends TestCase
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class PortHelperTest extends TestCase
+{
     /**
      * Test if port is properly set when it is omitted
      */
     public function testGetDefaultPortWhenPropertyIsMissing()
     {
-      $job = new PortHelperJob();
-      $this->assertSame(PortHelperJob::DEFAULT_PORT, $job->getData()['port']);
+        $job = new PortHelperJob();
+        $this->assertSame(PortHelperJob::DEFAULT_PORT, $job->getData()['port']);
     }
 
     /**
@@ -23,8 +23,8 @@
      */
     public function testGoodPort()
     {
-      $job = new PortHelperJob([ 'port' => 4321 ]);
-      $this->assertSame(4321, $job->getData()['port']);
+        $job = new PortHelperJob(['port' => 4321]);
+        $this->assertSame(4321, $job->getData()['port']);
     }
 
     /**
@@ -32,8 +32,8 @@
      */
     public function testGoodPortAsString()
     {
-      $job = new PortHelperJob([ 'port' => '4321' ]);
-      $this->assertSame(4321, $job->getData()['port']);
+        $job = new PortHelperJob(['port' => '4321']);
+        $this->assertSame(4321, $job->getData()['port']);
     }
 
     /**
@@ -41,7 +41,7 @@
      */
     public function testPortIsLessThan1()
     {
-      new PortHelperJob([ 'port' => -1 ]);
+        new PortHelperJob(['port' => -1]);
     }
 
     /**
@@ -49,7 +49,7 @@
      */
     public function testPortIsLessThan1String()
     {
-      new PortHelperJob([ 'port' => '-1' ]);
+        new PortHelperJob(['port' => '-1']);
     }
 
     /**
@@ -57,6 +57,6 @@
      */
     public function testPortIsNotNumericString()
     {
-      new PortHelperJob([ 'port' => 'Some Strange Value' ]);
+        new PortHelperJob(['port' => 'Some Strange Value']);
     }
-  }
+}

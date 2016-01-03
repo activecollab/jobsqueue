@@ -1,15 +1,15 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test\Jobs;
+namespace ActiveCollab\JobsQueue\Test\Jobs;
 
-  use ActiveCollab\JobsQueue\Jobs\Job;
-  use Exception;
+use ActiveCollab\JobsQueue\Jobs\Job;
+use Exception;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test\Jobs
-   */
-  class Failing extends Job
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Test\Jobs
+ */
+class Failing extends Job
+{
     /**
      * Always fail
      *
@@ -18,6 +18,6 @@
      */
     public function execute()
     {
-      throw new Exception('Built to fail!');
+        throw new Exception('Built to fail!');
     }
-  }
+}

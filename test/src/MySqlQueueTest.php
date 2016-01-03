@@ -5,6 +5,7 @@ namespace ActiveCollab\JobsQueue\Test;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use DateTime;
 
@@ -33,6 +34,44 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->assertEquals(3, $this->dispatcher->dispatch(new Inc(['number' => 789])));
 
         $this->assertRecordsCount(3);
+    }
+
+    /**
+     * Test jobs can be removed from queue
+     */
+    public function testJobsAreRemovedFromTheQueue()
+    {
+        $job_id = $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->assertEquals(1, $job_id);
+
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+
+        $this->assertEquals(3, $this->dispatcher->getQueue()->count());
+        $this->dispatcher->getQueue()->dequeue(1);
+        $this->assertEquals(2, $this->dispatcher->getQueue()->count());
+    }
+
+    /**
+     * Check if there will be no exception if we try to dequeue a job that doesn't exist
+     */
+    public function testDequeueNoExceptionOnMissingJob()
+    {
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->dispatcher->getQueue()->dequeue(12345);
+    }
+
+    /**
+     * Test if jobs by be removed from the queue by type
+     */
+    public function testDequeueByTypeRemovesJobsOfSpecificType()
+    {
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->dispatcher->dispatch(new Failing());
+
+        $this->assertEquals(2, $this->dispatcher->getQueue()->count());
+        $this->dispatcher->getQueue()->dequeueByType(Inc::class);
+        $this->assertEquals(1, $this->dispatcher->getQueue()->count());
     }
 
     /**

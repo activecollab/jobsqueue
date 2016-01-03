@@ -43,6 +43,20 @@ class TestQueue implements QueueInterface
     /**
      * {@inheritdoc}
      */
+    public function dequeue($job_id)
+    {
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dequeueByType($type)
+    {
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $job->execute();

@@ -136,6 +136,22 @@ class MySqlQueue implements QueueInterface
     /**
      * {@inheritdoc}
      */
+    public function dequeue($job_id)
+    {
+        $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dequeueByType($type)
+    {
+        $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $type);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         try {
@@ -232,7 +248,7 @@ class MySqlQueue implements QueueInterface
             } catch (Exception $e) {
                 $this->connection->transact(function () use ($row, $e) {
                     $this->connection->execute('INSERT INTO `' . self::FAILED_JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['batch_id'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-                    $this->deleteJobById($row['id']);
+                    $this->dequeue($row['id']);
                 });
             }
         }
@@ -304,7 +320,7 @@ class MySqlQueue implements QueueInterface
     public function deleteJob($job)
     {
         if ($job_id = $job->getQueueId()) {
-            $this->deleteJobById($job_id);
+            $this->dequeue($job_id);
         }
     }
 
@@ -541,7 +557,7 @@ class MySqlQueue implements QueueInterface
                     if ($this->isProcessRunning($row['process_id'])) {
                         continue; // Skip jobs that launched long running background processes
                     } else {
-                        $this->deleteJobById($row['id']); // Process done? Consider the job executed
+                        $this->dequeue($row['id']); // Process done? Consider the job executed
                     }
                 } else {
                     try {
@@ -550,7 +566,7 @@ class MySqlQueue implements QueueInterface
                         $this->connection->beginWork();
 
                         $this->connection->execute('INSERT INTO `' . self::FAILED_JOBS_TABLE_NAME . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-                        $this->deleteJobById($row['id']);
+                        $this->dequeue($row['id']);
 
                         $this->connection->commit();
                     }
@@ -619,7 +635,9 @@ class MySqlQueue implements QueueInterface
      */
     public function clear()
     {
-        $this->connection->execute('TRUNCATE TABLE `jobs_queue_failed`');
+        $this->connection->execute('TRUNCATE TABLE `' . self::JOBS_TABLE_NAME . '`');
+        $this->connection->execute('TRUNCATE TABLE `' . self::FAILED_JOBS_TABLE_NAME . '`');
+        $this->connection->execute('TRUNCATE TABLE `' . self::BATCHES_TABLE_NAME . '`');
     }
 
     /**

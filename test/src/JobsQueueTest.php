@@ -1,19 +1,19 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Test;
 
-  use ActiveCollab\JobsQueue\Queue\TestQueue;
+use ActiveCollab\JobsQueue\Queue\TestQueue;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class JobsQueueTest extends TestCase
-  {
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class JobsQueueTest extends TestCase
+{
     /**
      * Test if queue implements Countable interface
      */
     public function testQueuesAreCountable()
     {
-      $this->assertInstanceOf('Countable', new TestQueue());
+        $this->assertInstanceOf('Countable', new TestQueue());
     }
-  }
+}

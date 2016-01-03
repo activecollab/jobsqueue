@@ -24,6 +24,20 @@ interface QueueInterface extends Countable
     public function enqueue(JobInterface $job, $channel = self::MAIN_CHANNEL);
 
     /**
+     * Remove a specific job from the queue
+     *
+     * @param mixed $job_id
+     */
+    public function dequeue($job_id);
+
+    /**
+     * Remove jobs from jobs queue by type
+     *
+     * @param string $type
+     */
+    public function dequeueByType($type);
+
+    /**
      * Execute a job now (sync, waits for a response)
      *
      * @param  JobInterface $job

@@ -27,6 +27,6 @@ class ExecuteCliCommandHelperJob extends Job
      */
     public function execute()
     {
-        return $this->prepareCommandFromData();
+        return $this->prepareCommandFromData($this->getData());
     }
 }

@@ -46,11 +46,25 @@ trait ExecuteCliCommand
     }
 
     /**
-     * @param  string               $command
-     * @param  string|null          $from_working_directory
+     * Use input data to prepare command and execute it
+     *
+     * @param  array                $data
+     * @param  string               $from_working_directory
      * @return SignalInterface|null
      */
-    protected function runCommand($command, $from_working_directory = null)
+    public function runCommandFromData(array $data, $from_working_directory = '')
+    {
+        return $this->runCommand($this->prepareCommandFromData($data), $from_working_directory, $data['log_to_file'], $data['in_background']);
+    }
+
+    /**
+     * @param  string               $command
+     * @param  string               $from_working_directory
+     * @param  string               $log_to_file
+     * @param  bool                 $in_background
+     * @return SignalInterface|null
+     */
+    protected function runCommand($command, $from_working_directory = '', $log_to_file = '', $in_background = false)
     {
         // Check working directory if $from_working_directory is set and not current directory
         if ($from_working_directory) {
@@ -63,8 +77,6 @@ trait ExecuteCliCommand
             }
         }
 
-        $log_to_file = $this->getData()['log_output_to_file'];
-
         if (!empty($log_to_file)) {
             $log_to_file = escapeshellarg($log_to_file);
         }
@@ -72,7 +84,7 @@ trait ExecuteCliCommand
         $output = [];
         $code = 0;
 
-        if ($this->getData()['in_background']) {
+        if ($in_background) {
             if (empty($log_to_file)) {
                 $log_to_file = '/dev/null';
             }
@@ -121,13 +133,14 @@ trait ExecuteCliCommand
     }
 
     /**
+     * @param  array  $data
      * @return string
      */
-    public function prepareCommandFromData()
+    public function prepareCommandFromData(array $data)
     {
-        $command = $this->getData()['command'];
+        $command = $data['command'];
 
-        foreach ($this->getData()['command_arguments'] as $k => $v) {
+        foreach ($data['command_arguments'] as $k => $v) {
             if (is_int($k)) {
                 if (is_string($v) && substr($v, 0, 1) == '-') {
                     $command .= " $v";
@@ -152,9 +165,4 @@ trait ExecuteCliCommand
      * {@inheritdoc}
      */
     abstract protected function reportBackgroundProcess($process_id);
-
-    /**
-     * {@inheritdoc}
-     */
-    abstract public function getData();
 }

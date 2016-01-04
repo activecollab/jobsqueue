@@ -26,7 +26,7 @@
     }
 
     /**
-     * @expectedException \ActiveCollab\DatabaseConnection\Exception\Query
+     * @expectedException \ActiveCollab\DatabaseConnection\Exception\QueryException
      */
     public function testExceptionBecauseFieldDoesNotExist()
     {

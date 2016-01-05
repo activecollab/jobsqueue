@@ -21,7 +21,9 @@
     "symfony/console" : "Use Symfony console to easily create CLI jobs consumer"
   },
   "require-dev" : {
+    "monolog/monolog" : "~1.0",
     "phpunit/phpunit": "~5.0",
+    "pimple/pimple": "~3.0",
     "symfony/console" : "~2.0"
   },
   "minimum-stability": "dev",

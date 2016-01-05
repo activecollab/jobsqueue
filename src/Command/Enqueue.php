@@ -2,7 +2,6 @@
 
 namespace ActiveCollab\JobsQueue\Command;
 
-use ActiveCollab\JobsQueue\Command\Command;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

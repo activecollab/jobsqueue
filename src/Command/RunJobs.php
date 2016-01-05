@@ -42,11 +42,33 @@ class RunJobs extends Command
 
         $jobs_ran = $jobs_failed = [];
 
-        $this->dispatcher->getQueue()->onJobFailure(function (Job $job) use (&$jobs_failed) {
+        $this->dispatcher->getQueue()->onJobFailure(function (Job $job, $reason) use (&$jobs_failed, $input, $output) {
             $job_id = $job->getQueueId();
 
             if (!in_array($job_id, $jobs_failed)) {
                 $jobs_failed[] = $job_id;
+            }
+
+            if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
+                $job_class = get_class($job);
+
+                if ($reason instanceof \Exception) {
+                    $output->writeln("<error>Error:</error> Job #{$job->getQueueId()} ($job_class) failed with message {$reason->getMessage()}");
+
+                    if ($input->getOption('debug')) {
+                        $output->writeln('');
+                        $output->writeln('Exception: ' . get_class($reason));
+                        $output->writeln('File: ' . $reason->getFile());
+                        $output->writeln('Line: ' . $reason->getLine());
+                        $output->writeln('Trace:');
+                        $output->writeln('');
+                        $output->writeln($reason->getTraceAsString());
+                        $output->writeln('');
+                    }
+                } else {
+                    $output->writeln("<error>Error:</error> Job #{$job->getQueueId()} ($job_class) failed");
+                }
+
             }
         });
 

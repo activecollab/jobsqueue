@@ -44,48 +44,56 @@ class MySqlQueue implements QueueInterface
      */
     public function createTables(...$additional_tables)
     {
+        $table_names = $this->connection->getTableNames();
+
         try {
-            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::BATCHES_TABLE_NAME . "` (
-                `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-                `name` varchar(191) NOT NULL DEFAULT '',
-                `jobs_count` int(10) unsigned NOT NULL DEFAULT '0',
-                `created_at` datetime DEFAULT NULL,
-                PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+            if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
+                $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::BATCHES_TABLE_NAME . "` (
+                    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                    `name` varchar(191) NOT NULL DEFAULT '',
+                    `jobs_count` int(10) unsigned NOT NULL DEFAULT '0',
+                    `created_at` datetime DEFAULT NULL,
+                    PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+            }
 
-            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::JOBS_TABLE_NAME . "` (
-                `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                `batch_id` int(10) unsigned,
-                `priority` int(10) unsigned DEFAULT '0',
-                `data` longtext CHARACTER SET utf8 NOT NULL,
-                `available_at` datetime DEFAULT NULL,
-                `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-                `reserved_at` datetime DEFAULT NULL,
-                `attempts` smallint(6) DEFAULT '0',
-                `process_id` int(10) unsigned DEFAULT '0',
-                PRIMARY KEY (`id`),
-                UNIQUE KEY `reservation_key` (`reservation_key`),
-                KEY `type` (`type`),
-                KEY `channel` (`channel`),
-                KEY `priority` (`priority`),
-                KEY `reserved_at` (`reserved_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
+                $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::JOBS_TABLE_NAME . "` (
+                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
+                    `batch_id` int(10) unsigned,
+                    `priority` int(10) unsigned DEFAULT '0',
+                    `data` longtext CHARACTER SET utf8 NOT NULL,
+                    `available_at` datetime DEFAULT NULL,
+                    `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                    `reserved_at` datetime DEFAULT NULL,
+                    `attempts` smallint(6) DEFAULT '0',
+                    `process_id` int(10) unsigned DEFAULT '0',
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `reservation_key` (`reservation_key`),
+                    KEY `type` (`type`),
+                    KEY `channel` (`channel`),
+                    KEY `priority` (`priority`),
+                    KEY `reserved_at` (`reserved_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            }
 
-            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::FAILED_JOBS_TABLE_NAME . "` (
-                `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                `batch_id` int(10) unsigned,
-                `data` longtext CHARACTER SET utf8 NOT NULL,
-                `failed_at` datetime DEFAULT NULL,
-                `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                PRIMARY KEY (`id`),
-                KEY `type` (`type`),
-                KEY `channel` (`channel`),
-                KEY `failed_at` (`failed_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
+                $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::FAILED_JOBS_TABLE_NAME . "` (
+                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
+                    `batch_id` int(10) unsigned,
+                    `data` longtext CHARACTER SET utf8 NOT NULL,
+                    `failed_at` datetime DEFAULT NULL,
+                    `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                    PRIMARY KEY (`id`),
+                    KEY `type` (`type`),
+                    KEY `channel` (`channel`),
+                    KEY `failed_at` (`failed_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            }
 
             foreach ($additional_tables as $additional_table) {
                 $this->connection->execute($additional_table);

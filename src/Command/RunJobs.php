@@ -72,13 +72,13 @@ class RunJobs extends Command
 
         do {
             if ($next_in_line = $this->dispatcher->getQueue()->nextInLine(...$channels)) {
-                $this->log->debug('Running job #' . $next_in_line->getQueueId() . ' (' . get_class($next_in_line) . ')', [
+                $this->log->info('Running job #{job_id} of {job_type} type', [
                     'job_type' => get_class($next_in_line),
                     'job_id' => $next_in_line->getQueueId(),
                 ]);
 
                 if ($output->getVerbosity()) {
-                    $output->writeln("<info>OK</info> Running job #{$next_in_line->getQueueId()} (" . get_class($next_in_line) . ")");
+                    $output->writeln("<info>OK:</info> Running job #{$next_in_line->getQueueId()} (" . get_class($next_in_line) . ")");
                 }
 
                 if (method_exists($next_in_line, 'setContainer')) {
@@ -88,7 +88,7 @@ class RunJobs extends Command
                 $this->dispatcher->getQueue()->execute($next_in_line);
 
                 if ($output->getVerbosity()) {
-                    $output->writeln("<info>OK</info> Job #{$next_in_line->getQueueId()} done");
+                    $output->writeln("<info>OK:</info> Job #{$next_in_line->getQueueId()} done");
                 }
 
                 $job_id = $next_in_line->getQueueId();
@@ -103,9 +103,9 @@ class RunJobs extends Command
                     if ($output->getVerbosity()) {
                         $sleep_for = mt_rand(900000, 1000000);
 
-                        $this->log->notice("Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
+                        $this->log->notice("Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds", ['sleep_for' => $sleep_for]);
 
-                        $output->writeln("<comment>Notice</comment> Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
+                        $output->writeln("<comment>Notice:</comment> Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
                         usleep($sleep_for);
                     }
                 } else {
@@ -126,7 +126,7 @@ class RunJobs extends Command
             'left_in_queue' => $this->dispatcher->getQueue()->count(),
         ];
 
-        $this->log->info($execution_stats['jobs_ran'] . ' jobs ran in ' . $execution_stats['exec_time']  . 's', $execution_stats);
+        $this->log->info('{jobs_ran} jobs ran in {exec_time}s', $execution_stats);
         $output->writeln('Execution stats: ' . $execution_stats['jobs_ran'] . ' ran, ' . $execution_stats['jobs_failed'] . ' failed. ' . $execution_stats['left_in_queue'] . " left in queue. Executed in " . $execution_stats['exec_time']);
     }
 

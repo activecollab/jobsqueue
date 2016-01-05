@@ -49,9 +49,9 @@ class RunJobs extends Command
                 $jobs_failed[] = $job_id;
             }
 
-            if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-                $job_class = get_class($job);
+            $job_class = get_class($job);
 
+            if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
                 if ($reason instanceof \Exception) {
                     $output->writeln("<error>Error:</error> Job #{$job->getQueueId()} ($job_class) failed with message {$reason->getMessage()}");
 
@@ -68,8 +68,23 @@ class RunJobs extends Command
                 } else {
                     $output->writeln("<error>Error:</error> Job #{$job->getQueueId()} ($job_class) failed");
                 }
-
             }
+
+            $context = [
+                'job_id' => $job->getQueueId(),
+                'job_type' => $job_class,
+            ];
+
+            if ($reason instanceof \Exception) {
+                $context['error_message'] = $reason->getMessage();
+                $context['exception'] = $reason;
+            } elseif ($reason) {
+                $context['error_message'] = (string) $reason;
+            } else {
+                $context['error_message'] = 'Unknown';
+            }
+
+            $this->log->error('Job #{job_id} ({job_type}) failed with message: {error_message}', $context);
         });
 
         // ---------------------------------------------------

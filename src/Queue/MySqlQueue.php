@@ -333,16 +333,6 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Delete job by ID, used internally
-     *
-     * @param integer $job_id
-     */
-    private function deleteJobById($job_id)
-    {
-        $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function nextInLine(...$from_channels)

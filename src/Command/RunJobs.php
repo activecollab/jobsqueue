@@ -2,7 +2,6 @@
 
 namespace ActiveCollab\JobsQueue\Command;
 
-use ActiveCollab\JobsQueue\Command\Command;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,6 +34,8 @@ class RunJobs extends Command
      */
     protected function execute (InputInterface $input, OutputInterface $output)
     {
+        $reference_time = microtime(true);
+
         // ---------------------------------------------------
         //  Prepare dispatcher and success and error logs
         // ---------------------------------------------------
@@ -119,7 +120,7 @@ class RunJobs extends Command
 
         $execution_stats = [
             'time_limit' => $max_execution_time,
-            'exec_time' => round(microtime(true) - JOBS_QUEUE_SCRIPT_TIME, 3),
+            'exec_time' => round(microtime(true) - $reference_time, 3),
             'jobs_ran' => count($jobs_ran),
             'jobs_failed' => count($jobs_failed),
             'left_in_queue' => $this->dispatcher->getQueue()->count(),

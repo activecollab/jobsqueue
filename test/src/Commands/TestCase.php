@@ -1,14 +1,23 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobQueue\Test\Commands;
 
 use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
-use ActiveCollab\JobsQueue\Test\Fixtures\Container;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use ActiveCollab\JobsQueue\Test\Fixtures\Container;
 use Interop\Container\ContainerInterface;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;

@@ -1,12 +1,21 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
 use ActiveCollab\JobsQueue\Batches\MySqlBatch;
 use ActiveCollab\JobsQueue\DispatcherInterface;
-use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
 use InvalidArgumentException;
@@ -48,7 +57,7 @@ class MySqlQueue implements QueueInterface
 
         try {
             if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
-                $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::BATCHES_TABLE_NAME . "` (
+                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::BATCHES_TABLE_NAME . "` (
                     `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
                     `name` varchar(191) NOT NULL DEFAULT '',
                     `jobs_count` int(10) unsigned NOT NULL DEFAULT '0',
@@ -58,7 +67,7 @@ class MySqlQueue implements QueueInterface
             }
 
             if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
-                $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::JOBS_TABLE_NAME . "` (
+                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::JOBS_TABLE_NAME . "` (
                     `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                     `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                     `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
@@ -80,7 +89,7 @@ class MySqlQueue implements QueueInterface
             }
 
             if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
-                $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::FAILED_JOBS_TABLE_NAME . "` (
+                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::FAILED_JOBS_TABLE_NAME . "` (
                     `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                     `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                     `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
@@ -109,7 +118,7 @@ class MySqlQueue implements QueueInterface
     private $extract_properties_to_fields = ['priority'];
 
     /**
-     * Extract property value to field value
+     * Extract property value to field value.
      *
      * @param string $property
      */
@@ -191,7 +200,7 @@ class MySqlQueue implements QueueInterface
     public function exists($job_type, array $properties = null)
     {
         if (empty($properties)) {
-            return (boolean)$this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type);
+            return (boolean) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type);
         } else {
             if ($rows = $this->connection->execute('SELECT `data` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
                 foreach ($rows as $row) {
@@ -211,7 +220,6 @@ class MySqlQueue implements QueueInterface
                             return true;
                         }
                     } catch (RuntimeException $e) {
-
                     }
                 }
             }
@@ -221,7 +229,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Handle a job failure (attempts, removal from queue, exception handling etc)
+     * Handle a job failure (attempts, removal from queue, exception handling etc).
      *
      * @param JobInterface   $job
      * @param Exception|null $reason
@@ -265,9 +273,9 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Hydrate a job based on row data
+     * Hydrate a job based on row data.
      *
-     * @param  array $row
+     * @param  array        $row
      * @return JobInterface
      */
     private function getJobFromRow(array $row)
@@ -278,28 +286,28 @@ class MySqlQueue implements QueueInterface
         $job = new $type($this->jsonDecode($row['data']));
         $job->setChannel($row['channel']);
         $job->setBatchId($row['batch_id']);
-        $job->setQueue($this, (integer)$row['id']);
+        $job->setQueue($this, (integer) $row['id']);
 
         return $job;
     }
 
     /**
-     * Return number of previous attempts that we recorded for the given job
+     * Return number of previous attempts that we recorded for the given job.
      *
-     * @param  integer $job_id
-     * @return integer
+     * @param  int $job_id
+     * @return int
      */
     private function getPreviousAttemptsByJobId($job_id)
     {
-        return (integer)$this->connection->executeFirstCell('SELECT `attempts` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
+        return (integer) $this->connection->executeFirstCell('SELECT `attempts` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
 
     /**
-     * Increase number of attempts by job ID
+     * Increase number of attempts by job ID.
      *
-     * @param integer $job_id
-     * @param integer $previous_attempts
-     * @param integer $delay
+     * @param int $job_id
+     * @param int $previous_attempts
+     * @param int $delay
      */
     public function prepareForNextAttempt($job_id, $previous_attempts, $delay = 0)
     {
@@ -307,7 +315,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Log failed job and delete it from the main queue
+     * Log failed job and delete it from the main queue.
      *
      * @param JobInterface $job
      * @param string       $reason
@@ -321,7 +329,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Delete a job
+     * Delete a job.
      *
      * @param JobInterface $job
      */
@@ -350,7 +358,7 @@ class MySqlQueue implements QueueInterface
     private $on_reservation_key_ready;
 
     /**
-     * Callback that is called when reservation key is prepared for a particular job, but not yet set
+     * Callback that is called when reservation key is prepared for a particular job, but not yet set.
      *
      * This callback is useful for testing job snatching when we have multiple workers
      *
@@ -366,7 +374,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Reserve next job ID
+     * Reserve next job ID.
      *
      * @param  array|null $from_channels
      * @return int|null
@@ -574,9 +582,9 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Check if process with PID $process_id is running
+     * Check if process with PID $process_id is running.
      *
-     * @param  integer $process_id
+     * @param  int  $process_id
      * @return bool
      */
     private function isProcessRunning($process_id)
@@ -606,7 +614,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Decode JSON and throw an exception in case of any error
+     * Decode JSON and throw an exception in case of any error.
      *
      * @param  string $serialized_data
      * @return mixed

@@ -1,13 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobQueue\Test\Commands;
 
 use ActiveCollab\JobsQueue\Command\FailedJobs;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use Exception;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
-use Exception;
 
 /**
  * @package ActiveCollab\JobQueue\Test\Commands
@@ -17,17 +26,18 @@ class FailedJobsTest extends TestCase
     private $command;
 
     /**
-     * Set up test environment
+     * Set up test environment.
      */
-    public function setUp(){
+    public function setUp()
+    {
         parent::setUp();
 
-        $this->command =  new FailedJobs();
+        $this->command = new FailedJobs();
         $this->command->setContainer($this->container);
     }
 
     /**
-     * Test if command send friendly message when no job is found
+     * Test if command send friendly message when no job is found.
      */
     public function testExecuteNoJobFound()
     {
@@ -55,7 +65,7 @@ class FailedJobsTest extends TestCase
     }
 
     /**
-     * Test if unexpected exception from queue is handel
+     * Test if unexpected exception from queue is handel.
      */
     public function testExecuteThrowErrorOnQueueCall()
     {
@@ -81,10 +91,9 @@ class FailedJobsTest extends TestCase
             'command' => $command->getName(),
         ]);
         $this->assertRegExp("/$error_message/", $commandTester->getDisplay());
-
     }
     /**
-     * Test data is displayed correctly
+     * Test data is displayed correctly.
      */
     public function testExecuteDisplayCorrectResponse()
     {
@@ -104,7 +113,7 @@ class FailedJobsTest extends TestCase
                 ],
                 'type2' => [
                     '2.7.2015' => 91,
-                ]
+                ],
             ]));
 
         $this->container['dispatcher'] = new Dispatcher($mock_queue);

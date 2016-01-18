@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Dispatcher;
@@ -17,7 +26,7 @@ class JobsTest extends TestCase
     private $dispatcher;
 
     /**
-     * Set up test environment
+     * Set up test environment.
      */
     public function setUp()
     {
@@ -29,7 +38,7 @@ class JobsTest extends TestCase
     }
 
     /**
-     * Test if dispatch adds a job to the queue
+     * Test if dispatch adds a job to the queue.
      */
     public function testDispatchAddsEventToTheQueue()
     {
@@ -38,7 +47,7 @@ class JobsTest extends TestCase
     }
 
     /**
-     * Test if run executes immediately
+     * Test if run executes immediately.
      */
     public function testRunExecutesImmediately()
     {

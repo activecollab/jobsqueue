@@ -1,11 +1,20 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Command;
 
+use Exception;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Exception;
 
 /**
  * @package ActiveCollab\JobQueue\Command

@@ -1,13 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Command;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use InvalidArgumentException;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @package ActiveCollab\JobQueue\Command
@@ -15,7 +24,7 @@ use InvalidArgumentException;
 class RunJobs extends Command
 {
     /**
-     * Configure command
+     * Configure command.
      */
     protected function configure()
     {
@@ -32,7 +41,7 @@ class RunJobs extends Command
      * @param  OutputInterface $output
      * @return int
      */
-    protected function execute (InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         $reference_time = microtime(true);
 
@@ -115,7 +124,7 @@ class RunJobs extends Command
                 ]);
 
                 if ($output->getVerbosity()) {
-                    $output->writeln("<info>OK:</info> Running job #{$next_in_line->getQueueId()} (" . get_class($next_in_line) . ")");
+                    $output->writeln("<info>OK:</info> Running job #{$next_in_line->getQueueId()} (" . get_class($next_in_line) . ')');
                 }
 
                 if (method_exists($next_in_line, 'setContainer')) {
@@ -140,7 +149,7 @@ class RunJobs extends Command
                     if ($output->getVerbosity()) {
                         $sleep_for = mt_rand(900000, 1000000);
 
-                        $this->log->notice("Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds", ['sleep_for' => $sleep_for]);
+                        $this->log->notice('Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds', ['sleep_for' => $sleep_for]);
 
                         $output->writeln("<comment>Notice:</comment> Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
                         usleep($sleep_for);
@@ -164,11 +173,11 @@ class RunJobs extends Command
         ];
 
         $this->log->info('{jobs_ran} jobs ran in {exec_time}s', $execution_stats);
-        $output->writeln('Execution stats: ' . $execution_stats['jobs_ran'] . ' ran, ' . $execution_stats['jobs_failed'] . ' failed. ' . $execution_stats['left_in_queue'] . " left in queue. Executed in " . $execution_stats['exec_time']);
+        $output->writeln('Execution stats: ' . $execution_stats['jobs_ran'] . ' ran, ' . $execution_stats['jobs_failed'] . ' failed. ' . $execution_stats['left_in_queue'] . ' left in queue. Executed in ' . $execution_stats['exec_time']);
     }
 
     /**
-     * Convert channels string to channel list
+     * Convert channels string to channel list.
      *
      * @param  string $channels
      * @return array
@@ -179,7 +188,7 @@ class RunJobs extends Command
 
         if (empty($channels)) {
             throw new InvalidArgumentException('No channel found.');
-        } elseif ($channels = '*')  {
+        } elseif ($channels = '*') {
             return [];
         } else {
             return explode(',', $channels);

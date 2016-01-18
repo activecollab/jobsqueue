@@ -1,12 +1,21 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobQueue\Test\Commands;
 
+use ActiveCollab\JobsQueue\Command\CreateTables;
 use ActiveCollab\JobsQueue\Command\Enqueue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
-use ActiveCollab\JobsQueue\Command\CreateTables;
 
 /**
  * @package ActiveCollab\JobQueue\Test\Commands
@@ -21,10 +30,11 @@ class EnqueueTest extends TestCase
     /**
      * {@inheritdoc}
      */
-    public function setUp(){
+    public function setUp()
+    {
         parent::setUp();
 
-        $this->command =  new Enqueue();
+        $this->command = new Enqueue();
         $this->command->setContainer($this->container);
     }
 
@@ -45,7 +55,7 @@ class EnqueueTest extends TestCase
     }
 
     /**
-     * Test if command rejects invalid job type
+     * Test if command rejects invalid job type.
      */
     public function testInvalidJobTypeExit()
     {
@@ -65,7 +75,7 @@ class EnqueueTest extends TestCase
     }
 
     /**
-     * Test if command rejects invalid data (malformatted JSON)
+     * Test if command rejects invalid data (malformatted JSON).
      */
     public function testInvalidJsonExit()
     {
@@ -78,7 +88,7 @@ class EnqueueTest extends TestCase
         $command_tester->execute([
             'command' => $command->getName(),
             'type' => Inc::class,
-            '--data' => '{"invalid"json'
+            '--data' => '{"invalid"json',
         ]);
 
         $this->assertEquals(1, $command_tester->getStatusCode());
@@ -86,7 +96,7 @@ class EnqueueTest extends TestCase
     }
 
     /**
-     * Test if invalid job data throws an error
+     * Test if invalid job data throws an error.
      */
     public function testInvalidJobDataExit()
     {
@@ -99,7 +109,7 @@ class EnqueueTest extends TestCase
         $command_tester->execute([
             'command' => $command->getName(),
             'type' => Inc::class,
-            '--data' => '{"here":"you go"}'
+            '--data' => '{"here":"you go"}',
         ]);
 
         $this->assertEquals(1, $command_tester->getStatusCode());
@@ -107,7 +117,7 @@ class EnqueueTest extends TestCase
     }
 
     /**
-     * Test a successful command run
+     * Test a successful command run.
      */
     public function testRunsOk()
     {
@@ -120,7 +130,7 @@ class EnqueueTest extends TestCase
         $command_tester->execute([
             'command' => $command->getName(),
             'type' => Inc::class,
-            '--data' => '{"number":12}'
+            '--data' => '{"number":12}',
         ]);
 
         $this->assertEquals(0, $command_tester->getStatusCode());

@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
@@ -11,7 +20,7 @@ use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 class DelayedJobsTest extends AbstractMySqlQueueTest
 {
     /**
-     * Test getting a delayed job
+     * Test getting a delayed job.
      */
     public function testGettingDelayedJob()
     {
@@ -28,7 +37,7 @@ class DelayedJobsTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if delay is applied to failed attempts
+     * Test if delay is applied to failed attempts.
      */
     public function testDelayIsAppliedToFailedAttempts()
     {
@@ -70,7 +79,7 @@ class DelayedJobsTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if first job delay can be different than failed attempts
+     * Test if first job delay can be different than failed attempts.
      */
     public function testFirstAttemptCanHaveDifferentDelayThanFailedAttempts()
     {

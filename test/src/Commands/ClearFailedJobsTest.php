@@ -1,13 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobQueue\Test\Commands;
 
-use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 use ActiveCollab\JobsQueue\Command\ClearFailedJobs;
 use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Tester\CommandTester;
 
 /**
  * @package ActiveCollab\JobQueue\Test\Commands
@@ -22,17 +31,19 @@ class ClearFailedJobsTest extends TestCase
     /**
      * {@inheritdoc}
      */
-    public function setUp(){
+    public function setUp()
+    {
         parent::setUp();
 
-        $this->command =  new ClearFailedJobs();
+        $this->command = new ClearFailedJobs();
         $this->command->setContainer($this->container);
     }
 
     /**
-     * Test if execute will delete all records from failed job table
+     * Test if execute will delete all records from failed job table.
      */
-    public function testExecuteRunsOK(){
+    public function testExecuteRunsOK()
+    {
         $application = new Application();
         $application->add($this->command);
 
@@ -47,10 +58,10 @@ class ClearFailedJobsTest extends TestCase
     }
 
     /**
-     * Test if unexpected exception  is handel
+     * Test if unexpected exception  is handel.
      */
-    public function testExecuteThrowErrorToDisplay(){
-
+    public function testExecuteThrowErrorToDisplay()
+    {
         $error_message = 'Expected test exception.';
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */

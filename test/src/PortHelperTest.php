@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Test\Jobs\PortHelperJob;
@@ -10,7 +19,7 @@ use ActiveCollab\JobsQueue\Test\Jobs\PortHelperJob;
 class PortHelperTest extends TestCase
 {
     /**
-     * Test if port is properly set when it is omitted
+     * Test if port is properly set when it is omitted.
      */
     public function testGetDefaultPortWhenPropertyIsMissing()
     {
@@ -19,7 +28,7 @@ class PortHelperTest extends TestCase
     }
 
     /**
-     * Test good port
+     * Test good port.
      */
     public function testGoodPort()
     {
@@ -28,7 +37,7 @@ class PortHelperTest extends TestCase
     }
 
     /**
-     * Test good port, passed as string
+     * Test good port, passed as string.
      */
     public function testGoodPortAsString()
     {

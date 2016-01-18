@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Batches;
 
 use ActiveCollab\JobsQueue\DispatchJobInterface;
@@ -10,54 +19,54 @@ use ActiveCollab\JobsQueue\DispatchJobInterface;
 interface BatchInterface extends DispatchJobInterface
 {
     /**
-     * Commit job ID-s dispatched by this batch
+     * Commit job ID-s dispatched by this batch.
      */
     public function commitDispatchedJobIds();
 
     /**
-     * Return queueu ID that this batch is created under
+     * Return queueu ID that this batch is created under.
      *
      * @return mixed
      */
     public function getQueueId();
 
     /**
-     * Return batch name (or description)
+     * Return batch name (or description).
      *
      * @return string
      */
     public function getName();
 
     /**
-     * Return true if there are no pending jobs in this queue (all jobs are done)
+     * Return true if there are no pending jobs in this queue (all jobs are done).
      *
-     * @return boolean
+     * @return bool
      */
     public function isComplete();
 
     /**
-     * Return total number of jobs that are in the batch
+     * Return total number of jobs that are in the batch.
      *
-     * @return integer
+     * @return int
      */
     public function countJobs();
 
     /**
-     * @return integer
+     * @return int
      */
     public function countPendingJobs();
 
     /**
-     * Return total number of jobs
+     * Return total number of jobs.
      *
-     * @return integer
+     * @return int
      */
     public function countCompletedJobs();
 
     /**
-     * Return number of failed jobs
+     * Return number of failed jobs.
      *
-     * @return integer
+     * @return int
      */
     public function countFailedJobs();
 }

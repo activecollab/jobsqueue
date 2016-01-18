@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
@@ -11,7 +20,7 @@ use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 class FailureRetriesTest extends AbstractMySqlQueueTest
 {
     /**
-     * Test job failure
+     * Test job failure.
      */
     public function testJobFailure()
     {
@@ -34,7 +43,7 @@ class FailureRetriesTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if job failure reason is properly logged
+     * Test if job failure reason is properly logged.
      */
     public function testJobFailureLogsReason()
     {
@@ -59,7 +68,7 @@ class FailureRetriesTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test count failed by job type
+     * Test count failed by job type.
      */
     public function testCountFailedByJobType()
     {
@@ -83,7 +92,7 @@ class FailureRetriesTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if job is retried after failure until attempts limit is reached
+     * Test if job is retried after failure until attempts limit is reached.
      */
     public function testJobFailureAttempts()
     {

@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Batches;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
@@ -22,7 +31,7 @@ class MySqlBatch extends Batch
     /**
      * @param DispatcherInterface $dispatcher
      * @param ConnectionInterface $connection
-     * @param integer             $queue_id
+     * @param int                 $queue_id
      * @param string              $name
      */
     public function __construct(DispatcherInterface &$dispatcher, ConnectionInterface &$connection, $queue_id = null, $name = null)
@@ -38,7 +47,7 @@ class MySqlBatch extends Batch
     private $dispatched_job_ids = [];
 
     /**
-     * Add a job to the queue
+     * Add a job to the queue.
      *
      * @param  JobInterface $job
      * @param  string       $channel
@@ -60,7 +69,7 @@ class MySqlBatch extends Batch
     {
         if ($queue_id = $this->getQueueId()) {
             if (!empty($this->dispatched_job_ids)) {
-                $this->connection->transact(function() use ($queue_id) {
+                $this->connection->transact(function () use ($queue_id) {
                     $this->connection->execute('UPDATE `' . MySqlQueue::BATCHES_TABLE_NAME . '` SET `jobs_count` = `jobs_count` + ? WHERE `id` = ?', count($this->dispatched_job_ids), $queue_id);
                 });
             }

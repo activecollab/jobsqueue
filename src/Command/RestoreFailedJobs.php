@@ -1,13 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Command;
 
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 use Exception;
 use InvalidArgumentException;
 use LogicException;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @package ActiveCollab\JobQueue\Command
@@ -15,7 +24,7 @@ use LogicException;
 class RestoreFailedJobs extends Command
 {
     /**
-     * Configure command
+     * Configure command.
      */
     protected function configure()
     {
@@ -75,7 +84,7 @@ class RestoreFailedJobs extends Command
     }
 
     /**
-     * Get update data values
+     * Get update data values.
      *
      * @param  InputInterface $input
      * @return array|null

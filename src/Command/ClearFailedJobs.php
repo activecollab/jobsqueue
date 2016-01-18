@@ -1,10 +1,19 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Command;
 
+use Exception;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Exception;
 
 /**
  * @package ActiveCollab\JobQueue\Command
@@ -12,7 +21,7 @@ use Exception;
 class ClearFailedJobs extends Command
 {
     /**
-     * Configure command
+     * Configure command.
      */
     protected function configure()
     {
@@ -31,6 +40,7 @@ class ClearFailedJobs extends Command
     {
         try {
             $this->dispatcher->getQueue()->clear();
+
             return $this->success('Done', $input, $output);
         } catch (Exception $e) {
             return $this->abortDueToException($e, $input, $output);

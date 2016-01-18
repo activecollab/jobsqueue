@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Batches\Batch;
@@ -12,7 +21,7 @@ use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 class BatchesTest extends AbstractMySqlQueueTest
 {
     /**
-     * Test if job batches table exists
+     * Test if job batches table exists.
      */
     public function testBatchesTableExists()
     {
@@ -20,7 +29,7 @@ class BatchesTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if call to Dispatcher's batch method creates a batch
+     * Test if call to Dispatcher's batch method creates a batch.
      */
     public function testDispatcherBatchCallCreatesBatch()
     {
@@ -34,7 +43,7 @@ class BatchesTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if batch can be set for an unsaved job
+     * Test if batch can be set for an unsaved job.
      */
     public function testBatchCanBeSetForUnqueuedJob()
     {
@@ -71,8 +80,8 @@ class BatchesTest extends AbstractMySqlQueueTest
 
     public function testCountBatchJobs()
     {
-        $batch = $this->dispatcher->batch('Testing batch', function(Batch &$batch) {
-            for ($i = 1; $i <= 5; $i++) {
+        $batch = $this->dispatcher->batch('Testing batch', function (Batch &$batch) {
+            for ($i = 1; $i <= 5; ++$i) {
                 $batch->dispatch(new Inc(['number' => $i]));
             }
         });
@@ -83,8 +92,8 @@ class BatchesTest extends AbstractMySqlQueueTest
 
     public function testCountBatchProgress()
     {
-        $batch = $this->dispatcher->batch('Testing batch', function(Batch &$batch) {
-            for ($i = 1; $i <= 5; $i++) {
+        $batch = $this->dispatcher->batch('Testing batch', function (Batch &$batch) {
+            for ($i = 1; $i <= 5; ++$i) {
                 $batch->dispatch(new Inc(['number' => $i]));
             }
         });
@@ -111,8 +120,8 @@ class BatchesTest extends AbstractMySqlQueueTest
 
     public function testAllBatchJobsExecution()
     {
-        $batch = $this->dispatcher->batch('Testing batch', function(Batch &$batch) {
-            for ($i = 1; $i <= 5; $i++) {
+        $batch = $this->dispatcher->batch('Testing batch', function (Batch &$batch) {
+            for ($i = 1; $i <= 5; ++$i) {
                 $batch->dispatch(new Inc(['number' => $i]));
             }
         });

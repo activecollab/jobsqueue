@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
@@ -15,7 +24,7 @@ use DateTime;
 class MySqlQueueTest extends AbstractMySqlQueueTest
 {
     /**
-     * Test if job queue table is prepared for testing
+     * Test if job queue table is prepared for testing.
      */
     public function testJobsQueueTableIsCreated()
     {
@@ -23,7 +32,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test jobs are added to the queue
+     * Test jobs are added to the queue.
      */
     public function testJobsAreAddedToTheQueue()
     {
@@ -37,7 +46,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test jobs can be removed from queue
+     * Test jobs can be removed from queue.
      */
     public function testJobsAreRemovedFromTheQueue()
     {
@@ -53,7 +62,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Check if there will be no exception if we try to dequeue a job that doesn't exist
+     * Check if there will be no exception if we try to dequeue a job that doesn't exist.
      */
     public function testDequeueNoExceptionOnMissingJob()
     {
@@ -62,7 +71,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if jobs by be removed from the queue by type
+     * Test if jobs by be removed from the queue by type.
      */
     public function testDequeueByTypeRemovesJobsOfSpecificType()
     {
@@ -75,7 +84,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test count jobs
+     * Test count jobs.
      */
     public function testCountJobs()
     {
@@ -89,7 +98,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test count jobs by type
+     * Test count jobs by type.
      */
     public function testCountJobsByType()
     {
@@ -105,7 +114,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Make sure that full job class is recorded
+     * Make sure that full job class is recorded.
      */
     public function testFullJobClassIsRecorded()
     {
@@ -118,7 +127,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if channel is properly set
+     * Test if channel is properly set.
      */
     public function testChannelIsSet()
     {
@@ -131,7 +140,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if priority is properly set
+     * Test if priority is properly set.
      */
     public function testPriorityIsProperlySetFromData()
     {
@@ -144,11 +153,11 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $row = $result->fetch_assoc();
 
         $this->assertArrayHasKey('priority', $row);
-        $this->assertEquals((string)Job::HAS_HIGHEST_PRIORITY, $row['priority']);
+        $this->assertEquals((string) Job::HAS_HIGHEST_PRIORITY, $row['priority']);
     }
 
     /**
-     * Test job data is properly serialized to JSON
+     * Test job data is properly serialized to JSON.
      */
     public function testJobDataIsSerializedToJson()
     {
@@ -174,7 +183,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if invalid JSON data is treated as a reason for job to fail
+     * Test if invalid JSON data is treated as a reason for job to fail.
      */
     public function testJobDataCanBeBrokenJson()
     {
@@ -191,7 +200,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test check for existing job
+     * Test check for existing job.
      */
     public function testCheckForExistingJob()
     {
@@ -202,7 +211,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test check for existing job
+     * Test check for existing job.
      */
     public function testCheckForExistingJobWithMatchigProperties()
     {
@@ -216,7 +225,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if new jobs are instantly available
+     * Test if new jobs are instantly available.
      */
     public function testNewJobsAreAvailableInstantly()
     {
@@ -233,7 +242,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test new jobs can be delayed by a specified number of seconds
+     * Test new jobs can be delayed by a specified number of seconds.
      */
     public function testNewJobsCanBeDelayed()
     {
@@ -247,7 +256,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if we can use first_attempt_delay to set a delay of the first attempt
+     * Test if we can use first_attempt_delay to set a delay of the first attempt.
      */
     public function testNewJobsCanBeDelayedWithFirstAttemptExecutedNow()
     {
@@ -270,7 +279,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test that jobs are not reserved by default
+     * Test that jobs are not reserved by default.
      */
     public function testJobsAreNotReservedByDefault()
     {
@@ -290,7 +299,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test that jobs start with zero attempts
+     * Test that jobs start with zero attempts.
      */
     public function testAttemptsAreZeroByDefault()
     {
@@ -307,7 +316,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test next in line when no priority is set (FIFO)
+     * Test next in line when no priority is set (FIFO).
      */
     public function testNextInLineReturnsNullOnNoJobs()
     {
@@ -316,7 +325,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test next in line when no priority is set (FIFO)
+     * Test next in line when no priority is set (FIFO).
      */
     public function testNextInLine()
     {
@@ -334,7 +343,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if nextInLine works fine when another worker process "snatches" the job (returns NULL)
+     * Test if nextInLine works fine when another worker process "snatches" the job (returns NULL).
      */
     public function testJobSnatching()
     {
@@ -366,7 +375,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if queue instance is properly set
+     * Test if queue instance is properly set.
      */
     public function testJobGetsQueueProperlySet()
     {
@@ -382,7 +391,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test priority tasks are front in line
+     * Test priority tasks are front in line.
      */
     public function testPriorityJobsAreFrontInLine()
     {
@@ -401,7 +410,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if job execution removes it from the queue
+     * Test if job execution removes it from the queue.
      */
     public function testExecuteJobRemovesItFromQueue()
     {

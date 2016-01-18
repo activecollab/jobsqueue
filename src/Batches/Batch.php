@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Batches;
 
 use ActiveCollab\JobsQueue\DispatcherInterface;
@@ -16,7 +25,7 @@ abstract class Batch implements BatchInterface
 
     /**
      * @param DispatcherInterface $dispatcher
-     * @param integer             $queue_id
+     * @param int                 $queue_id
      * @param string              $name
      */
     public function __construct(DispatcherInterface &$dispatcher, $queue_id = null, $name = null)

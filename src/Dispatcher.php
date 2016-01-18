@@ -1,9 +1,18 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue;
 
-use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use InvalidArgumentException;
 
 /**
@@ -164,7 +173,7 @@ class Dispatcher implements DispatcherInterface
                 }
             }
         } else {
-            throw new InvalidArgumentException("Channel name needs to be a string value");
+            throw new InvalidArgumentException('Channel name needs to be a string value');
         }
     }
 
@@ -185,7 +194,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * @return integer
+     * @return int
      */
     public function countBatches()
     {
@@ -195,7 +204,8 @@ class Dispatcher implements DispatcherInterface
     /**
      * {@inheritdoc}
      */
-    public function unfurlType($search_for){
+    public function unfurlType($search_for)
+    {
         return  $this->getQueue()->unfurlType($search_for);
     }
 }

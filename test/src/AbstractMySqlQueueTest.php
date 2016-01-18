@@ -1,14 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
-use mysqli;
 use Exception;
-use RuntimeException;
+use mysqli;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -36,7 +44,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
     protected $last_failed_job = null, $last_failure_message = null;
 
     /**
-     * Set up test environment
+     * Set up test environment.
      */
     public function setUp()
     {
@@ -63,7 +71,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
     }
 
     /**
-     * Tear down test environment
+     * Tear down test environment.
      */
     public function tearDown()
     {
@@ -78,9 +86,9 @@ abstract class AbstractMySqlQueueTest extends TestCase
     }
 
     /**
-     * Check number of records in jobs queue table
+     * Check number of records in jobs queue table.
      *
-     * @param integer $expected
+     * @param int $expected
      */
     protected function assertRecordsCount($expected)
     {
@@ -88,9 +96,9 @@ abstract class AbstractMySqlQueueTest extends TestCase
     }
 
     /**
-     * Check number of records in failed jobs queue table
+     * Check number of records in failed jobs queue table.
      *
-     * @param integer $expected
+     * @param int $expected
      */
     protected function assertFailedRecordsCount($expected)
     {
@@ -98,19 +106,19 @@ abstract class AbstractMySqlQueueTest extends TestCase
     }
 
     /**
-     * Check if attempts value for the given job has an expected value
+     * Check if attempts value for the given job has an expected value.
      *
-     * @param integer|null $expected
-     * @param integer      $job_id
+     * @param int|null $expected
+     * @param int      $job_id
      */
     protected function assertAttempts($expected, $job_id)
     {
-        $result = $this->connection->executeFirstCell('SELECT `attempts` FROM `' . MySqlQueue::JOBS_TABLE_NAME . "` WHERE id = ?", $job_id);
+        $result = $this->connection->executeFirstCell('SELECT `attempts` FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = ?', $job_id);
 
         if ($expected === null) {
             $this->assertEmpty($result);
         } else {
-            $this->assertSame($expected, (integer)$result);
+            $this->assertSame($expected, (integer) $result);
         }
     }
 }

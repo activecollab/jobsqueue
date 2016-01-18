@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\JobsQueue\DispatcherInterface;
@@ -140,7 +149,7 @@ class TestQueue implements QueueInterface
 
         foreach ($this->jobs as $job) {
             if (in_array(get_class($job), $types)) {
-                $count++;
+                ++$count;
             }
         }
 
@@ -166,7 +175,7 @@ class TestQueue implements QueueInterface
 
         foreach ($this->failed_jobs as $job) {
             if (in_array(get_class($job), $types)) {
-                $count++;
+                ++$count;
             }
         }
 

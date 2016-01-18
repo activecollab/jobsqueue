@@ -19,7 +19,8 @@
     "require": {
         "php": ">=5.6.0",
         "activecollab/containeraccess": "~1.0.0",
-        "activecollab/databaseconnection": "dev-next"
+        "activecollab/databaseconnection": "dev-next",
+        "psr/log": "~1.0"
     },
     "suggest": {
         "symfony/console": "Use Symfony console to easily create CLI jobs consumer"

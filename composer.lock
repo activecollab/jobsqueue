@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "7cfc2d01db01c30883ed16fd91b2d8b7",
-    "content-hash": "8b12c34cf126b3bf491ea9bc1d5d27ea",
+    "hash": "c5e6594726190ba08d69ac18f7bfb0c5",
+    "content-hash": "48a5ec59e84a267b6080c656c74583da",
     "packages": [
         {
             "name": "activecollab/containeraccess",

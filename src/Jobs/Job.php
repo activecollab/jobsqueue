@@ -17,6 +17,7 @@ use ActiveCollab\JobsQueue\Signals\ProcessLaunched;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use InvalidArgumentException;
 use LogicException;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -259,5 +260,29 @@ abstract class Job implements JobInterface
         $this->queue->reportBackgroundProcess($this, $process_id);
 
         return new ProcessLaunched($process_id);
+    }
+
+    /**
+     * @var LoggerInterface|null
+     */
+    protected $log;
+
+    /**
+     * @return null|LoggerInterface
+     */
+    public function getLog()
+    {
+        return $this->log;
+    }
+
+    /**
+     * @param  LoggerInterface $log
+     * @return $this
+     */
+    public function &setLog(LoggerInterface $log)
+    {
+        $this->log = $log;
+
+        return $this;
     }
 }

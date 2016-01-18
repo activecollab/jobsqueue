@@ -14,6 +14,7 @@ namespace ActiveCollab\JobsQueue\Jobs;
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use JsonSerializable;
+use Psr\Log\LoggerInterface;
 
 /**
  * @package ActiveCollab\JobsQueue\Jobs
@@ -105,4 +106,15 @@ interface JobInterface extends  JsonSerializable
      * @param mixed          $queue_id
      */
     public function &setQueue(QueueInterface &$queue, $queue_id);
+
+    /**
+     * @return null|LoggerInterface
+     */
+    public function getLog();
+
+    /**
+     * @param  LoggerInterface $log
+     * @return $this
+     */
+    public function &setLog(LoggerInterface $log);
 }

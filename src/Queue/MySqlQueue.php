@@ -19,12 +19,13 @@ use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
-class MySqlQueue implements QueueInterface
+class MySqlQueue extends Queue
 {
     const BATCHES_TABLE_NAME = 'job_batches';
     const JOBS_TABLE_NAME = 'jobs_queue';
@@ -36,11 +37,14 @@ class MySqlQueue implements QueueInterface
     private $connection;
 
     /**
-     * @param ConnectionInterface $connection
-     * @param bool|true           $create_tables_if_missing
+     * @param ConnectionInterface  $connection
+     * @param bool|true            $create_tables_if_missing
+     * @param LoggerInterface|null $log
      */
-    public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true)
+    public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true, LoggerInterface &$log = null)
     {
+        parent::__construct($log);
+
         $this->connection = $connection;
 
         if ($create_tables_if_missing) {
@@ -57,6 +61,10 @@ class MySqlQueue implements QueueInterface
 
         try {
             if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
+                if ($this->log) {
+                    $this->log->info("Creating {table_name} MySQL queue table", ['table_name' => self::BATCHES_TABLE_NAME]);
+                }
+
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::BATCHES_TABLE_NAME . "` (
                     `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
                     `name` varchar(191) NOT NULL DEFAULT '',
@@ -67,6 +75,10 @@ class MySqlQueue implements QueueInterface
             }
 
             if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
+                if ($this->log) {
+                    $this->log->info("Creating {table_name} MySQL queue table", ['table_name' => self::JOBS_TABLE_NAME]);
+                }
+
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::JOBS_TABLE_NAME . "` (
                     `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                     `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
@@ -89,6 +101,10 @@ class MySqlQueue implements QueueInterface
             }
 
             if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
+                if ($this->log) {
+                    $this->log->info("Creating {table_name} MySQL queue table", ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
+                }
+
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::FAILED_JOBS_TABLE_NAME . "` (
                     `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                     `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
@@ -172,6 +188,10 @@ class MySqlQueue implements QueueInterface
     public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         try {
+            if ($this->log) {
+                $job->setLog($this->log);
+            }
+
             $result = $job->execute();
 
             if (!($result instanceof SignalInterface && $result->keepJobInQueue())) {

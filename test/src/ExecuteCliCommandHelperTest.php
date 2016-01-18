@@ -27,15 +27,19 @@ class ExecuteCliCommandHelperTest extends TestCase
         new ExecuteCliCommandHelperJob([]);
     }
 
+    /**
+     * Test if command without arguments is properly prepared.
+     */
     public function testCommandWithoutOptionsAndArguments()
     {
         $this->assertEquals('php', (new ExecuteCliCommandHelperJob(['command' => 'php']))->execute());
     }
 
+    /**
+     * Test if command arguments are properly prepared.
+     */
     public function testCommandArguments()
     {
-        // php -S 0.0.0.0:8888 -t public public/index.php
-
         $job = new ExecuteCliCommandHelperJob([
             'command' => 'php',
             'command_arguments' => [

@@ -14,6 +14,7 @@ namespace ActiveCollab\JobsQueue\Helpers;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use InvalidArgumentException;
 use LogicException;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -80,13 +81,25 @@ trait ExecuteCliCommand
             $old_working_directory = getcwd();
 
             if ($old_working_directory != $from_working_directory) {
-                if (!chdir($from_working_directory)) {
+                if (chdir($from_working_directory)) {
+                    if ($this->getLog()) {
+                        $this->getLog()->debug('Current directory changed from {from_dir} to {to_dir}', ['from_dir' => $old_working_directory, 'to_dir' => $from_working_directory]);
+                    }
+                } else {
+                    if ($this->getLog()) {
+                        $this->getLog()->error('Failed to change working directory to {to_dir}', ['to_dir' => $from_working_directory]);
+                    }
+
                     throw new RuntimeException("Failed to change working directory to '$from_working_directory'");
                 }
             }
         }
 
         if (!empty($log_to_file)) {
+            if ($this->getLog()) {
+                $this->getLog()->debug('Command output will be logged to {file}', ['file' => $log_to_file]);
+            }
+
             $log_to_file = escapeshellarg($log_to_file);
         }
 
@@ -113,10 +126,26 @@ trait ExecuteCliCommand
 
             // Switch back to old working directory if we changed working directory
             if (isset($old_working_directory) && $old_working_directory != $from_working_directory) {
-                chdir($old_working_directory);
+                if (chdir($old_working_directory)) {
+                    if ($this->getLog()) {
+                        $this->getLog()->debug('Current directory changed back to {to_dir}', ['to_dir' => $old_working_directory]);
+                    }
+                } else {
+                    if ($this->getLog()) {
+                        $this->getLog()->error('Failed to change work directory to {to_dir}', ['to_dir' => $old_working_directory]);
+                    }
+                }
             }
 
-            if (!empty($pid)) {
+            if (empty($pid)) {
+                if ($this->getLog()) {
+                    $this->getLog()->error('Command {command} launched but PID is empty', ['command' => $command]);
+                }
+            } else {
+                if ($this->getLog()) {
+                    $this->getLog()->info('Command {command} launched with PID {pid}', ['command' => $command, 'pid' => $pid]);
+                }
+
                 return $this->reportBackgroundProcess($pid);
             }
         } else {
@@ -129,11 +158,26 @@ trait ExecuteCliCommand
             }
 
             if (isset($old_working_directory) && $old_working_directory != $from_working_directory) {
-                chdir($old_working_directory); // Switch back to old working directory if we changed working directory
+                if (chdir($old_working_directory)) {
+                    if ($this->getLog()) {
+                        $this->getLog()->debug('Current directory changed back to {to_dir}', ['to_dir' => $old_working_directory]);
+                    }
+                } else {
+                    if ($this->getLog()) {
+                        $this->getLog()->error('Failed to change work directory to {to_dir}', ['to_dir' => $old_working_directory]);
+                    }
+                }
             }
 
-            // Switch back to old working directory if we changed working directory
-            if ($code !== 0) {
+            if ($code === 0) {
+                if ($this->getLog()) {
+                    $this->getLog()->info('Command {command} exited with 0', ['command' => $command]);
+                }
+            } else {
+                if ($this->getLog()) {
+                    $this->getLog()->error('Command {command} exited with {exit_code}', ['command' => $command, 'exit_code' => $code]);
+                }
+
                 throw new RuntimeException("Command exited with error #{$code}", $code);
             }
         }
@@ -167,8 +211,17 @@ trait ExecuteCliCommand
             }
         }
 
+        if ($this->getLog()) {
+            $this->getLog()->debug('Command {command} prepared', ['command' => $command]);
+        }
+
         return $command;
     }
+
+    /**
+     * @return null|LoggerInterface
+     */
+    abstract public function getLog();
 
     /**
      * {@inheritdoc}

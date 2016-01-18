@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Helpers;
 
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
@@ -13,7 +22,7 @@ use RuntimeException;
 trait ExecuteCliCommand
 {
     /**
-     * Validate and prepare job data
+     * Validate and prepare job data.
      *
      * This method needs to be called from job's constructor. Expectations:
      *
@@ -46,7 +55,7 @@ trait ExecuteCliCommand
     }
 
     /**
-     * Use input data to prepare command and execute it
+     * Use input data to prepare command and execute it.
      *
      * @param  array                $data
      * @param  string               $from_working_directory

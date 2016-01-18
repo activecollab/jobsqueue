@@ -66,7 +66,7 @@ class TestQueue extends Queue
     /**
      * {@inheritdoc}
      */
-    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function execute(JobInterface $job, $silent = true)
     {
         return $job->execute();
     }

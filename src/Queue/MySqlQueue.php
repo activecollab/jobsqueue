@@ -62,7 +62,7 @@ class MySqlQueue extends Queue
         try {
             if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
                 if ($this->log) {
-                    $this->log->info("Creating {table_name} MySQL queue table", ['table_name' => self::BATCHES_TABLE_NAME]);
+                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::BATCHES_TABLE_NAME]);
                 }
 
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::BATCHES_TABLE_NAME . "` (
@@ -76,7 +76,7 @@ class MySqlQueue extends Queue
 
             if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
                 if ($this->log) {
-                    $this->log->info("Creating {table_name} MySQL queue table", ['table_name' => self::JOBS_TABLE_NAME]);
+                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
                 }
 
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::JOBS_TABLE_NAME . "` (
@@ -102,7 +102,7 @@ class MySqlQueue extends Queue
 
             if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
                 if ($this->log) {
-                    $this->log->info("Creating {table_name} MySQL queue table", ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
+                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
                 }
 
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::FAILED_JOBS_TABLE_NAME . "` (
@@ -191,7 +191,7 @@ class MySqlQueue extends Queue
     /**
      * {@inheritdoc}
      */
-    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function execute(JobInterface $job, $silent = true)
     {
         try {
             if ($this->log) {
@@ -206,7 +206,11 @@ class MySqlQueue extends Queue
 
             return $result;
         } catch (\Exception $e) {
-            $this->failJob($job, $e);
+            if ($this->log) {
+                $this->log->error('Job {type} failed due to error', ['type' => get_class($job), 'exception' => $e]);
+            }
+
+            $this->failJob($job, $e, $silent);
         }
 
         return null;
@@ -257,10 +261,12 @@ class MySqlQueue extends Queue
     /**
      * Handle a job failure (attempts, removal from queue, exception handling etc).
      *
-     * @param JobInterface   $job
-     * @param Exception|null $reason
+     * @param  JobInterface   $job
+     * @param  Exception|null $reason
+     * @param  bool|true      $silent
+     * @throws Exception
      */
-    private function failJob(JobInterface $job, Exception $reason = null)
+    private function failJob(JobInterface $job, Exception $reason = null, $silent = true)
     {
         if ($job_id = $job->getQueueId()) {
             $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
@@ -276,6 +282,10 @@ class MySqlQueue extends Queue
             foreach ($this->on_job_failure as $callback) {
                 call_user_func($callback, $job, $reason);
             }
+        }
+
+        if ($reason instanceof Exception && !$silent) {
+            throw $reason;
         }
     }
 

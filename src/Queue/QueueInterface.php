@@ -49,11 +49,11 @@ interface QueueInterface extends Countable
     /**
      * Execute a job now (sync, waits for a response).
      *
-     * @param JobInterface $job
-     * @param  $channel     $channel
+     * @param  JobInterface $job
+     * @param  boolean      $silent
      * @return mixed
      */
-    public function execute(JobInterface $job, $channel = self::MAIN_CHANNEL);
+    public function execute(JobInterface $job, $silent = true);
 
     /**
      * Return true if there's an active job of the give type with the given properties.

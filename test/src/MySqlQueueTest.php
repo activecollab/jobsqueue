@@ -428,4 +428,21 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
 
         $this->assertRecordsCount(0);
     }
+
+    /**
+     * Test if execute suppresses exceptions by default
+     */
+    public function testExecuteIsSilencedByDefault()
+    {
+        $this->dispatcher->getQueue()->execute(new Failing());
+    }
+
+    /**
+     * @expectedException \Exception
+     * @expectedExceptionMessage Built to fail!
+     */
+    public function testExecuteThrowsExceptionWhenNotSilenced()
+    {
+        $this->dispatcher->getQueue()->execute(new Failing(), false);
+    }
 }

@@ -175,7 +175,7 @@ trait ExecuteCliCommand
                 }
             } else {
                 if ($this->getLog()) {
-                    $this->getLog()->error('Command {command} exited with {exit_code}', ['command' => $command, 'exit_code' => $code]);
+                    $this->getLog()->error('Command {command} exited with {exit_code}', ['command' => $command, 'exit_code' => $code, 'output' => mb_substr(implode("\n", $output), 0, 1048576)]);
                 }
 
                 throw new RuntimeException("Command exited with error #{$code}", $code);

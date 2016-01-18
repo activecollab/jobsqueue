@@ -196,3 +196,7 @@ Array
 ```
 
 Note: Process reporting and watching is not supported on Windows systems at the moment.
+
+## To do
+
+1. Add logging to all relevant methods in MySQL queue

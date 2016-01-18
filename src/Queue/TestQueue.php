@@ -18,7 +18,7 @@ use ActiveCollab\JobsQueue\Jobs\JobInterface;
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
-class TestQueue implements QueueInterface
+class TestQueue extends Queue
 {
     /**
      * @var Job[]

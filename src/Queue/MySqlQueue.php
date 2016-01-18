@@ -163,7 +163,13 @@ class MySqlQueue extends Queue
 
         $this->connection->execute('INSERT INTO `' . self::JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, $job->getBatchId(), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
 
-        return $this->connection->lastInsertId();
+        $job_id = $this->connection->lastInsertId();
+
+        if ($this->log) {
+            $this->log->info('Job {type} enqueued as #{job_id}', ['type' => get_class($job), 'job_id' => $job_id]);
+        }
+
+        return $job_id;
     }
 
     /**

@@ -12,14 +12,14 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class ExtractPropertyTest extends AbstractMySqlQueueTest
-  {
-      /**
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class ExtractPropertyTest extends AbstractMySqlQueueTest
+{
+    /**
      * Test to confirm that priority is extracted field by default.
      */
     public function testPriorityIsExtractedByDefault()
@@ -58,4 +58,4 @@ use ActiveCollab\JobsQueue\Jobs\Job;
 
         $this->assertEquals(12, (integer) $job_row['number']);
     }
-  }
+}

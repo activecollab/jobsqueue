@@ -12,16 +12,16 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Dispatcher;
-  use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\JobsQueue\Queue\TestQueue;
-  use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Queue\TestQueue;
+use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class JobPriorityTest extends TestCase
-  {
-      /**
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class JobPriorityTest extends TestCase
+{
+    /**
      * @var Dispatcher
      */
     private $dispatcher;
@@ -69,4 +69,4 @@ use ActiveCollab\JobsQueue\Dispatcher;
     {
         $this->assertEquals(Job::HAS_HIGHEST_PRIORITY, (new Inc(['number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY + 1]))->getData()['priority']);
     }
-  }
+}

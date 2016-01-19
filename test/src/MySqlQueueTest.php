@@ -430,7 +430,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if execute suppresses exceptions by default
+     * Test if execute suppresses exceptions by default.
      */
     public function testExecuteIsSilencedByDefault()
     {

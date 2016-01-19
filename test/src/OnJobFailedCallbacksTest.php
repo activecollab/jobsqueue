@@ -12,15 +12,15 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
-  use ActiveCollab\JobsQueue\Test\Jobs\Failing;
-  use Exception;
+use ActiveCollab\JobsQueue\Test\Jobs\Failing;
+use Exception;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class OnJobFailedCallbacksTest extends AbstractMySqlQueueTest
-  {
-      /**
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class OnJobFailedCallbacksTest extends AbstractMySqlQueueTest
+{
+    /**
      * Test to check if we can set multiple failure callbacks.
      */
     public function testExtraCallback()
@@ -29,9 +29,9 @@ use ActiveCollab\JobsQueue\Jobs\Job;
         $failure_message = '';
 
         $this->dispatcher->getQueue()->onJobFailure(function (Job $job, Exception $e) use (&$failure_count, &$failure_message) {
-        ++$failure_count;
-        $failure_message = $e->getMessage();
-      });
+            ++$failure_count;
+            $failure_message = $e->getMessage();
+        });
 
         $this->assertRecordsCount(0);
 
@@ -50,4 +50,4 @@ use ActiveCollab\JobsQueue\Jobs\Job;
         $this->assertEquals('Built to fail!', $failure_message);
         $this->assertEquals(1, $failure_count);
     }
-  }
+}

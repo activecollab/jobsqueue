@@ -46,7 +46,7 @@ interface JobInterface extends  JsonSerializable
     /**
      * Return all job data (when $property is NULL) or a particular property.
      *
-     * @param  string|null  $property
+     * @param  string|null $property
      * @return array|mixed
      */
     public function getData($property = null);

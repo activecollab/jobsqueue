@@ -12,14 +12,14 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
-  use ActiveCollab\JobsQueue\Test\Jobs\Failing;
+use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class RestoreFailedJobTest extends AbstractMySqlQueueTest
-  {
-      /**
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class RestoreFailedJobTest extends AbstractMySqlQueueTest
+{
+    /**
      * Set up test environment.
      */
     public function setUp()
@@ -71,8 +71,8 @@ use ActiveCollab\JobsQueue\Queue\MySqlQueue;
     {
         $this->assertRecordsCount(0);
 
-      /** @var Failing $job */
-      $job = $this->dispatcher->getQueue()->restoreFailedJobById(1);
+        /** @var Failing $job */
+        $job = $this->dispatcher->getQueue()->restoreFailedJobById(1);
 
         $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $job);
 
@@ -88,7 +88,7 @@ use ActiveCollab\JobsQueue\Queue\MySqlQueue;
     public function testRestoreByIdWithDataUpdate()
     {
         /** @var Failing $job */
-      $job = $this->dispatcher->getQueue()->restoreFailedJobById(1, ['attempts' => 5, 'first_attempt_delay' => 0, 'property1' => 'new value']);
+        $job = $this->dispatcher->getQueue()->restoreFailedJobById(1, ['attempts' => 5, 'first_attempt_delay' => 0, 'property1' => 'new value']);
 
         $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $job);
 
@@ -109,4 +109,4 @@ use ActiveCollab\JobsQueue\Queue\MySqlQueue;
         $this->assertRecordsCount(2);
         $this->assertFailedRecordsCount(0);
     }
-  }
+}

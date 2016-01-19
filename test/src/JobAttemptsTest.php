@@ -12,15 +12,15 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Dispatcher;
-  use ActiveCollab\JobsQueue\Queue\TestQueue;
-  use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Queue\TestQueue;
+use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class JobAttemptsTest extends TestCase
-  {
-      /**
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class JobAttemptsTest extends TestCase
+{
+    /**
      * @var Dispatcher
      */
     private $dispatcher;
@@ -78,4 +78,4 @@ use ActiveCollab\JobsQueue\Dispatcher;
         $job = new Inc(['number' => 123, 'attempts' => 13]);
         $this->assertEquals(13, $job->getAttempts());
     }
-  }
+}

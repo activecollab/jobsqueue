@@ -50,7 +50,7 @@ interface QueueInterface extends Countable
      * Execute a job now (sync, waits for a response).
      *
      * @param  JobInterface $job
-     * @param  boolean      $silent
+     * @param  bool         $silent
      * @return mixed
      */
     public function execute(JobInterface $job, $silent = true);

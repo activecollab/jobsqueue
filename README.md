@@ -4,6 +4,8 @@
 
 Reason for existence: it's light, with very few dependencies. It can be used with cron + database powered queues for people who are not allowed to run a proper messaging or job management server. Or you can execute jobs through proper messaging or job manager with it.
 
+## Installation
+
 To install it, use Composer:
 
 ```json
@@ -14,6 +16,7 @@ To install it, use Composer:
 }
 ```
 
+## Basic Usage
 
 This library uses three elements:
 
@@ -88,6 +91,14 @@ To run a job and wait for the result, use `execute()` instead of `dispatch()`:
 ```php
 $result = $dispatcher->execute(new Inc([ 'number' => 123 ]));
 ```
+
+When called like this, jobs are executed right away. `execute()` suppresses exceptions by default, so you should set `$silent` to `false` if you want exceptions to bubble out:
+
+```php
+$result = $dispatcher->execute(new Inc([ ‘number’ => 123 ]), false);
+```
+
+## Job Properties
 
 When constructing a new `Job` instance, you can set an array of job data, as well as following job properties:
 

@@ -24,10 +24,10 @@ interface DispatcherInterface extends DispatchJobInterface
      * Execute a job now (sync, waits for a response).
      *
      * @param  JobInterface $job
-     * @param  string       $channel
+     * @param  bool|true    $silent
      * @return mixed
      */
-    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL);
+    public function execute(JobInterface $job, $silent = true);
 
     /**
      * Execute next job in line of execution.

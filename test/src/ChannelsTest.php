@@ -76,14 +76,6 @@ class ChannelsTest extends AbstractMySqlQueueTest
     /**
      * @expectedException \InvalidArgumentException
      */
-    public function testChannelCantBeEmptyOnExecute()
-    {
-        $this->dispatcher->execute(new Inc(['number' => 123]), '');
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testChannelNeedsCantBeAnArrayOfChannels()
     {
         $this->dispatcher->dispatch(new Inc(['number' => 123]), [QueueInterface::MAIN_CHANNEL, 'another_channel']);
@@ -112,14 +104,6 @@ class ChannelsTest extends AbstractMySqlQueueTest
 
         $this->assertInstanceOf(Inc::class, $job);
         $this->assertEquals(QueueInterface::MAIN_CHANNEL, $job->getChannel());
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testJobCantBeExecutedInAnUnknownChannel()
-    {
-        $this->dispatcher->execute(new Inc(['number' => 123]), 'not registered');
     }
 
     /**

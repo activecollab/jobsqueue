@@ -48,9 +48,9 @@ class Dispatcher implements DispatcherInterface
     /**
      * {@inheritdoc}
      */
-    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function execute(JobInterface $job, $silent = true)
     {
-        return $this->getQueue()->execute($job, $this->validateChannel($channel));
+        return $this->getQueue()->execute($job, $silent);
     }
 
     /**

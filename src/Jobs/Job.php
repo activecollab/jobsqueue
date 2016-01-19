@@ -111,11 +111,23 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * @return array
+     * {@inheritdoc}
      */
-    public function getData()
+    public function getData($property = null)
     {
-        return $this->data;
+        if ($property === null) {
+            return $this->data;
+        } else {
+            if (empty($property)) {
+                throw new InvalidArgumentException("When provided, property can't be an empty value");
+            } else {
+                if (empty($this->data[$property]) && !array_key_exists($property, $this->data)) {
+                    throw new InvalidArgumentException("Property '$property' not found");
+                } else {
+                    return $this->data[$property];
+                }
+            }
+        }
     }
 
     /**

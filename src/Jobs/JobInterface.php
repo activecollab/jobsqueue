@@ -44,9 +44,12 @@ interface JobInterface extends  JsonSerializable
     public function &setChannel($channel);
 
     /**
-     * @return array
+     * Return all job data (when $property is NULL) or a particular property.
+     *
+     * @param  string|null  $property
+     * @return array|mixed
      */
-    public function getData();
+    public function getData($property = null);
 
     /**
      * Return job priority.

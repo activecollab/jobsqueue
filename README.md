@@ -117,6 +117,18 @@ $job = new Inc([
 ]);
 ```
 
+### Accessing Properties in a Job
+
+Once in an job's `execute()` method, you can access job properties using `getData()` method:
+
+```php
+public function execute()
+{
+    print_r($this->getData()); // Print all job properties
+    print $this->getData('number') . "\n"; // Print only number
+}
+```
+
 ## Batches
 
 Jobs can be added to the queue in batches. Once in a batch, job queue will execute them as any other job, but you will be able to track progress of batch:

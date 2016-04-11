@@ -15,6 +15,7 @@ use ActiveCollab\ContainerAccess\ContainerAccessInterface;
 use ActiveCollab\ContainerAccess\ContainerAccessInterface\Implementation as ContainerAccessInterfaceImplementation;
 use DateTime;
 use DateTimeZone;
+use Doctrine\Common\Inflector\Inflector;
 use Exception;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,9 +35,22 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
      */
     protected function configure()
     {
-        $this->addOption('debug', '', InputOption::VALUE_NONE, 'Output debug details')
+        $bits = explode('\\', get_class($this));
+
+        $this->setName($this->getCommandNamePrefix() . Inflector::tableize(array_pop($bits)))
+            ->addOption('debug', '', InputOption::VALUE_NONE, 'Output debug details')
             ->addOption('json', '', InputOption::VALUE_NONE, 'Output JSON')
             ->addOption('environment', 'e', InputOption::VALUE_REQUIRED, 'Environment in which we are are running (development, staging or production)', 'development');
+    }
+
+    /**
+     * Return command name prefix.
+     *
+     * @return string
+     */
+    protected function getCommandNamePrefix()
+    {
+        return '';
     }
 
     /**

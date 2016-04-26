@@ -4,12 +4,12 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "fdffedab11055992d4a96d65fe1027da",
-    "content-hash": "7216d10281b644856b4cd778662fb683",
+    "hash": "d5e4e86b4ad96c6e0485e22da961e1a3",
+    "content-hash": "cbb939012513690292986a4c6c437f8f",
     "packages": [
         {
             "name": "activecollab/containeraccess",
-            "version": "dev-master",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/containeraccess.git",
@@ -60,20 +60,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/databaseconnection.git",
-                "reference": "e681758ddd688aed3baad9b04598d20e59a10134"
+                "reference": "14d7c3e3b99185a8f99f3ba36dbd3c06e9eacedd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/e681758ddd688aed3baad9b04598d20e59a10134",
-                "reference": "e681758ddd688aed3baad9b04598d20e59a10134",
+                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/14d7c3e3b99185a8f99f3ba36dbd3c06e9eacedd",
+                "reference": "14d7c3e3b99185a8f99f3ba36dbd3c06e9eacedd",
                 "shasum": ""
             },
             "require": {
-                "activecollab/containeraccess": "dev-master",
-                "activecollab/datevalue": "dev-master",
+                "activecollab/containeraccess": "^1.0.0",
+                "activecollab/datevalue": "^1.0.0",
                 "ext-mysqli": "*",
                 "php": ">=5.6.0",
-                "psr/log": "~1.0.0"
+                "psr/log": "^1.0.0"
             },
             "require-dev": {
                 "fabpot/php-cs-fixer": "~1.0",
@@ -103,11 +103,11 @@
                 "activecollab",
                 "mysql"
             ],
-            "time": "2016-04-26 09:28:17"
+            "time": "2016-04-26 14:43:27"
         },
         {
             "name": "activecollab/datevalue",
-            "version": "dev-master",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/datevalue.git",
@@ -2094,7 +2094,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "activecollab/containeraccess": 20,
         "activecollab/databaseconnection": 20
     },
     "prefer-stable": true,

@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "78b7f1655cff9e6649c4e5c641b110be",
-    "content-hash": "fed284f3752fb60e725e241ccc79a003",
+    "hash": "fdffedab11055992d4a96d65fe1027da",
+    "content-hash": "7216d10281b644856b4cd778662fb683",
     "packages": [
         {
             "name": "activecollab/containeraccess",
-            "version": "1.0.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/containeraccess.git",
-                "reference": "640a9742f29b62ace7dfe68b7f92deb76b130908"
+                "reference": "de99b335fd67b958e6af53c41eedbaaab7bcd38c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/containeraccess/zipball/640a9742f29b62ace7dfe68b7f92deb76b130908",
-                "reference": "640a9742f29b62ace7dfe68b7f92deb76b130908",
+                "url": "https://api.github.com/repos/activecollab/containeraccess/zipball/de99b335fd67b958e6af53c41eedbaaab7bcd38c",
+                "reference": "de99b335fd67b958e6af53c41eedbaaab7bcd38c",
                 "shasum": ""
             },
             "require": {
@@ -26,7 +26,7 @@
                 "php": ">=5.6.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~5.0"
+                "phpunit/phpunit": "~5.3"
             },
             "type": "library",
             "autoload": {
@@ -44,13 +44,15 @@
                     "email": "ilija.studen@activecollab.com"
                 }
             ],
-            "description": "Interface that implement objects that have access DIC access",
+            "description": "Interface that implement objects that have DIC access",
             "homepage": "https://labs.activecollab.com",
             "keywords": [
                 "activecollab",
-                "dic"
+                "dic",
+                "ioc",
+                "service-container"
             ],
-            "time": "2015-12-22 21:47:02"
+            "time": "2016-04-26 09:18:07"
         },
         {
             "name": "activecollab/databaseconnection",
@@ -58,17 +60,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/databaseconnection.git",
-                "reference": "1f4df3c126ccabd4e59a2bda738e8c59db9cddc0"
+                "reference": "e681758ddd688aed3baad9b04598d20e59a10134"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/1f4df3c126ccabd4e59a2bda738e8c59db9cddc0",
-                "reference": "1f4df3c126ccabd4e59a2bda738e8c59db9cddc0",
+                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/e681758ddd688aed3baad9b04598d20e59a10134",
+                "reference": "e681758ddd688aed3baad9b04598d20e59a10134",
                 "shasum": ""
             },
             "require": {
-                "activecollab/containeraccess": "~1.0.0",
-                "activecollab/datevalue": "~1.0.0",
+                "activecollab/containeraccess": "dev-master",
+                "activecollab/datevalue": "dev-master",
                 "ext-mysqli": "*",
                 "php": ">=5.6.0",
                 "psr/log": "~1.0.0"
@@ -101,20 +103,20 @@
                 "activecollab",
                 "mysql"
             ],
-            "time": "2016-03-19 05:57:14"
+            "time": "2016-04-26 09:28:17"
         },
         {
             "name": "activecollab/datevalue",
-            "version": "1.0.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/datevalue.git",
-                "reference": "1c2a1d7b2704315d8cb0462f7a9dbd9bf5eb9ba4"
+                "reference": "c7b0af1ca57e82a529368a0038c79fbe015d07a3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/datevalue/zipball/1c2a1d7b2704315d8cb0462f7a9dbd9bf5eb9ba4",
-                "reference": "1c2a1d7b2704315d8cb0462f7a9dbd9bf5eb9ba4",
+                "url": "https://api.github.com/repos/activecollab/datevalue/zipball/c7b0af1ca57e82a529368a0038c79fbe015d07a3",
+                "reference": "c7b0af1ca57e82a529368a0038c79fbe015d07a3",
                 "shasum": ""
             },
             "require": {
@@ -148,7 +150,7 @@
                 "date",
                 "datetime"
             ],
-            "time": "2015-11-26 14:01:05"
+            "time": "2016-04-26 07:51:26"
         },
         {
             "name": "container-interop/container-interop",
@@ -564,16 +566,16 @@
         },
         {
             "name": "monolog/monolog",
-            "version": "1.18.2",
+            "version": "1.19.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/monolog.git",
-                "reference": "064b38c16790249488e7a8b987acf1c9d7383c09"
+                "reference": "5f56ed5212dc509c8dc8caeba2715732abb32dbf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/064b38c16790249488e7a8b987acf1c9d7383c09",
-                "reference": "064b38c16790249488e7a8b987acf1c9d7383c09",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/5f56ed5212dc509c8dc8caeba2715732abb32dbf",
+                "reference": "5f56ed5212dc509c8dc8caeba2715732abb32dbf",
                 "shasum": ""
             },
             "require": {
@@ -638,7 +640,7 @@
                 "logging",
                 "psr-3"
             ],
-            "time": "2016-04-02 13:12:58"
+            "time": "2016-04-12 18:29:35"
         },
         {
             "name": "myclabs/deep-copy",
@@ -1036,16 +1038,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "5.3.1",
+            "version": "5.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "34a3acb401ae79deb37bc6e5f5ec3d325b369b4c"
+                "reference": "2c6da3536035617bae3fe3db37283c9e0eb63ab3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/34a3acb401ae79deb37bc6e5f5ec3d325b369b4c",
-                "reference": "34a3acb401ae79deb37bc6e5f5ec3d325b369b4c",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/2c6da3536035617bae3fe3db37283c9e0eb63ab3",
+                "reference": "2c6da3536035617bae3fe3db37283c9e0eb63ab3",
                 "shasum": ""
             },
             "require": {
@@ -1107,20 +1109,20 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2016-04-07 07:04:34"
+            "time": "2016-04-12 16:20:08"
         },
         {
             "name": "phpunit/phpunit-mock-objects",
-            "version": "3.1.2",
+            "version": "3.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit-mock-objects.git",
-                "reference": "7c34c9bdde4131b824086457a3145e27dba10ca1"
+                "reference": "151c96874bff6fe61a25039df60e776613a61489"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit-mock-objects/zipball/7c34c9bdde4131b824086457a3145e27dba10ca1",
-                "reference": "7c34c9bdde4131b824086457a3145e27dba10ca1",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit-mock-objects/zipball/151c96874bff6fe61a25039df60e776613a61489",
+                "reference": "151c96874bff6fe61a25039df60e776613a61489",
                 "shasum": ""
             },
             "require": {
@@ -1163,7 +1165,7 @@
                 "mock",
                 "xunit"
             ],
-            "time": "2016-03-24 05:58:25"
+            "time": "2016-04-20 14:39:26"
         },
         {
             "name": "pimple/pimple",
@@ -2092,6 +2094,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "activecollab/containeraccess": 20,
         "activecollab/databaseconnection": 20
     },
     "prefer-stable": true,

@@ -9,16 +9,16 @@
     "packages": [
         {
             "name": "activecollab/containeraccess",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/containeraccess.git",
-                "reference": "9f0916adae56821cae7a32c955a01e7e8f235b2f"
+                "reference": "a3d615c6f123c17458b10dde106bd717a12c73ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/containeraccess/zipball/9f0916adae56821cae7a32c955a01e7e8f235b2f",
-                "reference": "9f0916adae56821cae7a32c955a01e7e8f235b2f",
+                "url": "https://api.github.com/repos/activecollab/containeraccess/zipball/a3d615c6f123c17458b10dde106bd717a12c73ba",
+                "reference": "a3d615c6f123c17458b10dde106bd717a12c73ba",
                 "shasum": ""
             },
             "require": {
@@ -52,7 +52,7 @@
                 "ioc",
                 "service-container"
             ],
-            "time": "2016-04-26 15:02:23"
+            "time": "2016-04-26 15:18:08"
         },
         {
             "name": "activecollab/databaseconnection",
@@ -60,12 +60,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/databaseconnection.git",
-                "reference": "e00f3e9c1f1a05fd65a5692a98524ceb8ab23ac1"
+                "reference": "24d575fa79e0403849f1e36f28d5820103ba9417"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/e00f3e9c1f1a05fd65a5692a98524ceb8ab23ac1",
-                "reference": "e00f3e9c1f1a05fd65a5692a98524ceb8ab23ac1",
+                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/24d575fa79e0403849f1e36f28d5820103ba9417",
+                "reference": "24d575fa79e0403849f1e36f28d5820103ba9417",
                 "shasum": ""
             },
             "require": {
@@ -103,7 +103,7 @@
                 "activecollab",
                 "mysql"
             ],
-            "time": "2016-04-26 14:58:56"
+            "time": "2016-04-26 15:24:26"
         },
         {
             "name": "activecollab/datevalue",

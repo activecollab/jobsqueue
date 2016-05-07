@@ -1,12 +1,24 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Jobs;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use ActiveCollab\JobsQueue\Signals\ProcessLaunched;
+use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use InvalidArgumentException;
 use LogicException;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * @package ActiveCollab\JobsQueue\Jobs
@@ -19,9 +31,9 @@ abstract class Job implements JobInterface
     private $data;
 
     /**
-     * Construct a new Job instance
+     * Construct a new Job instance.
      *
-     * @param  array|null $data
+     * @param  array|null               $data
      * @throws InvalidArgumentException
      */
     public function __construct(array $data = null)
@@ -76,7 +88,7 @@ abstract class Job implements JobInterface
     private $channel;
 
     /**
-     * Get job channel, if known
+     * Get job channel, if known.
      *
      * @return string
      */
@@ -86,7 +98,7 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Set job channel when it is known
+     * Set job channel when it is known.
      *
      * @param  string $channel
      * @return $this
@@ -99,15 +111,27 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * @return array
+     * {@inheritdoc}
      */
-    public function getData()
+    public function getData($property = null)
     {
-        return $this->data;
+        if ($property === null) {
+            return $this->data;
+        } else {
+            if (empty($property)) {
+                throw new InvalidArgumentException("When provided, property can't be an empty value");
+            } else {
+                if (empty($this->data[$property]) && !array_key_exists($property, $this->data)) {
+                    throw new InvalidArgumentException("Property '$property' not found");
+                } else {
+                    return $this->data[$property];
+                }
+            }
+        }
     }
 
     /**
-     * Return job priority
+     * Return job priority.
      *
      * @return int
      */
@@ -117,7 +141,7 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Return max number of attempts for this job
+     * Return max number of attempts for this job.
      *
      * @return int
      */
@@ -127,7 +151,7 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Return delay between first and every consecutive job execution (after failure)
+     * Return delay between first and every consecutive job execution (after failure).
      *
      * @return int
      */
@@ -137,9 +161,9 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Return first job delay
+     * Return first job delay.
      *
-     * @return integer|null
+     * @return int|null
      */
     public function getFirstJobDelay()
     {
@@ -165,9 +189,7 @@ abstract class Job implements JobInterface
     private $queue_id;
 
     /**
-     * Return queueu ID that this job is encured under
-     *
-     * @return mixed
+     * {@inheritdoc}
      */
     public function getQueueId()
     {
@@ -175,11 +197,7 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Set job queue
-     *
-     * @param  QueueInterface $queue
-     * @param  mixed          $queue_id
-     * @return $this
+     * {@inheritdoc}
      */
     public function &setQueue(QueueInterface &$queue, $queue_id)
     {
@@ -195,9 +213,50 @@ abstract class Job implements JobInterface
     }
 
     /**
-     * Report that this job has launched a background process
+     * @var int
+     */
+    private $batch_id;
+
+    /**
+     * @return int|null
+     */
+    public function getBatchId()
+    {
+        return $this->batch_id;
+    }
+
+    /**
+     * @param  int|null $batch_id
+     * @return $this
+     */
+    public function &setBatchId($batch_id)
+    {
+        $this->batch_id = $batch_id === null ? null : (integer) $batch_id;
+
+        return $this;
+    }
+
+    /**
+     * @param  BatchInterface $batch
+     * @return $this
+     */
+    public function &setBatch(BatchInterface $batch)
+    {
+        if (empty($this->getQueueId())) {
+            if ($batch->getQueueId()) {
+                return $this->setBatchId($batch->getQueueId());
+            } else {
+                throw new RuntimeException("Can't set an unqueued batch");
+            }
+        } else {
+            throw new RuntimeException("Can't add already enqueued job to a batch");
+        }
+    }
+
+    /**
+     * Report that this job has launched a background process.
      *
-     * @param  integer                         $process_id
+     * @param  int                             $process_id
      * @return SignalInterface|ProcessLaunched
      */
     protected function reportBackgroundProcess($process_id)
@@ -213,5 +272,29 @@ abstract class Job implements JobInterface
         $this->queue->reportBackgroundProcess($this, $process_id);
 
         return new ProcessLaunched($process_id);
+    }
+
+    /**
+     * @var LoggerInterface|null
+     */
+    protected $log;
+
+    /**
+     * @return null|LoggerInterface
+     */
+    public function getLog()
+    {
+        return $this->log;
+    }
+
+    /**
+     * @param  LoggerInterface $log
+     * @return $this
+     */
+    public function &setLog(LoggerInterface $log)
+    {
+        $this->log = $log;
+
+        return $this;
     }
 }

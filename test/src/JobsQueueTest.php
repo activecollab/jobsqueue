@@ -1,19 +1,28 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test;
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
-  use ActiveCollab\JobsQueue\Queue\TestQueue;
+namespace ActiveCollab\JobsQueue\Test;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test
-   */
-  class JobsQueueTest extends TestCase
-  {
+use ActiveCollab\JobsQueue\Queue\TestQueue;
+
+/**
+ * @package ActiveCollab\JobsQueue\Test
+ */
+class JobsQueueTest extends TestCase
+{
     /**
-     * Test if queue implements Countable interface
+     * Test if queue implements Countable interface.
      */
     public function testQueuesAreCountable()
     {
-      $this->assertInstanceOf('Countable', new TestQueue());
+        $this->assertInstanceOf('Countable', new TestQueue());
     }
-  }
+}

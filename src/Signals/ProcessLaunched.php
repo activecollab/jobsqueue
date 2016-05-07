@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Signals;
 
 /**
@@ -8,12 +17,12 @@ namespace ActiveCollab\JobsQueue\Signals;
 class ProcessLaunched implements SignalInterface
 {
     /**
-     * @var integer
+     * @var int
      */
     private $process_id;
 
     /**
-     * @param integer $process_id
+     * @param int $process_id
      */
     public function __construct($process_id)
     {
@@ -21,7 +30,7 @@ class ProcessLaunched implements SignalInterface
     }
 
     /**
-     * @return integer
+     * @return int
      */
     public function getProcessId()
     {
@@ -29,9 +38,9 @@ class ProcessLaunched implements SignalInterface
     }
 
     /**
-     * Return true if you would like to signal queue to keep the job instead of removing it
+     * Return true if you would like to signal queue to keep the job instead of removing it.
      *
-     * @return boolean
+     * @return bool
      */
     public function keepJobInQueue()
     {

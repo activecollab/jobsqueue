@@ -1,10 +1,20 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use DateTime;
 
@@ -14,15 +24,15 @@ use DateTime;
 class MySqlQueueTest extends AbstractMySqlQueueTest
 {
     /**
-     * Test if job queue table is prepared for testing
+     * Test if job queue table is prepared for testing.
      */
     public function testJobsQueueTableIsCreated()
     {
-        $this->assertContains(MySqlQueue::TABLE_NAME, $this->connection->getTableNames());
+        $this->assertContains(MySqlQueue::JOBS_TABLE_NAME, $this->connection->getTableNames());
     }
 
     /**
-     * Test jobs are added to the queue
+     * Test jobs are added to the queue.
      */
     public function testJobsAreAddedToTheQueue()
     {
@@ -36,7 +46,45 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test count jobs
+     * Test jobs can be removed from queue.
+     */
+    public function testJobsAreRemovedFromTheQueue()
+    {
+        $job_id = $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->assertEquals(1, $job_id);
+
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+
+        $this->assertEquals(3, $this->dispatcher->getQueue()->count());
+        $this->dispatcher->getQueue()->dequeue(1);
+        $this->assertEquals(2, $this->dispatcher->getQueue()->count());
+    }
+
+    /**
+     * Check if there will be no exception if we try to dequeue a job that doesn't exist.
+     */
+    public function testDequeueNoExceptionOnMissingJob()
+    {
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->dispatcher->getQueue()->dequeue(12345);
+    }
+
+    /**
+     * Test if jobs by be removed from the queue by type.
+     */
+    public function testDequeueByTypeRemovesJobsOfSpecificType()
+    {
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->dispatcher->dispatch(new Failing());
+
+        $this->assertEquals(2, $this->dispatcher->getQueue()->count());
+        $this->dispatcher->getQueue()->dequeueByType(Inc::class);
+        $this->assertEquals(1, $this->dispatcher->getQueue()->count());
+    }
+
+    /**
+     * Test count jobs.
      */
     public function testCountJobs()
     {
@@ -50,7 +98,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test count jobs by type
+     * Test count jobs by type.
      */
     public function testCountJobsByType()
     {
@@ -66,56 +114,56 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Make sure that full job class is recorded
+     * Make sure that full job class is recorded.
      */
     public function testFullJobClassIsRecorded()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = ?', 1);
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = ?', 1);
 
         $this->assertInternalType('array', $job);
         $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Inc', $job['type']);
     }
 
     /**
-     * Test if channel is properly set
+     * Test if channel is properly set.
      */
     public function testChannelIsSet()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = ?', 1);
+        $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = ?', 1);
 
         $this->assertInternalType('array', $job);
         $this->assertEquals(QueueInterface::MAIN_CHANNEL, $job['channel']);
     }
 
     /**
-     * Test if priority is properly set
+     * Test if priority is properly set.
      */
     public function testPriorityIsProperlySetFromData()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
         $row = $result->fetch_assoc();
 
         $this->assertArrayHasKey('priority', $row);
-        $this->assertEquals((string)Job::HAS_HIGHEST_PRIORITY, $row['priority']);
+        $this->assertEquals((string) Job::HAS_HIGHEST_PRIORITY, $row['priority']);
     }
 
     /**
-     * Test job data is properly serialized to JSON
+     * Test job data is properly serialized to JSON.
      */
     public function testJobDataIsSerializedToJson()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -135,7 +183,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if invalid JSON data is treated as a reason for job to fail
+     * Test if invalid JSON data is treated as a reason for job to fail.
      */
     public function testJobDataCanBeBrokenJson()
     {
@@ -152,7 +200,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test check for existing job
+     * Test check for existing job.
      */
     public function testCheckForExistingJob()
     {
@@ -163,7 +211,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test check for existing job
+     * Test check for existing job.
      */
     public function testCheckForExistingJobWithMatchigProperties()
     {
@@ -177,13 +225,13 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if new jobs are instantly available
+     * Test if new jobs are instantly available.
      */
     public function testNewJobsAreAvailableInstantly()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -194,21 +242,21 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test new jobs can be delayed by a specified number of seconds
+     * Test new jobs can be delayed by a specified number of seconds.
      */
     public function testNewJobsCanBeDelayed()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'delay' => 5])));
 
         /** @var DateTime $available_at */
-        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', 1);
+        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE `id` = ?', 1);
 
         $this->assertInstanceOf('DateTime', $available_at);
         $this->assertGreaterThan(time(), $available_at->getTimestamp());
     }
 
     /**
-     * Test if we can use first_attempt_delay to set a delay of the first attempt
+     * Test if we can use first_attempt_delay to set a delay of the first attempt.
      */
     public function testNewJobsCanBeDelayedWithFirstAttemptExecutedNow()
     {
@@ -224,20 +272,20 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->dispatch($inc_job_with_no_first_attempt_delay));
 
         /** @var DateTime $available_at */
-        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySqlQueue::TABLE_NAME . '` WHERE `id` = ?', 1);
+        $available_at = $this->connection->executeFirstCell('SELECT `available_at` FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE `id` = ?', 1);
 
         $this->assertInstanceOf('DateTime', $available_at);
         $this->assertLessThanOrEqual(time(), $available_at->getTimestamp());
     }
 
     /**
-     * Test that jobs are not reserved by default
+     * Test that jobs are not reserved by default.
      */
     public function testJobsAreNotReservedByDefault()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -251,13 +299,13 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test that jobs start with zero attempts
+     * Test that jobs start with zero attempts.
      */
     public function testAttemptsAreZeroByDefault()
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
-        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::TABLE_NAME . '` WHERE id = 1');
+        $result = $this->link->query('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = 1');
         $this->assertInstanceOf('mysqli_result', $result);
         $this->assertEquals(1, $result->num_rows);
 
@@ -268,7 +316,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test next in line when no priority is set (FIFO)
+     * Test next in line when no priority is set (FIFO).
      */
     public function testNextInLineReturnsNullOnNoJobs()
     {
@@ -277,7 +325,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test next in line when no priority is set (FIFO)
+     * Test next in line when no priority is set (FIFO).
      */
     public function testNextInLine()
     {
@@ -295,7 +343,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if nextInLine works fine when another worker process "snatches" the job (returns NULL)
+     * Test if nextInLine works fine when another worker process "snatches" the job (returns NULL).
      */
     public function testJobSnatching()
     {
@@ -327,7 +375,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if queue instance is properly set
+     * Test if queue instance is properly set.
      */
     public function testJobGetsQueueProperlySet()
     {
@@ -343,7 +391,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test priority tasks are front in line
+     * Test priority tasks are front in line.
      */
     public function testPriorityJobsAreFrontInLine()
     {
@@ -362,7 +410,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     }
 
     /**
-     * Test if job execution removes it from the queue
+     * Test if job execution removes it from the queue.
      */
     public function testExecuteJobRemovesItFromQueue()
     {
@@ -379,5 +427,22 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->assertEquals(124, $job_execution_result);
 
         $this->assertRecordsCount(0);
+    }
+
+    /**
+     * Test if execute suppresses exceptions by default.
+     */
+    public function testExecuteIsSilencedByDefault()
+    {
+        $this->dispatcher->getQueue()->execute(new Failing());
+    }
+
+    /**
+     * @expectedException \Exception
+     * @expectedExceptionMessage Built to fail!
+     */
+    public function testExecuteThrowsExceptionWhenNotSilenced()
+    {
+        $this->dispatcher->getQueue()->execute(new Failing(), false);
     }
 }

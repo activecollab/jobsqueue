@@ -1,23 +1,32 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test\Jobs;
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
-  use ActiveCollab\JobsQueue\Jobs\Job;
-  use Exception;
+namespace ActiveCollab\JobsQueue\Test\Jobs;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test\Jobs
-   */
-  class Failing extends Job
-  {
+use ActiveCollab\JobsQueue\Jobs\Job;
+use Exception;
+
+/**
+ * @package ActiveCollab\JobsQueue\Test\Jobs
+ */
+class Failing extends Job
+{
     /**
-     * Always fail
+     * Always fail.
      *
-     * @return integer
+     * @return int
      * @throws Exception
      */
     public function execute()
     {
-      throw new Exception('Built to fail!');
+        throw new Exception('Built to fail!');
     }
-  }
+}

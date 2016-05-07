@@ -1,9 +1,18 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue;
 
-use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use InvalidArgumentException;
 
 /**
@@ -29,11 +38,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Add a job to the queue
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
+     * {@inheritdoc}
      */
     public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -41,15 +46,39 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Execute a job now (sync, waits for a response)
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
+     * {@inheritdoc}
      */
-    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function execute(JobInterface $job, $silent = true)
     {
-        return $this->getQueue()->execute($job, $this->validateChannel($channel));
+        return $this->getQueue()->execute($job, $silent);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function executeNextInLine(...$from_channels)
+    {
+        if ($job = $this->getQueue()->nextInLine(...$from_channels)) {
+            return $this->getQueue()->execute($job, $job->getChannel());
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function exists($job_type, array $properties = null)
+    {
+        return $this->getQueue()->exists($job_type, $properties);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function &getQueue()
+    {
+        return $this->queue;
     }
 
     /**
@@ -58,14 +87,11 @@ class Dispatcher implements DispatcherInterface
     private $registered_channels = [QueueInterface::MAIN_CHANNEL];
 
     /**
-     * Register multiple channels
-     *
-     * @param  string ...$channels
-     * @return $this
+     * {@inheritdoc}
      */
-    public function &registerChannels()
+    public function &registerChannels(...$channels)
     {
-        foreach (func_get_args() as $channel) {
+        foreach ($channels as $channel) {
             $this->registerChannel($channel);
         }
 
@@ -73,10 +99,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Register a single change
-     *
-     * @param  string $channel
-     * @return $this
+     * {@inheritdoc}
      */
     public function &registerChannel($channel)
     {
@@ -90,9 +113,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Return an array of registered channels
-     *
-     * @return array
+     * {@inheritdoc}
      */
     public function getRegisteredChannels()
     {
@@ -100,10 +121,7 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Return true if $channel is registered
-     *
-     * @param  string  $channel
-     * @return boolean
+     * {@inheritdoc}
      */
     public function isChannelRegistered($channel)
     {
@@ -111,10 +129,30 @@ class Dispatcher implements DispatcherInterface
     }
 
     /**
-     * Make sure that we got a valid channel name
-     *
-     * @param  string $channel
-     * @return string
+     * @var bool
+     */
+    private $exception_on_unregistered_channel = true;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getExceptionOnUnregisteredChannel()
+    {
+        return $this->exception_on_unregistered_channel;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function &exceptionOnUnregisteredChannel($value = true)
+    {
+        $this->exception_on_unregistered_channel = (boolean) $value;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     private function validateChannel($channel)
     {
@@ -128,32 +166,46 @@ class Dispatcher implements DispatcherInterface
             if (in_array($channel, $this->registered_channels)) {
                 return $channel;
             } else {
-                throw new InvalidArgumentException("Channel '$channel' is not registered");
+                if ($this->exception_on_unregistered_channel) {
+                    throw new InvalidArgumentException("Channel '$channel' is not registered");
+                } else {
+                    return QueueInterface::MAIN_CHANNEL;
+                }
             }
         } else {
-            throw new InvalidArgumentException("Channel name needs to be a string value");
+            throw new InvalidArgumentException('Channel name needs to be a string value');
         }
     }
 
     /**
-     * Return true if job of the given type and with the given properties exists in queue
-     *
-     * @param  string     $job_type
-     * @param  array|null $properties
-     * @return bool
+     * {@inheritdoc}
      */
-    public function exists($job_type, array $properties = null)
+    public function batch($name, callable $add_jobs = null)
     {
-        return $this->getQueue()->exists($job_type, $properties);
+        $batch = $this->getQueue()->createBatch($this, $name);
+
+        if ($add_jobs) {
+            call_user_func_array($add_jobs, [&$batch]);
+        }
+
+        $batch->commitDispatchedJobIds();
+
+        return $batch;
     }
 
     /**
-     * Return queue instance
-     *
-     * @return QueueInterface
+     * @return int
      */
-    public function &getQueue()
+    public function countBatches()
     {
-        return $this->queue;
+        return $this->getQueue()->countBatches();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function unfurlType($search_for)
+    {
+        return  $this->getQueue()->unfurlType($search_for);
     }
 }

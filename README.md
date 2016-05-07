@@ -2,9 +2,9 @@
 
 [![Build Status](https://travis-ci.org/activecollab/jobsqueue.svg?branch=master)](https://travis-ci.org/activecollab/jobsqueue)
 
-Reason for existence: it's light, with very few dependencies. It can be used with cron + database powered queues for
-people who are not allowed to run a proper messaging or job management server. Or you can execute jobs through proper
-messaging or job manager with it.
+Reason for existence: it's light, with very few dependencies. It can be used with cron + database powered queues for people who are not allowed to run a proper messaging or job management server. Or you can execute jobs through proper messaging or job manager with it.
+
+## Installation
 
 To install it, use Composer:
 
@@ -16,6 +16,7 @@ To install it, use Composer:
 }
 ```
 
+## Basic Usage
 
 This library uses three elements:
 
@@ -52,7 +53,7 @@ Now, lets create a dispatcher instance that manages one MySQL powered queue:
 <?php
 
 use ActiveCollab\JobsQueue\Dispatcher;
-use ActiveCollab\JobsQueue\Queue\MySql;
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use mysqli;
 use RuntimeException;
 
@@ -62,7 +63,7 @@ if ($database_link->connect_error) {
     throw new RuntimeException('Failed to connect to database. MySQL said: ' . $database_link->connect_error);
 }
 
-$queue = new MySql($database_link);
+$queue = new MySqlQueue($database_link);
 
 // Not required but gives you flexibility with failure handling
 $queue->onJobFailure(function(Job $job, Exception $reason) {
@@ -91,6 +92,14 @@ To run a job and wait for the result, use `execute()` instead of `dispatch()`:
 $result = $dispatcher->execute(new Inc([ 'number' => 123 ]));
 ```
 
+When called like this, jobs are executed right away. `execute()` suppresses exceptions by default, so you should set `$silent` to `false` if you want exceptions to bubble out:
+
+```php
+$result = $dispatcher->execute(new Inc([ ‘number’ => 123 ]), false);
+```
+
+## Job Properties
+
 When constructing a new `Job` instance, you can set an array of job data, as well as following job properties:
 
 1. `priority` - Value between 0 and 4294967295 that determins how important the job is (a job with higher value has higher priority). Default is 0 (job is not a priority),
@@ -100,12 +109,65 @@ When constructing a new `Job` instance, you can set an array of job data, as wel
 
 ```php
 $job = new Inc([
-    'number' => 123,
+    'number'              => 123,
     'priority'            => Job::HAS_HIGHEST_PRIORITY,
     'attempts'            => 5,
     'delay'               => 5,
     'first_attempt_delay' => 1
 ]);
+```
+
+### Accessing Properties in a Job
+
+Once in an job's `execute()` method, you can access job properties using `getData()` method:
+
+```php
+public function execute()
+{
+    print_r($this->getData()); // Print all job properties
+    print $this->getData('number') . "\n"; // Print only number
+}
+```
+
+## Batches
+
+Jobs can be added to the queue in batches. Once in a batch, job queue will execute them as any other job, but you will be able to track progress of batch:
+
+```php
+$batch = $dispatcher->batch('Testing batch', function(BatchInterface &$batch) {
+    for ($i = 1; $i <= 1000; $i++) {
+        $batch->dispatch(new Inc(['number' => $i]));
+    }
+});
+
+sleep(1);
+
+print $batch->countJobs() . " jobs in a batch\n";
+print $batch->countPendingJobs() . " batch jobs still pending for execution\n";
+print $batch->countFailedJobs() . " batch jobs have failed to complete\n";
+print $batch->countCompletedJobs() . " batch jobs were completed successfully\n";
+```
+
+All batches have name, so they are easy to find using command line tools.
+
+## Channels
+
+In some situations, it is useful to have multiple channels and consumer listening on them. For example, you can have a consumer on a mailing server listening only on `mail` channel, but not listening on other channels (which jobs it is not suited to perform).
+
+By default, all jobs go to main channel (`QueueInterface::MAIN_CHANNEL`), but channel can be specified when job is added to the queue:
+
+```php
+$dispatcher->registerChannels('new');
+$dispatcher->execute(new Inc(['number' => 123]), 'new');
+```
+
+By default, dispatcher will throw an exception if you try to add a job to an unknown channel. This can be turned off:
+
+```php
+$dispatcher->exceptionOnUnregisteredChannel(false);
+
+// This job will end up in the 'main' channel, but exception will not be thrown
+$dispatcher->execute(new Inc(['number' => 123]), 'unknown channel');
 ```
 
 ## Background Process
@@ -157,3 +219,7 @@ Array
 ```
 
 Note: Process reporting and watching is not supported on Windows systems at the moment.
+
+## To do
+
+1. Add logging to all relevant methods in MySQL queue

@@ -1,23 +1,35 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
-use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\Batches\MySqlBatch;
+use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
-use LogicException;
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
  * @package ActiveCollab\JobsQueue\Queue
  */
-class MySqlQueue implements QueueInterface
+class MySqlQueue extends Queue
 {
-    const TABLE_NAME = 'jobs_queue';
-    const TABLE_NAME_FAILED = 'jobs_queue_failed';
+    const BATCHES_TABLE_NAME = 'job_batches';
+    const JOBS_TABLE_NAME = 'jobs_queue';
+    const FAILED_JOBS_TABLE_NAME = 'jobs_queue_failed';
 
     /**
      * @var ConnectionInterface
@@ -25,45 +37,94 @@ class MySqlQueue implements QueueInterface
     private $connection;
 
     /**
-     * @param ConnectionInterface $connection
-     * @param bool|true           $create_tables_if_missing
+     * @param ConnectionInterface  $connection
+     * @param bool|true            $create_tables_if_missing
+     * @param LoggerInterface|null $log
      */
-    public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true)
+    public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true, LoggerInterface &$log = null)
     {
+        parent::__construct($log);
+
         $this->connection = $connection;
 
         if ($create_tables_if_missing) {
-            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME . "` (
-                `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                `priority` int(10) unsigned DEFAULT '0',
-                `data` longtext CHARACTER SET utf8 NOT NULL,
-                `available_at` datetime DEFAULT NULL,
-                `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-                `reserved_at` datetime DEFAULT NULL,
-                `attempts` smallint(6) DEFAULT '0',
-                `process_id` int(10) unsigned DEFAULT '0',
-                PRIMARY KEY (`id`),
-                UNIQUE KEY `reservation_key` (`reservation_key`),
-                KEY `type` (`type`),
-                KEY `channel` (`channel`),
-                KEY `priority` (`priority`),
-                KEY `reserved_at` (`reserved_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            $this->createTables();
+        }
+    }
 
-            $this->connection->execute("CREATE TABLE IF NOT EXISTS `" . self::TABLE_NAME_FAILED . "` (
-                `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                `data` longtext CHARACTER SET utf8 NOT NULL,
-                `failed_at` datetime DEFAULT NULL,
-                `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                PRIMARY KEY (`id`),
-                KEY `type` (`type`),
-                KEY `channel` (`channel`),
-                KEY `failed_at` (`failed_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    /**
+     * {@inheritdoc}
+     */
+    public function createTables(...$additional_tables)
+    {
+        $table_names = $this->connection->getTableNames();
+
+        try {
+            if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
+                if ($this->log) {
+                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::BATCHES_TABLE_NAME]);
+                }
+
+                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::BATCHES_TABLE_NAME . "` (
+                    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                    `name` varchar(191) NOT NULL DEFAULT '',
+                    `jobs_count` int(10) unsigned NOT NULL DEFAULT '0',
+                    `created_at` datetime DEFAULT NULL,
+                    PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+            }
+
+            if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
+                if ($this->log) {
+                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
+                }
+
+                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::JOBS_TABLE_NAME . "` (
+                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
+                    `batch_id` int(10) unsigned,
+                    `priority` int(10) unsigned DEFAULT '0',
+                    `data` longtext CHARACTER SET utf8 NOT NULL,
+                    `available_at` datetime DEFAULT NULL,
+                    `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                    `reserved_at` datetime DEFAULT NULL,
+                    `attempts` smallint(6) DEFAULT '0',
+                    `process_id` int(10) unsigned DEFAULT '0',
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `reservation_key` (`reservation_key`),
+                    KEY `type` (`type`),
+                    KEY `channel` (`channel`),
+                    KEY `priority` (`priority`),
+                    KEY `reserved_at` (`reserved_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            }
+
+            if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
+                if ($this->log) {
+                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
+                }
+
+                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::FAILED_JOBS_TABLE_NAME . "` (
+                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
+                    `batch_id` int(10) unsigned,
+                    `data` longtext CHARACTER SET utf8 NOT NULL,
+                    `failed_at` datetime DEFAULT NULL,
+                    `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                    PRIMARY KEY (`id`),
+                    KEY `type` (`type`),
+                    KEY `channel` (`channel`),
+                    KEY `failed_at` (`failed_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            }
+
+            foreach ($additional_tables as $additional_table) {
+                $this->connection->execute($additional_table);
+            }
+        } catch (\Exception $e) {
+            throw new Exception('Error on create table execute. MySql error message:' . $e->getMessage());
         }
     }
 
@@ -73,7 +134,7 @@ class MySqlQueue implements QueueInterface
     private $extract_properties_to_fields = ['priority'];
 
     /**
-     * Extract property value to field value
+     * Extract property value to field value.
      *
      * @param string $property
      */
@@ -85,11 +146,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Add a job to the queue
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return integer
+     * {@inheritdoc}
      */
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -104,22 +161,43 @@ class MySqlQueue implements QueueInterface
         $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
         $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
 
-        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME . '` (`type`, `channel`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
+        $this->connection->execute('INSERT INTO `' . self::JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, $job->getBatchId(), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
 
-        return $this->connection->lastInsertId();
+        $job_id = $this->connection->lastInsertId();
+
+        if ($this->log) {
+            $this->log->info('Job {type} enqueued as #{job_id}', ['type' => get_class($job), 'job_id' => $job_id]);
+        }
+
+        return $job_id;
     }
 
     /**
-     * Run job now (sync, waits for a response)
-     *
-     * @param  JobInterface     $job
-     * @param  string           $channel
-     * @return mixed
-     * @throws RuntimeException
+     * {@inheritdoc}
      */
-    public function execute(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function dequeue($job_id)
+    {
+        $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dequeueByType($type)
+    {
+        $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $type);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function execute(JobInterface $job, $silent = true)
     {
         try {
+            if ($this->log) {
+                $job->setLog($this->log);
+            }
+
             $result = $job->execute();
 
             if (!($result instanceof SignalInterface && $result->keepJobInQueue())) {
@@ -128,36 +206,33 @@ class MySqlQueue implements QueueInterface
 
             return $result;
         } catch (\Exception $e) {
-            $this->failJob($job, $e);
+            if ($this->log) {
+                $this->log->error('Job {type} failed due to error', ['type' => get_class($job), 'exception' => $e]);
+            }
+
+            $this->failJob($job, $e, $silent);
         }
 
         return null;
     }
 
     /**
-     * Return a total number of jobs that are in the given channel
-     *
-     * @param  string  $channel
-     * @return integer
+     * {@inheritdoc}
      */
     public function countByChannel($channel)
     {
-        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `channel` = ?', $channel);
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `channel` = ?', $channel);
     }
 
     /**
-     * Return true if there's an active job of the give type with the given properties
-     *
-     * @param  string     $job_type
-     * @param  array|null $properties
-     * @return boolean
+     * {@inheritdoc}
      */
     public function exists($job_type, array $properties = null)
     {
         if (empty($properties)) {
-            return (boolean) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` = ?', $job_type);
+            return (boolean) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type);
         } else {
-            if ($rows = $this->connection->execute('SELECT `data` FROM `' . self::TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
+            if ($rows = $this->connection->execute('SELECT `data` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
                 foreach ($rows as $row) {
                     try {
                         $data = $this->jsonDecode($row['data']);
@@ -165,7 +240,7 @@ class MySqlQueue implements QueueInterface
                         $all_properties_found = true;
 
                         foreach ($properties as $k => $v) {
-                            if (!(array_key_exists($k, $data) && $data[$k] === $v)) {
+                            if (!(array_key_exists($k, $data) && $data[ $k ] === $v)) {
                                 $all_properties_found = false;
                                 break;
                             }
@@ -175,7 +250,6 @@ class MySqlQueue implements QueueInterface
                             return true;
                         }
                     } catch (RuntimeException $e) {
-
                     }
                 }
             }
@@ -185,12 +259,14 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Handle a job failure (attempts, removal from queue, exception handling etc)
+     * Handle a job failure (attempts, removal from queue, exception handling etc).
      *
-     * @param JobInterface   $job
-     * @param Exception|null $reason
+     * @param  JobInterface   $job
+     * @param  Exception|null $reason
+     * @param  bool|true      $silent
+     * @throws Exception
      */
-    private function failJob(JobInterface $job, Exception $reason = null)
+    private function failJob(JobInterface $job, Exception $reason = null, $silent = true)
     {
         if ($job_id = $job->getQueueId()) {
             $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
@@ -207,23 +283,24 @@ class MySqlQueue implements QueueInterface
                 call_user_func($callback, $job, $reason);
             }
         }
+
+        if ($reason instanceof Exception && !$silent) {
+            throw $reason;
+        }
     }
 
     /**
-     * Return job by ID
-     *
-     * @param  integer           $job_id
-     * @return JobInterface|null
+     * {@inheritdoc}
      */
     public function getJobById($job_id)
     {
-        if ($row = $this->connection->executeFirstRow('SELECT `id`, `channel`, `type`, `data` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
+        if ($row = $this->connection->executeFirstRow('SELECT `id`, `channel`, `batch_id`, `type`, `data` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
             try {
                 return $this->getJobFromRow($row);
             } catch (Exception $e) {
                 $this->connection->transact(function () use ($row, $e) {
-                    $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?)', $row['type'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-                    $this->deleteJobById($row['id']);
+                    $this->connection->execute('INSERT INTO `' . self::FAILED_JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['batch_id'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+                    $this->dequeue($row['id']);
                 });
             }
         }
@@ -232,7 +309,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Hydrate a job based on row data
+     * Hydrate a job based on row data.
      *
      * @param  array        $row
      * @return JobInterface
@@ -244,79 +321,67 @@ class MySqlQueue implements QueueInterface
         /** @var Job $job */
         $job = new $type($this->jsonDecode($row['data']));
         $job->setChannel($row['channel']);
+        $job->setBatchId($row['batch_id']);
         $job->setQueue($this, (integer) $row['id']);
 
         return $job;
     }
 
     /**
-     * Return number of previous attempts that we recorded for the given job
+     * Return number of previous attempts that we recorded for the given job.
      *
-     * @param  integer $job_id
-     * @return integer
+     * @param  int $job_id
+     * @return int
      */
     private function getPreviousAttemptsByJobId($job_id)
     {
-        return (integer)$this->connection->executeFirstCell('SELECT `attempts` FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
+        return (integer) $this->connection->executeFirstCell('SELECT `attempts` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
 
     /**
-     * Increase number of attempts by job ID
+     * Increase number of attempts by job ID.
      *
-     * @param integer $job_id
-     * @param integer $previous_attempts
-     * @param integer $delay
+     * @param int $job_id
+     * @param int $previous_attempts
+     * @param int $delay
      */
     public function prepareForNextAttempt($job_id, $previous_attempts, $delay = 0)
     {
-        $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $previous_attempts + 1, $job_id);
+        $this->connection->execute('UPDATE `' . self::JOBS_TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $previous_attempts + 1, $job_id);
     }
 
     /**
-     * Log failed job and delete it from the main queue
+     * Log failed job and delete it from the main queue.
      *
      * @param JobInterface $job
-     * @param string      $reason
+     * @param string       $reason
      */
     public function logFailedJob(JobInterface $job, $reason)
     {
         $this->connection->transact(function () use ($job, $reason) {
-            $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', get_class($job), $job->getChannel(), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
+            $this->connection->execute('INSERT INTO `' . self::FAILED_JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?, ?)', get_class($job), $job->getChannel(), $job->getBatchId(), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
             $this->deleteJob($job);
         });
     }
 
     /**
-     * Delete a job
+     * Delete a job.
      *
      * @param JobInterface $job
      */
     public function deleteJob($job)
     {
         if ($job_id = $job->getQueueId()) {
-            $this->deleteJobById($job_id);
+            $this->dequeue($job_id);
         }
     }
 
     /**
-     * Delete job by ID, used internally
-     *
-     * @param integer $job_id
+     * {@inheritdoc}
      */
-    private function deleteJobById($job_id)
+    public function nextInLine(...$from_channels)
     {
-        $this->connection->execute('DELETE FROM `' . self::TABLE_NAME . '` WHERE `id` = ?', $job_id);
-    }
-
-    /**
-     * Return Job that is next in line to be executed
-     *
-     * @param  string            ...$from_channels
-     * @return JobInterface|null
-     */
-    public function nextInLine()
-    {
-        if ($job_id = $this->reserveNextJob(func_get_args())) {
+        if ($job_id = $this->reserveNextJob($from_channels)) {
             return $this->getJobById($job_id);
         } else {
             return null;
@@ -329,7 +394,7 @@ class MySqlQueue implements QueueInterface
     private $on_reservation_key_ready;
 
     /**
-     * Callback that is called when reservation key is prepared for a particular job, but not yet set
+     * Callback that is called when reservation key is prepared for a particular job, but not yet set.
      *
      * This callback is useful for testing job snatching when we have multiple workers
      *
@@ -345,7 +410,7 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Reserve next job ID
+     * Reserve next job ID.
      *
      * @param  array|null $from_channels
      * @return int|null
@@ -355,7 +420,7 @@ class MySqlQueue implements QueueInterface
         $timestamp = date('Y-m-d H:i:s');
         $channel_conditions = empty($from_channels) ? '' : $this->connection->prepareConditions(['`channel` IN ? AND ', $from_channels]);
 
-        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME . "` WHERE {$channel_conditions}`reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100", $timestamp)) {
+        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::JOBS_TABLE_NAME . "` WHERE {$channel_conditions}`reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100", $timestamp)) {
             foreach ($job_ids as $job_id) {
                 $reservation_key = $this->prepareNewReservationKey();
 
@@ -363,7 +428,7 @@ class MySqlQueue implements QueueInterface
                     call_user_func($this->on_reservation_key_ready, $job_id, $reservation_key);
                 }
 
-                $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
+                $this->connection->execute('UPDATE `' . self::JOBS_TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
 
                 if ($this->connection->affectedRows() === 1) {
                     return $job_id;
@@ -375,31 +440,25 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Prepare and return a new reservation key
-     *
-     * @return string
+     * {@inheritdoc}
      */
     private function prepareNewReservationKey()
     {
         do {
             $reservation_key = sha1(microtime(true) . mt_rand(10000, 90000));
-        } while ($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `reservation_key` = ?', $reservation_key));
+        } while ($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `reservation_key` = ?', $reservation_key));
 
         return $reservation_key;
     }
 
     /**
-     * Restore failed job by job ID and optionally update job properties
-     *
-     * @param  mixed        $job_id
-     * @param  array|null   $update_data
-     * @return JobInterface
+     * {@inheritdoc}
      */
     public function restoreFailedJobById($job_id, array $update_data = null)
     {
         $job = null;
 
-        if ($row = $this->connection->executeFirstRow('SELECT `type`, `channel`, `data` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id)) {
+        if ($row = $this->connection->executeFirstRow('SELECT `type`, `channel`, `data` FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
             $this->connection->transact(function () use (&$job, $job_id, $update_data, $row) {
                 $job_type = $row['type'];
 
@@ -432,7 +491,7 @@ class MySqlQueue implements QueueInterface
                 $job = new $job_type($data);
 
                 $this->enqueue($job, $channel);
-                $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `id` = ?', $job_id);
+                $this->connection->execute('DELETE FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
             });
         } else {
             throw new RuntimeException("Failed job #{$job_id} not found");
@@ -442,14 +501,11 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Restore failed jobs by job type
-     *
-     * @param string     $job_type
-     * @param array|null $update_data
+     * {@inheritdoc}
      */
     public function restoreFailedJobsByType($job_type, array $update_data = null)
     {
-        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` LIKE ?', "%$job_type%")) {
+        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` LIKE ?', "%$job_type%")) {
             foreach ($job_ids as $job_id) {
                 $this->restoreFailedJobById($job_id, $update_data);
             }
@@ -457,60 +513,55 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * @return int
+     * {@inheritdoc}
      */
     public function count()
     {
-        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '`');
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '`');
     }
 
     /**
-     * @param  string $type1
-     * @return integer
+     * {@inheritdoc}
      */
     public function countByType($type1)
     {
         if (func_num_args()) {
-            return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `type` IN ?', func_get_args());
+            return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` IN ?', func_get_args());
         } else {
             return 0;
         }
     }
 
     /**
-     * @return integer
+     * {@inheritdoc}
      */
     public function countFailed()
     {
-        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '`');
+        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::FAILED_JOBS_TABLE_NAME . '`');
     }
 
     /**
-     * @param  string $type1
-     * @return integer
+     * {@inheritdoc}
      */
     public function countFailedByType($type1)
     {
         if (func_num_args()) {
-            return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME_FAILED . '` WHERE `type` IN ?', func_get_args());
+            return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` IN ?', func_get_args());
         } else {
             return 0;
         }
     }
 
     /**
-     * Let jobs report that they raised background process
-     *
-     * @param JobInterface $job
-     * @param integer      $process_id
+     * {@inheritdoc}
      */
     public function reportBackgroundProcess(JobInterface $job, $process_id)
     {
         if ($job->getQueue() && get_class($job->getQueue()) == get_class($this)) {
             if ($job_id = $job->getQueueId()) {
                 if (is_int($process_id) && $process_id > 0) {
-                    if ($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::TABLE_NAME . '` WHERE `id` = ? AND `reserved_at` IS NOT NULL', $job_id)) {
-                        $this->connection->execute('UPDATE `' . self::TABLE_NAME . '` SET `process_id` = ? WHERE `id` = ?', $process_id, $job_id);
+                    if ($this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ? AND `reserved_at` IS NOT NULL', $job_id)) {
+                        $this->connection->execute('UPDATE `' . self::JOBS_TABLE_NAME . '` SET `process_id` = ? WHERE `id` = ?', $process_id, $job_id);
                     } else {
                         throw new InvalidArgumentException('Job not found or not running');
                     }
@@ -526,13 +577,11 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Return a list of background processes that jobs from this queue have launched
-     *
-     * @return array
+     * {@inheritdoc}
      */
     public function getBackgroundProcesses()
     {
-        if ($result = $this->connection->execute('SELECT `id`, `type`, `process_id` FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL AND `process_id` > ? ORDER BY `reserved_at`', 0)) {
+        if ($result = $this->connection->execute('SELECT `id`, `type`, `process_id` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL AND `process_id` > ? ORDER BY `reserved_at`', 0)) {
             return $result->toArray();
         }
 
@@ -540,17 +589,17 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Check stuck jobs
+     * {@inheritdoc}
      */
     public function checkStuckJobs()
     {
-        if ($rows = $this->connection->execute('SELECT * FROM `' . self::TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
+        if ($rows = $this->connection->execute('SELECT * FROM `' . self::JOBS_TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
             foreach ($rows as $row) {
                 if ($row['process_id'] > 0) {
                     if ($this->isProcessRunning($row['process_id'])) {
                         continue; // Skip jobs that launched long running background processes
                     } else {
-                        $this->deleteJobById($row['id']); // Process done? Consider the job executed
+                        $this->dequeue($row['id']); // Process done? Consider the job executed
                     }
                 } else {
                     try {
@@ -558,8 +607,8 @@ class MySqlQueue implements QueueInterface
                     } catch (Exception $e) {
                         $this->connection->beginWork();
 
-                        $this->connection->execute('INSERT INTO `' . self::TABLE_NAME_FAILED . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
-                        $this->deleteJobById($row['id']);
+                        $this->connection->execute('INSERT INTO `' . self::FAILED_JOBS_TABLE_NAME . '` (`type`, `channel`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?)', $row['type'], $row['channel'], $row['data'], date('Y-m-d H:i:s'), $e->getMessage());
+                        $this->dequeue($row['id']);
 
                         $this->connection->commit();
                     }
@@ -569,9 +618,9 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Check if process with PID $process_id is running
+     * Check if process with PID $process_id is running.
      *
-     * @param  integer $process_id
+     * @param  int  $process_id
      * @return bool
      */
     private function isProcessRunning($process_id)
@@ -580,11 +629,11 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Clean up the queue
+     * {@inheritdoc}
      */
     public function cleanUp()
     {
-        $this->connection->execute('DELETE FROM `' . self::TABLE_NAME_FAILED . '` WHERE `failed_at` < ?', date('Y-m-d H:i:s', strtotime('-7 days')));
+        $this->connection->execute('DELETE FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `failed_at` < ?', date('Y-m-d H:i:s', strtotime('-7 days')));
     }
 
     /**
@@ -593,9 +642,7 @@ class MySqlQueue implements QueueInterface
     private $on_job_failure = [];
 
     /**
-     * What to do when job fails
-     *
-     * @param callable|null $callback
+     * {@inheritdoc}
      */
     public function onJobFailure(callable $callback = null)
     {
@@ -603,11 +650,10 @@ class MySqlQueue implements QueueInterface
     }
 
     /**
-     * Decode JSON and throw an exception in case of any error
+     * Decode JSON and throw an exception in case of any error.
      *
-     * @param  string           $serialized_data
+     * @param  string $serialized_data
      * @return mixed
-     * @throws RuntimeException
      */
     private function jsonDecode($serialized_data)
     {
@@ -624,5 +670,106 @@ class MySqlQueue implements QueueInterface
         }
 
         return $data;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function clear()
+    {
+        $this->connection->execute('TRUNCATE TABLE `' . self::JOBS_TABLE_NAME . '`');
+        $this->connection->execute('TRUNCATE TABLE `' . self::FAILED_JOBS_TABLE_NAME . '`');
+        $this->connection->execute('TRUNCATE TABLE `' . self::BATCHES_TABLE_NAME . '`');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getFailedJobReasons($job_type)
+    {
+        if ($result = $this->connection->execute('SELECT DISTINCT(`reason`) AS "reason" FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
+            return $result->toArray();
+        }
+
+        return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function unfurlType($search_for)
+    {
+        return $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` LIKE ?', '%' . $search_for . '%');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function failedJobStatistics()
+    {
+        $result = [];
+        $event_types = $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::FAILED_JOBS_TABLE_NAME . '`');
+
+        if (count($event_types)) {
+            foreach ($event_types as $event_type) {
+                $result[ $event_type ] = $this->failedJobStatisticsByType($event_type);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function failedJobStatisticsByType($event_type)
+    {
+        $result = [];
+        $job_rows = $this->connection->execute('SELECT DATE(`failed_at`) AS "date", COUNT(`id`) AS "failed_jobs_count" FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` = ? GROUP BY DATE(`failed_at`)', $event_type);
+        if (count($job_rows)) {
+            foreach ($job_rows as $row) {
+                $result[ $row['date'] ] = $row['failed_jobs_count'];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function countJobsByType()
+    {
+        $result = [];
+        $type_rows = $this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::JOBS_TABLE_NAME . '` GROUP BY `type`');
+        if (count($type_rows)) {
+            foreach ($type_rows as $row) {
+                $result[ $row['type'] ] = $row['queued_jobs_count'];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createBatch(DispatcherInterface &$dispatcher, $name)
+    {
+        if ($name) {
+            $this->connection->execute('INSERT INTO `' . self::BATCHES_TABLE_NAME . '` (`name`, `created_at`) VALUES (?, UTC_TIMESTAMP())', $name);
+
+            return new MySqlBatch($dispatcher, $this->connection, $this->connection->lastInsertId(), $name);
+        } else {
+            throw new InvalidArgumentException('Batch name is required');
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function countBatches()
+    {
+        return $this->connection->count(self::BATCHES_TABLE_NAME);
     }
 }

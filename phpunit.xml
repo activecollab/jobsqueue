@@ -1,0 +1,19 @@
+<phpunit bootstrap="./test/bootstrap.php"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         stopOnError="false"
+         stopOnFailure="false"
+         stopOnIncomplete="false"
+         stopOnSkipped="false"
+         syntaxCheck="false"
+         processIsolation="false"
+         colors="true">
+    <testsuites>
+        <testsuite name="JobsQueue">
+            <directory>./test/src</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

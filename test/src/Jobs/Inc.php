@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace ActiveCollab\JobsQueue\Test\Jobs;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
@@ -11,7 +20,7 @@ use InvalidArgumentException;
 class Inc extends Job
 {
     /**
-     * Construct a new Job instance
+     * Construct a new Job instance.
      *
      * @param array|null $data
      */
@@ -25,9 +34,9 @@ class Inc extends Job
     }
 
     /**
-     * Increment a number
+     * Increment a number.
      *
-     * @return integer
+     * @return int
      */
     public function execute()
     {

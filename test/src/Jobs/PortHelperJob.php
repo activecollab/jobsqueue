@@ -1,37 +1,42 @@
 <?php
 
-  namespace ActiveCollab\JobsQueue\Test\Jobs;
+/*
+ * This file is part of the Active Collab Jobs Queue.
+ *
+ * (c) A51 doo <info@activecollab.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
-  use ActiveCollab\JobsQueue\Helpers\Port;
-  use ActiveCollab\JobsQueue\Jobs\Job;
-  use InvalidArgumentException;
+namespace ActiveCollab\JobsQueue\Test\Jobs;
 
-  /**
-   * @package ActiveCollab\JobsQueue\Test\Jobs
-   */
-  class PortHelperJob extends Job
-  {
+use ActiveCollab\JobsQueue\Helpers\Port;
+use ActiveCollab\JobsQueue\Jobs\Job;
+
+/**
+ * @package ActiveCollab\JobsQueue\Test\Jobs
+ */
+class PortHelperJob extends Job
+{
     use Port;
 
     const DEFAULT_PORT = 1234;
 
     /**
-     * Construct a new Job instance
-     *
-     * @param  array|null               $data
-     * @throws InvalidArgumentException
+     * {@inheritdoc}
      */
     public function __construct(array $data = null)
     {
-      $this->validatePort($data, self::DEFAULT_PORT);
+        $this->validatePort($data, self::DEFAULT_PORT);
 
-      parent::__construct($data);
+        parent::__construct($data);
     }
 
     /**
-     * Execute the job
+     * {@inheritdoc}
      */
     public function execute()
     {
     }
-  }
+}

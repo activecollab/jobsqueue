@@ -11,7 +11,7 @@ To install it, use Composer:
 ```json
 {
     "require": {
-        "activecollab/jobsqueue": "~0.1"
+        "activecollab/jobsqueue": "^1.0.0"
     }
 }
 ```

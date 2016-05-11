@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "d5e4e86b4ad96c6e0485e22da961e1a3",
-    "content-hash": "cbb939012513690292986a4c6c437f8f",
+    "hash": "3aff8658c46723b7d2ca95784d7f0ce1",
+    "content-hash": "39e1395cae6cd5aaa2837f1738d79630",
     "packages": [
         {
             "name": "activecollab/containeraccess",
@@ -56,16 +56,16 @@
         },
         {
             "name": "activecollab/databaseconnection",
-            "version": "dev-next",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/databaseconnection.git",
-                "reference": "24d575fa79e0403849f1e36f28d5820103ba9417"
+                "reference": "53c0e5e27204320ea05d3c1037ddc30c0a71cb71"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/24d575fa79e0403849f1e36f28d5820103ba9417",
-                "reference": "24d575fa79e0403849f1e36f28d5820103ba9417",
+                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/53c0e5e27204320ea05d3c1037ddc30c0a71cb71",
+                "reference": "53c0e5e27204320ea05d3c1037ddc30c0a71cb71",
                 "shasum": ""
             },
             "require": {
@@ -103,20 +103,20 @@
                 "activecollab",
                 "mysql"
             ],
-            "time": "2016-04-26 15:24:26"
+            "time": "2016-05-07 18:32:41"
         },
         {
             "name": "activecollab/datevalue",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/datevalue.git",
-                "reference": "c7b0af1ca57e82a529368a0038c79fbe015d07a3"
+                "reference": "d9f47a2bec33e8072578d5330899bba0ec9a42a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/datevalue/zipball/c7b0af1ca57e82a529368a0038c79fbe015d07a3",
-                "reference": "c7b0af1ca57e82a529368a0038c79fbe015d07a3",
+                "url": "https://api.github.com/repos/activecollab/datevalue/zipball/d9f47a2bec33e8072578d5330899bba0ec9a42a9",
+                "reference": "d9f47a2bec33e8072578d5330899bba0ec9a42a9",
                 "shasum": ""
             },
             "require": {
@@ -124,7 +124,8 @@
                 "php": ">=5.6.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~4.8"
+                "fabpot/php-cs-fixer": "^1.0",
+                "phpunit/phpunit": "^5.0"
             },
             "type": "library",
             "autoload": {
@@ -150,7 +151,7 @@
                 "date",
                 "datetime"
             ],
-            "time": "2016-04-26 07:51:26"
+            "time": "2016-05-08 15:52:22"
         },
         {
             "name": "container-interop/container-interop",
@@ -392,7 +393,7 @@
         },
         {
             "name": "symfony/translation",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
@@ -1727,7 +1728,7 @@
         },
         {
             "name": "symfony/console",
-            "version": "v2.8.5",
+            "version": "v2.8.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
@@ -1787,16 +1788,16 @@
         },
         {
             "name": "symfony/event-dispatcher",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/event-dispatcher.git",
-                "reference": "17b04e6b1ede45b57d3ad5146abe50df6c3968b4"
+                "reference": "807dde98589f9b2b00624dca326740380d78dbbc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/17b04e6b1ede45b57d3ad5146abe50df6c3968b4",
-                "reference": "17b04e6b1ede45b57d3ad5146abe50df6c3968b4",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/807dde98589f9b2b00624dca326740380d78dbbc",
+                "reference": "807dde98589f9b2b00624dca326740380d78dbbc",
                 "shasum": ""
             },
             "require": {
@@ -1843,11 +1844,11 @@
             ],
             "description": "Symfony EventDispatcher Component",
             "homepage": "https://symfony.com",
-            "time": "2016-04-12 18:09:53"
+            "time": "2016-05-05 06:56:13"
         },
         {
             "name": "symfony/filesystem",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
@@ -1896,7 +1897,7 @@
         },
         {
             "name": "symfony/finder",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
@@ -1945,7 +1946,7 @@
         },
         {
             "name": "symfony/process",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
@@ -1994,7 +1995,7 @@
         },
         {
             "name": "symfony/stopwatch",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/stopwatch.git",
@@ -2043,7 +2044,7 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
@@ -2093,9 +2094,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "activecollab/databaseconnection": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

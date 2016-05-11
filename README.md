@@ -11,7 +11,7 @@ To install it, use Composer:
 ```json
 {
     "require": {
-        "activecollab/jobsqueue": "~0.1"
+        "activecollab/jobsqueue": "^1.0.0"
     }
 }
 ```
@@ -223,3 +223,4 @@ Note: Process reporting and watching is not supported on Windows systems at the 
 ## To do
 
 1. Add logging to all relevant methods in MySQL queue
+2. Implement job quarantine

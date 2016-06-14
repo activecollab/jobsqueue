@@ -188,10 +188,8 @@ class RunJobs extends Command
 
         if (empty($channels)) {
             throw new InvalidArgumentException('No channel found.');
-        } elseif ($channels = '*') {
-            return [];
-        } else {
-            return explode(',', $channels);
         }
+
+        return $channels === '*' ? [] : explode(',', $channels);
     }
 }

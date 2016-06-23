@@ -149,7 +149,7 @@ class RunJobs extends Command
                     if ($output->getVerbosity()) {
                         $sleep_for = mt_rand(900000, 1000000);
 
-                        $this->log->notice('Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds', ['sleep_for' => $sleep_for]);
+                        $this->log->debug('Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds', ['sleep_for' => $sleep_for]);
 
                         $output->writeln("<comment>Notice:</comment> Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
                         usleep($sleep_for);

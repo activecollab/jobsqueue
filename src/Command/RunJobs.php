@@ -143,14 +143,14 @@ class RunJobs extends Command
                     $jobs_ran[] = $job_id;
                 }
             } else {
+                $sleep_for = mt_rand(900000, 1000000);
+
+                $this->log->debug('Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds', ['sleep_for' => $sleep_for]);
+
                 if ($output->getVerbosity()) {
-                    $sleep_for = mt_rand(900000, 1000000);
-
-                    $this->log->debug('Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds', ['sleep_for' => $sleep_for]);
-
                     $output->writeln("<comment>Notice:</comment> Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
-                    usleep($sleep_for);
                 }
+                usleep($sleep_for);
             }
         } while (time() < $work_until);
 

@@ -17,7 +17,7 @@ use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 /**
  * @package ActiveCollab\JobsQueue\Test
  */
-class FailureRetriesTest extends AbstractMySqlQueueTest
+class JobFailureTest extends AbstractMySqlQueueTest
 {
     /**
      * Test job failure.
@@ -65,6 +65,38 @@ class FailureRetriesTest extends AbstractMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
 
         $this->assertEquals('Built to fail!', $this->connection->executeFirstCell('SELECT `reason` FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` WHERE `id` = ?', 1));
+    }
+
+    public function testJobFailureTrimsLongReason()
+    {
+        $this->assertRecordsCount(0);
+
+        $exception_message = '';
+
+        for ($i = 0; $i < 10; $i++) {
+            $exception_message .= 'abcdefghijklmnopqrstuvwxyz';
+        }
+
+        $this->assertGreaterThan(191, strlen($exception_message));
+
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Failing([
+            'exception_message' => $exception_message,
+        ])));
+
+        $next_in_line = $this->dispatcher->getQueue()->nextInLine();
+
+        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Failing', $next_in_line);
+        $this->assertEquals(1, $next_in_line->getQueueId());
+
+        $this->dispatcher->getQueue()->execute($next_in_line);
+
+        $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Failing', $this->last_failed_job);
+        $this->assertEquals($exception_message, $this->last_failure_message);
+
+        $this->assertEquals(0, $this->dispatcher->getQueue()->count());
+        $this->assertEquals(1, $this->dispatcher->getQueue()->countFailed());
+
+        $this->assertEquals(substr($exception_message, 0, 191), $this->connection->executeFirstCell('SELECT `reason` FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` WHERE `id` = ?', 1));
     }
 
     /**

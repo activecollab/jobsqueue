@@ -20,13 +20,26 @@ use Exception;
 class Failing extends Job
 {
     /**
-     * Always fail.
-     *
-     * @return int
-     * @throws Exception
+     * {@inheritdoc}
+     */
+    public function __construct(array $data = null)
+    {
+        if (empty($data)) {
+            $data = [];
+        }
+
+        if (empty($data['exception_message'])) {
+            $data['exception_message'] = 'Built to fail!';
+        }
+
+        parent::__construct($data);
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function execute()
     {
-        throw new Exception('Built to fail!');
+        throw new Exception($this->getData('exception_message'));
     }
 }

@@ -358,6 +358,10 @@ class MySqlQueue extends Queue
      */
     public function logFailedJob(JobInterface $job, $reason)
     {
+        if (mb_strlen($reason) > 191) {
+            $reason = mb_substr($reason, 0, 191);
+        }
+
         $this->connection->transact(function () use ($job, $reason) {
             $this->connection->execute('INSERT INTO `' . self::FAILED_JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?, ?)', get_class($job), $job->getChannel(), $job->getBatchId(), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
             $this->deleteJob($job);

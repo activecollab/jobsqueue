@@ -143,20 +143,14 @@ class RunJobs extends Command
                     $jobs_ran[] = $job_id;
                 }
             } else {
-                if ($this->dispatcher->getQueue()->count()) {
-                    $this->log->debug('Next in line not found.');
+                $sleep_for = mt_rand(900000, 1000000);
 
-                    if ($output->getVerbosity()) {
-                        $sleep_for = mt_rand(900000, 1000000);
+                $this->log->debug('Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds', ['sleep_for' => $sleep_for]);
 
-                        $this->log->notice('Nothing to do at the moment, or job reservation collision. Sleeping for {sleep_for} microseconds', ['sleep_for' => $sleep_for]);
-
-                        $output->writeln("<comment>Notice:</comment> Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
-                        usleep($sleep_for);
-                    }
-                } else {
-                    break; // No new jobs? Break from the loop. Check is needed because nextInLine() can return NULL in case of job snatching
+                if ($output->getVerbosity()) {
+                    $output->writeln("<comment>Notice:</comment> Nothing to do at the moment, or job reservation collision. Sleeping for {$sleep_for} microseconds");
                 }
+                usleep($sleep_for);
             }
         } while (time() < $work_until);
 
@@ -188,10 +182,8 @@ class RunJobs extends Command
 
         if (empty($channels)) {
             throw new InvalidArgumentException('No channel found.');
-        } elseif ($channels = '*') {
-            return [];
-        } else {
-            return explode(',', $channels);
         }
+
+        return $channels === '*' ? [] : explode(',', $channels);
     }
 }

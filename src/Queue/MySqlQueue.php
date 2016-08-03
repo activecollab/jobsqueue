@@ -96,6 +96,7 @@ class MySqlQueue extends Queue
                     UNIQUE KEY `reservation_key` (`reservation_key`),
                     KEY `type` (`type`),
                     KEY `channel` (`channel`),
+                    KEY `batch_id` (`batch_id`),
                     KEY `priority` (`priority`),
                     KEY `reserved_at` (`reserved_at`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
@@ -117,6 +118,7 @@ class MySqlQueue extends Queue
                     PRIMARY KEY (`id`),
                     KEY `type` (`type`),
                     KEY `channel` (`channel`),
+                    KEY `batch_id` (`batch_id`),
                     KEY `failed_at` (`failed_at`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
             }

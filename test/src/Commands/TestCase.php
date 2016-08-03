@@ -82,7 +82,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             throw new \RuntimeException('Failed to connect to database. MySQL said: '.$this->link->connect_error);
         }
 
-        if (!$this->link->select_db('activecollab_jobs_queue_commands_test')) {
+        if (!$this->link->select_db('activecollab_jobs_queue_test')) {
             throw new \RuntimeException('Failed to select database.');
         }
 

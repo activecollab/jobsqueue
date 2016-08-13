@@ -78,22 +78,6 @@ class RunJobs extends Command
                     $output->writeln("<error>Error:</error> Job #{$job->getQueueId()} ($job_class) failed");
                 }
             }
-
-            $context = [
-                'job_id' => $job->getQueueId(),
-                'job_type' => $job_class,
-            ];
-
-            if ($reason instanceof \Exception) {
-                $context['error_message'] = $reason->getMessage();
-                $context['exception'] = $reason;
-            } elseif ($reason) {
-                $context['error_message'] = (string) $reason;
-            } else {
-                $context['error_message'] = 'Unknown';
-            }
-
-            $this->log->error('Job #{job_id} ({job_type}) failed with message: {error_message}', $context);
         });
 
         // ---------------------------------------------------

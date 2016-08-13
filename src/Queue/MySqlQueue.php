@@ -169,7 +169,10 @@ class MySqlQueue extends Queue
         $job_id = $this->connection->lastInsertId();
 
         if ($this->log) {
-            $this->log->info('Job {type} enqueued as #{job_id}', ['type' => get_class($job), 'job_id' => $job_id]);
+            $this->log->info('Job #{job_id} ({type}) enqueued', [
+                'job_id' => $job_id,
+                'job_type' => get_class($job)
+            ]);
         }
 
         return $job_id;
@@ -197,16 +200,18 @@ class MySqlQueue extends Queue
     public function execute(JobInterface $job, $silent = true)
     {
         try {
-            if ($this->log) {
-                $job->setLog($this->log);
-            }
+            $this->log->info('Executing #{job_id} ({job_type})', [
+                'job_id' => $job->getQueueId(),
+                'job_type' => get_class($job),
+                'event' => 'job_started',
+            ]);
 
             $result = $job->execute();
 
             if ($result instanceof SignalInterface && $result->keepJobInQueue()) {
-                $log_message = 'Job #{job_id} ({type}) executed and kept in the queue';
+                $log_message = 'Job #{job_id} ({job_type}) executed and kept in the queue';
             } else {
-                $log_message = 'Job #{job_id} ({type}) executed';
+                $log_message = 'Job #{job_id} ({job_type}) executed';
 
                 $this->deleteJob($job);
             }
@@ -214,20 +219,13 @@ class MySqlQueue extends Queue
             if ($this->log) {
                 $this->log->info($log_message, [
                     'job_id' => $job->getQueueId(),
-                    'type' => get_class($job),
+                    'job_type' => get_class($job),
+                    'event' => 'job_executed',
                 ]);
             }
 
             return $result;
         } catch (\Exception $e) {
-            if ($this->log) {
-                $this->log->error('Job #{job_id} ({type}) failed due to an exception', [
-                    'job_id' => $job->getQueueId(),
-                    'type' => get_class($job),
-                    'exception' => $e,
-                ]);
-            }
-
             $this->failJob($job, $e, $silent);
         }
 
@@ -289,9 +287,42 @@ class MySqlQueue extends Queue
         if ($job_id = $job->getQueueId()) {
             $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
 
+            $log_arguments = [
+                'job_id' => $job->getQueueId(),
+                'job_type' => get_class($job),
+            ];
+
+            if ($reason) {
+                $log_arguments['exception'] = $reason;
+            }
+
             if (($previous_attempts + 1) >= $job->getAttempts()) {
+                $log_arguments['event'] = 'job_failed';
+
+                if ($this->log) {
+                    $log_message = 'Job #{job_id} ({type}) failed after {attempts} attemtps';
+
+                    if ($reason instanceof Exception) {
+                        $log_message .= '. Exception: {exception}';
+                    }
+
+                    $this->log->error($log_message, $log_arguments);
+                }
+
                 $this->logFailedJob($job, ($reason instanceof Exception ? $reason->getMessage() : ''));
             } else {
+                $log_arguments['event'] = 'job_attempt_failed';
+
+                if ($this->log) {
+                    $log_message = 'Job #{job_id} ({type}) failed at attempt {attempt}';
+
+                    if ($reason instanceof Exception) {
+                        $log_message .= '. Exception: {exception}';
+                    }
+
+                    $this->log->error($log_message, $log_arguments);
+                }
+
                 $this->prepareForNextAttempt($job_id, $previous_attempts, $job->getDelay());
             }
         }

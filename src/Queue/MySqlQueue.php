@@ -200,11 +200,13 @@ class MySqlQueue extends Queue
     public function execute(JobInterface $job, $silent = true)
     {
         try {
-            $this->log->info('Executing #{job_id} ({job_type})', [
-                'job_id' => $job->getQueueId(),
-                'job_type' => get_class($job),
-                'event' => 'job_started',
-            ]);
+            if ($this->log) {
+                $this->log->info('Executing #{job_id} ({job_type})', [
+                    'job_id' => $job->getQueueId(),
+                    'job_type' => get_class($job),
+                    'event' => 'job_started',
+                ]);
+            }
 
             $result = $job->execute();
 

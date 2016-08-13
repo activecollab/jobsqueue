@@ -203,14 +203,25 @@ class MySqlQueue extends Queue
 
             $result = $job->execute();
 
-            if (!($result instanceof SignalInterface && $result->keepJobInQueue())) {
+            if ($result instanceof SignalInterface && $result->keepJobInQueue()) {
+                $log_message = 'Job #{job_id} ({type}) executed and kept in the queue';
+            } else {
+                $log_message = 'Job #{job_id} ({type}) executed';
+
                 $this->deleteJob($job);
+            }
+
+            if ($this->log) {
+                $this->log->info($log_message, [
+                    'job_id' => $job->getQueueId(),
+                    'type' => get_class($job),
+                ]);
             }
 
             return $result;
         } catch (\Exception $e) {
             if ($this->log) {
-                $this->log->error('Job #{job_id} ({type}) failed due to error', [
+                $this->log->error('Job #{job_id} ({type}) failed due to an exception', [
                     'job_id' => $job->getQueueId(),
                     'type' => get_class($job),
                     'exception' => $e,

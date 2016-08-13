@@ -302,7 +302,8 @@ class MySqlQueue extends Queue
                 $log_arguments['event'] = 'job_failed';
 
                 if ($this->log) {
-                    $log_message = 'Job #{job_id} ({type}) failed after {attempts} attemtps';
+                    $log_message = 'Job #{job_id} ({job_type}) failed after {attempts} attemtps';
+                    $log_arguments['attempts'] = $previous_attempts + 1;
 
                     if ($reason instanceof Exception) {
                         $log_message .= '. Exception: {exception}';
@@ -316,7 +317,8 @@ class MySqlQueue extends Queue
                 $log_arguments['event'] = 'job_attempt_failed';
 
                 if ($this->log) {
-                    $log_message = 'Job #{job_id} ({type}) failed at attempt {attempt}';
+                    $log_message = 'Job #{job_id} ({job_type}) failed at attempt {attempt}';
+                    $log_arguments['attempt'] = $previous_attempts + 1;
 
                     if ($reason instanceof Exception) {
                         $log_message .= '. Exception: {exception}';

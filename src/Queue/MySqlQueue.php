@@ -210,7 +210,11 @@ class MySqlQueue extends Queue
             return $result;
         } catch (\Exception $e) {
             if ($this->log) {
-                $this->log->error('Job {type} failed due to error', ['type' => get_class($job), 'exception' => $e]);
+                $this->log->error('Job #{job_id} ({type}) failed due to error', [
+                    'job_id' => $job->getQueueId(),
+                    'type' => get_class($job),
+                    'exception' => $e,
+                ]);
             }
 
             $this->failJob($job, $e, $silent);

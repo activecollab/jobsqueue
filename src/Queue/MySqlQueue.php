@@ -164,14 +164,17 @@ class MySqlQueue extends Queue
         $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
         $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
 
-        $this->connection->execute('INSERT INTO `' . self::JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, $job->getBatchId(), json_encode($job_data), date('Y-m-d H:i:s', time() + $job->getFirstJobDelay()));
+        $available_at_timestamp = date('Y-m-d H:i:s', time() + $job->getFirstJobDelay());
+
+        $this->connection->execute('INSERT INTO `' . self::JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, $job->getBatchId(), json_encode($job_data), $available_at_timestamp);
 
         $job_id = $this->connection->lastInsertId();
 
         if ($this->log) {
-            $this->log->info('Job #{job_id} ({type}) enqueued', [
+            $this->log->info('Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}', [
                 'job_id' => $job_id,
-                'job_type' => get_class($job)
+                'job_type' => get_class($job),
+                'available_at' => $available_at_timestamp,
             ]);
         }
 

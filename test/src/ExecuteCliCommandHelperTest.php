@@ -53,4 +53,32 @@ class ExecuteCliCommandHelperTest extends TestCase
 
         $this->assertEquals("php -v --debug 'treat as argument' --s='127.0.0.1:8888' --p='1,2,3'", $job->execute());
     }
+
+    /**
+     * Test if command environment variables are properly prepared.
+     */
+    public function testCommandEnvironmentVariables()
+    {
+        $job = new ExecuteCliCommandHelperJob([
+            'command' => 'php',
+            'command_environment_variables' => [
+                'foo' => 'bar',
+                'baz' => 1,
+            ]
+        ]);
+
+        $this->assertEquals('export FOO=\'bar\' BAZ=\'1\' && php', $job->execute());
+    }
+
+    public function testCommandEnvironmentVariablesValuePreservesNewRow()
+    {
+        $job = new ExecuteCliCommandHelperJob([
+            'command' => 'php',
+            'command_environment_variables' => [
+                'lorem' => "Lorem\nIpsum\nDolor",
+            ]
+        ]);
+
+        $this->assertEquals("export LOREM='Lorem\nIpsum\nDolor' && php", $job->execute());
+    }
 }

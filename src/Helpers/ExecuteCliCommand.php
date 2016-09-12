@@ -42,6 +42,10 @@ trait ExecuteCliCommand
             $data['command_arguments'] = [];
         }
 
+        if (empty($data['command_environment_variables'])) {
+            $data['command_environment_variables'] = [];
+        }
+
         if (empty($data['in_background'])) {
             $data['in_background'] = false;
         }
@@ -209,6 +213,16 @@ trait ExecuteCliCommand
                     $command .= " --{$k}=" . escapeshellarg((is_array($v) ? implode(',', $v) : $v));
                 }
             }
+        }
+
+        if (!empty($data['command_environment_variables'])) {
+            $environment_variables = [];
+            foreach ($data['command_environment_variables'] as $k => $v) {
+                $variable_name = strtoupper($k);
+                $environment_variables[] =  $variable_name . '=' . escapeshellarg($v);
+            }
+
+            $command = 'export ' . implode(' ', $environment_variables) . ' && ' . $command;
         }
 
         if ($this->getLog()) {

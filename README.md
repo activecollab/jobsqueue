@@ -220,6 +220,44 @@ Array
 
 Note: Process reporting and watching is not supported on Windows systems at the moment.
 
+## Executing CLI commands from jobs
+
+If you need a job to simply run CLI command, there is a handy trait `ExecuteCliCommand`. You can pass a command call signature, arguments and environment variables to the command.
+
+Example usage:
+
+```
+class RunCommand extends Job{
+    use ExecuteCliCommand;
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function __construct(array $data = null)
+    {
+        $this->validateCommand($data);
+
+        parent::__construct($data);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function execute()
+    {
+        $data['command'] = 'php foobar.php'
+        $data['command_environement_variables'] = ['foo' => 'bar'];
+        $data['command_arguments'] = ['--baz' => 1];
+        return $this->prepareCommandFromData($this->getData());
+    }
+} 
+```
+
+will produce a CLI command:
+
+```
+export FOO='bar' && php foobar.php --baz=1 
+```
 ## To do
 
 1. Add logging to all relevant methods in MySQL queue

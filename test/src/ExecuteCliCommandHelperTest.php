@@ -70,6 +70,9 @@ class ExecuteCliCommandHelperTest extends TestCase
         $this->assertEquals('export FOO=\'bar\' BAZ=\'1\' && php', $job->execute());
     }
 
+    /**
+     * Test if command environment variables is in multiple rows, it will be preserved as is.
+     */
     public function testCommandEnvironmentVariablesValuePreservesNewRow()
     {
         $job = new ExecuteCliCommandHelperJob([

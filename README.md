@@ -226,8 +226,9 @@ If you need a job to simply run CLI command, there is a handy trait `ExecuteCliC
 
 Example usage:
 
-```
-class RunCommand extends Job{
+```php
+class RunCommand extends Job
+{
     use ExecuteCliCommand;
     
     /**
@@ -255,9 +256,10 @@ class RunCommand extends Job{
 
 will produce a CLI command:
 
-```
+```bash
 export FOO='bar' && php foobar.php --baz=1 
 ```
+
 ## To do
 
 1. Add logging to all relevant methods in MySQL queue

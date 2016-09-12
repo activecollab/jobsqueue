@@ -67,7 +67,7 @@ class ExecuteCliCommandHelperTest extends TestCase
             ]
         ]);
 
-        $this->assertEquals('export FOO=\'bar\' BAZ=\'1\' && php', $job->execute());
+        $this->assertEquals('export FOO=\'bar\';export BAZ=\'1\' && php', $job->execute());
     }
 
     /**

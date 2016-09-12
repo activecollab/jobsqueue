@@ -219,10 +219,10 @@ trait ExecuteCliCommand
             $environment_variables = [];
             foreach ($data['command_environment_variables'] as $k => $v) {
                 $variable_name = strtoupper($k);
-                $environment_variables[] =  $variable_name . '=' . escapeshellarg($v);
+                $environment_variables[] =  'export ' . $variable_name . '=' . escapeshellarg($v);
             }
 
-            $command = 'export ' . implode(' ', $environment_variables) . ' && ' . $command;
+            $command = implode(';', $environment_variables) . ' && ' . $command;
         }
 
         if ($this->getLog()) {

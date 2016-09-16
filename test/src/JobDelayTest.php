@@ -56,9 +56,9 @@ class JobDelayTest extends TestCase
     /**
      * @expectedException \InvalidArgumentException
      */
-    public function testMaxDelayIsOneHour()
+    public function testMaxDelayIsTreeMonths()
     {
-        new Inc(['number' => 123, 'delay' => 7200]);
+        new Inc(['number' => 123, 'delay' => 7776001]);
     }
 
     /**

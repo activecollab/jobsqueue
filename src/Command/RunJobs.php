@@ -118,7 +118,7 @@ class RunJobs extends Command
                 $this->dispatcher->getQueue()->execute($next_in_line);
 
                 if ($output->getVerbosity()) {
-                    $output->writeln("<info>OK:</info> Job #{$next_in_line->getQueueId()} (" . get_class($next_in_line) . ") done");
+                    $output->writeln("<info>OK:</info> Job #{$next_in_line->getQueueId()} (" . get_class($next_in_line) . ') done');
                 }
 
                 $job_id = $next_in_line->getQueueId();

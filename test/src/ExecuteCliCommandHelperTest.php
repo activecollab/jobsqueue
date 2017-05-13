@@ -64,7 +64,7 @@ class ExecuteCliCommandHelperTest extends TestCase
             'command_environment_variables' => [
                 'foo' => 'bar',
                 'baz' => 1,
-            ]
+            ],
         ]);
 
         $this->assertEquals('export FOO=\'bar\';export BAZ=\'1\' && php', $job->execute());
@@ -79,7 +79,7 @@ class ExecuteCliCommandHelperTest extends TestCase
             'command' => 'php',
             'command_environment_variables' => [
                 'lorem' => "Lorem\nIpsum\nDolor",
-            ]
+            ],
         ]);
 
         $this->assertEquals("export LOREM='Lorem\nIpsum\nDolor' && php", $job->execute());

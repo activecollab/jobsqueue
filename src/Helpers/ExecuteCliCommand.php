@@ -202,7 +202,7 @@ trait ExecuteCliCommand
                 if (is_string($v) && substr($v, 0, 1) == '-') {
                     $command .= " $v";
                 } elseif (is_array($v)) {
-                    $command .= ' ' . implode(' ', $v);
+                    $command .= ' ' . implode(' ', array_map(function ($element) { return escapeshellarg($element); }, $v));
                 } else {
                     $command .= ' ' . escapeshellarg($v);
                 }

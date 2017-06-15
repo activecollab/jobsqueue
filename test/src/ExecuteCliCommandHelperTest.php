@@ -52,7 +52,7 @@ class ExecuteCliCommandHelperTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals("php -v --debug 'treat as argument' --s='127.0.0.1:8888' --p='1,2,3' arg1 arg2 arg3 arg4", $job->execute());
+        $this->assertEquals("php -v --debug 'treat as argument' --s='127.0.0.1:8888' --p='1,2,3' 'arg1' 'arg2' 'arg3' 'arg4'", $job->execute());
     }
 
     /**

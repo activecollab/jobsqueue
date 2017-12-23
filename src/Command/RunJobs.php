@@ -185,7 +185,15 @@ class RunJobs extends Command
         ];
 
         $this->log->info('{jobs_ran} jobs ran in {exec_time}s', $execution_stats);
-        $output->writeln('Execution stats: ' . $execution_stats['jobs_ran'] . ' ran, ' . $execution_stats['jobs_failed'] . ' failed. ' . $execution_stats['left_in_queue'] . ' left in queue. Executed in ' . $execution_stats['exec_time']);
+        $output->writeln(
+            sprintf(
+                'Execution stats: %d ran, %d failed. %d left in queue. Executed in %s seconds.',
+                $execution_stats['jobs_ran'],
+                $execution_stats['jobs_failed'],
+                $execution_stats['left_in_queue'],
+                $execution_stats['exec_time']
+            )
+        );
 
         return 0;
     }

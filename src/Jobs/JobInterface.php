@@ -19,7 +19,7 @@ use Psr\Log\LoggerInterface;
 /**
  * @package ActiveCollab\JobsQueue\Jobs
  */
-interface JobInterface extends  JsonSerializable
+interface JobInterface extends JsonSerializable
 {
     const NOT_A_PRIORITY = 0;
     const HAS_PRIORITY = 256;

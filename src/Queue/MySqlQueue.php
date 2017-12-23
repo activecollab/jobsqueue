@@ -452,6 +452,36 @@ class MySqlQueue extends Queue
     }
 
     /**
+     * Return a batch of jobs that are next in line to be executed.
+     *
+     * @param  int            $jobs_to_run
+     * @param  string[]       ...$from_channels
+     * @return JobInterface[]
+     */
+    public function nextBatchInLine($jobs_to_run, ...$from_channels)
+    {
+        if (!is_int($jobs_to_run)) {
+            if (ctype_digit($jobs_to_run)) {
+                $jobs_to_run = (int) $jobs_to_run;
+            } else {
+                throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero');
+            }
+        }
+
+        if ($jobs_to_run < 1) {
+            throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero');
+        }
+
+        $result = [];
+
+        foreach ($this->reserveNextJobs($from_channels, $jobs_to_run) as $job_id) {
+            $result[] = $this->getJobById($job_id);
+        }
+
+        return $result;
+    }
+
+    /**
      * @var callable|null
      */
     private $on_reservation_key_ready;

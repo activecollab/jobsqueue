@@ -98,6 +98,7 @@ class MySqlQueue extends Queue
                     KEY `channel` (`channel`),
                     KEY `batch_id` (`batch_id`),
                     KEY `priority` (`priority`),
+                    KEY `available_at` (`available_at`)
                     KEY `reserved_at` (`reserved_at`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
             }
@@ -465,7 +466,7 @@ class MySqlQueue extends Queue
         if ($callback === null || is_callable($callback)) {
             $this->on_reservation_key_ready = $callback;
         } else {
-            throw new \InvalidArgumentException('Callable or NULL expected');
+            throw new InvalidArgumentException('Callable or NULL expected');
         }
     }
 

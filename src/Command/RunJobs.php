@@ -38,7 +38,8 @@ class RunJobs extends Command
                 'seconds',
                 's',
                 InputOption::VALUE_REQUIRED,
-                'Run jobs for -s seconds before quitting the process', 50
+                'Run jobs for -s seconds before quitting the process',
+                50
             )
             ->addOption(
                 'channels',
@@ -52,7 +53,7 @@ class RunJobs extends Command
                 '',
                 InputOption::VALUE_REQUIRED,
                 'Number of jobs that should be fetched and executed per single run',
-                '1'
+                1
             );
     }
 

@@ -110,6 +110,22 @@ class TestQueue extends Queue
     }
 
     /**
+     * Return a batch of jobs that are next in line to be executed.
+     *
+     * @param  int            $jobs_to_run
+     * @param  string[]       ...$from_channels
+     * @return JobInterface[]
+     */
+    public function nextBatchInLine($jobs_to_run, ...$from_channels)
+    {
+        if (!empty($this->jobs) && $this->needs_sort) {
+            $this->sortByPriority($this->jobs);
+        }
+
+        return array_slice($this->jobs, 0, $jobs_to_run);
+    }
+
+    /**
      * {@inheritdoc}
      */
     private function sortByPriority(array &$data)

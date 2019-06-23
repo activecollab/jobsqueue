@@ -43,15 +43,16 @@ class ExecuteCliCommandHelperTest extends TestCase
         $job = new ExecuteCliCommandHelperJob([
             'command' => 'php',
             'command_arguments' => [
-                '-v',                    // as is
-                '--debug',               // as is, second variation
-                'treat as argument',     // argument
-                's' => '127.0.0.1:8888', // option with value
-                'p' => [1, 2, 3],         // option with array value
+                '-v',                             // as is
+                '--debug',                        // as is, second variation
+                'treat as argument',              // argument
+                's' => '127.0.0.1:8888',          // option with value
+                'p' => [1, 2, 3],                 // option with array value
+                ['arg1', 'arg2', 'arg3', 'arg4'], // argument array
             ],
         ]);
 
-        $this->assertEquals("php -v --debug 'treat as argument' --s='127.0.0.1:8888' --p='1,2,3'", $job->execute());
+        $this->assertEquals("php -v --debug 'treat as argument' --s='127.0.0.1:8888' --p='1,2,3' 'arg1' 'arg2' 'arg3' 'arg4'", $job->execute());
     }
 
     /**

@@ -12,6 +12,7 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\TestQueue;
+use Countable;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -23,6 +24,6 @@ class JobsQueueTest extends TestCase
      */
     public function testQueuesAreCountable()
     {
-        $this->assertInstanceOf('Countable', new TestQueue());
+        $this->assertInstanceOf(Countable::class, new TestQueue());
     }
 }

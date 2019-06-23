@@ -98,6 +98,7 @@ class MySqlQueue extends Queue
                     KEY `channel` (`channel`),
                     KEY `batch_id` (`batch_id`),
                     KEY `priority` (`priority`),
+                    KEY `available_at` (`available_at`),
                     KEY `reserved_at` (`reserved_at`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
             }
@@ -441,11 +442,43 @@ class MySqlQueue extends Queue
      */
     public function nextInLine(...$from_channels)
     {
-        if ($job_id = $this->reserveNextJob($from_channels)) {
-            return $this->getJobById($job_id);
+        $reserved_job_ids = $this->reserveNextJobs($from_channels, 1);
+
+        if (count($reserved_job_ids) === 1) {
+            return $this->getJobById($reserved_job_ids[0]);
         } else {
             return null;
         }
+    }
+
+    /**
+     * Return a batch of jobs that are next in line to be executed.
+     *
+     * @param  int            $jobs_to_run
+     * @param  string[]       ...$from_channels
+     * @return JobInterface[]
+     */
+    public function nextBatchInLine($jobs_to_run, ...$from_channels)
+    {
+        if (!is_int($jobs_to_run)) {
+            if (ctype_digit($jobs_to_run)) {
+                $jobs_to_run = (int) $jobs_to_run;
+            } else {
+                throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero');
+            }
+        }
+
+        if ($jobs_to_run < 1) {
+            throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero');
+        }
+
+        $result = [];
+
+        foreach ($this->reserveNextJobs($from_channels, $jobs_to_run) as $job_id) {
+            $result[] = $this->getJobById($job_id);
+        }
+
+        return $result;
     }
 
     /**
@@ -465,7 +498,7 @@ class MySqlQueue extends Queue
         if ($callback === null || is_callable($callback)) {
             $this->on_reservation_key_ready = $callback;
         } else {
-            throw new \InvalidArgumentException('Callable or NULL expected');
+            throw new InvalidArgumentException('Callable or NULL expected');
         }
     }
 
@@ -473,14 +506,28 @@ class MySqlQueue extends Queue
      * Reserve next job ID.
      *
      * @param  array|null $from_channels
-     * @return int|null
+     * @param  int        $number_of_jobs_to_reserve
+     * @return int[]
      */
-    public function reserveNextJob(array $from_channels = null)
+    private function reserveNextJobs(array $from_channels = null, $number_of_jobs_to_reserve = 1)
     {
+        $reserved_job_ids = [];
+
         $timestamp = date('Y-m-d H:i:s');
         $channel_conditions = empty($from_channels) ? '' : $this->connection->prepareConditions(['`channel` IN ? AND ', $from_channels]);
 
-        if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::JOBS_TABLE_NAME . "` WHERE {$channel_conditions}`reserved_at` IS NULL AND `available_at` <= ? ORDER BY `priority` DESC, `id` LIMIT 0, 100", $timestamp)) {
+        $limit = $number_of_jobs_to_reserve + 100;
+
+        $job_ids = $this->connection->executeFirstColumn(
+            'SELECT `id` 
+                FROM `' . self::JOBS_TABLE_NAME . "` 
+                WHERE {$channel_conditions}`reserved_at` IS NULL AND `available_at` <= ? 
+                ORDER BY `priority` DESC, `id` 
+                LIMIT 0, {$limit}",
+            $timestamp
+        );
+
+        if (!empty($job_ids)) {
             foreach ($job_ids as $job_id) {
                 $reservation_key = $this->prepareNewReservationKey();
 
@@ -491,12 +538,16 @@ class MySqlQueue extends Queue
                 $this->connection->execute('UPDATE `' . self::JOBS_TABLE_NAME . '` SET `reservation_key` = ?, `reserved_at` = ? WHERE `id` = ? AND `reservation_key` IS NULL', $reservation_key, $timestamp, $job_id);
 
                 if ($this->connection->affectedRows() === 1) {
-                    return $job_id;
+                    $reserved_job_ids[] = $job_id;
+
+                    if (count($reserved_job_ids) >= $number_of_jobs_to_reserve) {
+                        break;
+                    }
                 }
             }
         }
 
-        return null;
+        return $reserved_job_ids;
     }
 
     /**

@@ -201,6 +201,16 @@ trait ExecuteCliCommand
             if (is_int($k)) {
                 if (is_string($v) && substr($v, 0, 1) == '-') {
                     $command .= " $v";
+                } elseif (is_array($v)) {
+                    $command .= ' ' . implode(
+                        ' ',
+                        array_map(
+                            function ($argument_value) {
+                                return escapeshellarg($argument_value);
+                            }, 
+                            $v
+                        )
+                    );
                 } else {
                     $command .= ' ' . escapeshellarg($v);
                 }

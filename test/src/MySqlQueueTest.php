@@ -338,8 +338,66 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
 
         $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-        $this->assertInstanceOf('ActiveCollab\JobsQueue\Test\Jobs\Inc', $next_in_line);
+        $this->assertInstanceOf(Inc::class, $next_in_line);
         $this->assertEquals(1, $next_in_line->getQueueId());
+    }
+
+    /**
+     * @dataProvider provideInvalidJobsToRunValues
+     * @param mixed $jobs_to_run
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Jobs to run needs to be a number larger than zero
+     */
+    public function testExceptionOnInvalidJobsToRun($jobs_to_run)
+    {
+        $this->dispatcher->getQueue()->nextBatchInLine($jobs_to_run);
+    }
+
+    public function provideInvalidJobsToRunValues()
+    {
+        return [
+            [-1],
+            [0],
+            [null],
+            ['string']
+        ];
+    }
+
+    /**
+     * Test next batch in line when no priority is set (FIFO).
+     */
+    public function testNextBatchInLine()
+    {
+        $this->assertRecordsCount(0);
+
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
+        $this->assertEquals(2, $this->dispatcher->dispatch(new Inc(['number' => 456])));
+        $this->assertEquals(3, $this->dispatcher->dispatch(new Inc(['number' => 789])));
+        $this->assertEquals(4, $this->dispatcher->dispatch(new Inc(['number' => 135])));
+
+        $this->assertRecordsCount(4);
+
+        $batch_of_tasks = $this->dispatcher->getQueue()->nextBatchInLine(3);
+
+        $this->assertInternalType('array', $batch_of_tasks);
+        $this->assertCount(3, $batch_of_tasks);
+
+        $this->assertEquals(1, $batch_of_tasks[0]->getQueueId());
+        $this->assertEquals(2, $batch_of_tasks[1]->getQueueId());
+        $this->assertEquals(3, $batch_of_tasks[2]->getQueueId());
+    }
+
+    /**
+     * Test next in line when no priority is set (FIFO).
+     */
+    public function testNextBatchInLineReturnsAnEmptyArrayOnNoJobs()
+    {
+        $this->assertRecordsCount(0);
+
+        $batch_of_jobs = $this->dispatcher->getQueue()->nextBatchInLine(10);
+
+        $this->assertInternalType('array', $batch_of_jobs);
+        $this->assertCount(0, $batch_of_jobs);
     }
 
     /**

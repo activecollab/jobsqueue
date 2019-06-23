@@ -20,7 +20,7 @@
     "require": {
         "php": ">=7.1",
         "activecollab/containeraccess": "^1.0",
-        "activecollab/databaseconnection": "v3.0.x-dev",
+        "activecollab/databaseconnection": "^3.0",
         "doctrine/inflector": "^1.1.0",
         "psr/log": "^1.0"
     },
@@ -31,8 +31,7 @@
         "friendsofphp/php-cs-fixer": "^2.0",
         "monolog/monolog": "~1.0",
         "phpunit/phpunit": "~5.0",
-        "pimple/pimple": "~3.0",
-        "symfony/console": "~2.0"
+        "pimple/pimple": "~3.0"
     },
     "autoload": {
         "psr-4": {

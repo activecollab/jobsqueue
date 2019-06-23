@@ -14,6 +14,7 @@ namespace ActiveCollab\JobsQueue\Command;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
+use Exception;
 use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -82,7 +83,7 @@ class RunJobs extends Command
             $job_class = get_class($job);
 
             if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-                if ($reason instanceof \Exception) {
+                if ($reason instanceof Exception) {
                     $output->writeln("<error>Error:</error> Job #{$job->getQueueId()} ($job_class) failed with message {$reason->getMessage()}");
 
                     if ($input->getOption('debug')) {

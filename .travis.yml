@@ -1,20 +1,11 @@
-dist: trusty
-sudo: required
 language: php
 php:
-  - 5.6
-  - '7'
-addons:
-  apt:
-    packages:
-    - mysql-server-5.6
-    - mysql-client-core-5.6
-    - mysql-client-5.6
-mysql:
-  database: activecollab_jobs_queue_test
-  username: root
-  encoding: utf8mb4
+    - 7.1
+services:
+    - mysql
+before_install:
+    - composer self-update
 install: composer install --dev
 before_script:
-  - mysql -u root -e 'create database if not exists activecollab_jobs_queue_test;'
-script: vendor/bin/phpunit
+    - mysql -u root -e 'create database activecollab_jobs_queue_test'
+script: php vendor/bin/phpunit

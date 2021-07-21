@@ -54,19 +54,13 @@ interface JobsDispatcherInterface extends DispatchJobInterface
 
     /**
      * Register multiple channels.
-     *
-     * @param  string[] ...$channels
-     * @return $this
      */
-    public function &registerChannels(...$channels);
+    public function registerChannels(string ...$channels): JobsDispatcherInterface;
 
     /**
-     * Register a single change.
-     *
-     * @param  string $channel
-     * @return $this
+     * Register a single channel.
      */
-    public function &registerChannel($channel);
+    public function registerChannel(string $channel): JobsDispatcherInterface;
 
     /**
      * Return an array of registered channels.

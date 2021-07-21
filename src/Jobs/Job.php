@@ -34,7 +34,6 @@ abstract class Job implements JobInterface
      * Construct a new Job instance.
      *
      * @param  array|null               $data
-     * @throws InvalidArgumentException
      */
     public function __construct(array $data = null)
     {
@@ -147,7 +146,7 @@ abstract class Job implements JobInterface
      */
     public function getAttempts()
     {
-        return isset($this->data['attempts']) ? $this->data['attempts'] : 1;
+        return $this->data['attempts'] ?? 1;
     }
 
     /**
@@ -157,7 +156,7 @@ abstract class Job implements JobInterface
      */
     public function getDelay()
     {
-        return isset($this->data['delay']) ? $this->data['delay'] : 0;
+        return $this->data['delay'] ?? 0;
     }
 
     /**

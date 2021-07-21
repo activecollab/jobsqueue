@@ -14,6 +14,7 @@ namespace ActiveCollab\JobsQueue\Queue;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
+use LogicException;
 
 class TestQueue extends Queue
 {
@@ -27,10 +28,7 @@ class TestQueue extends Queue
      */
     private array $failed_jobs = [];
 
-    /**
-     * @var bool
-     */
-    private $needs_sort = false;
+    private bool $needs_sort = false;
 
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
@@ -169,7 +167,7 @@ class TestQueue extends Queue
     /**
      * @var callable[]
      */
-    private $on_job_failure = [];
+    private array $on_job_failure = [];
 
     public function onJobFailure(callable $callback = null)
     {
@@ -210,7 +208,7 @@ class TestQueue extends Queue
 
     public function createBatch(JobsDispatcherInterface &$dispatcher, $name)
     {
-        throw new \LogicException('Method not implemented in test queue');
+        throw new LogicException('Method not implemented in test queue');
     }
 
     public function countBatches()

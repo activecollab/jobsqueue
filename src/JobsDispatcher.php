@@ -85,7 +85,7 @@ class JobsDispatcher implements DispatcherInterface
     /**
      * {@inheritdoc}
      */
-    public function &registerChannels(...$channels)
+    public function registerChannels(string ...$channels): JobsDispatcherInterface
     {
         foreach ($channels as $channel) {
             $this->registerChannel($channel);
@@ -94,10 +94,7 @@ class JobsDispatcher implements DispatcherInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function &registerChannel($channel)
+    public function registerChannel(string $channel): JobsDispatcherInterface
     {
         if (in_array($channel, $this->registered_channels)) {
             throw new InvalidArgumentException("Channel '$channel' already registered");

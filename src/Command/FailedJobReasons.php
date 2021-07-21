@@ -42,11 +42,14 @@ class FailedJobReasons extends Command
             $queue = $this->dispatcher->getQueue();
             $event_type_names = $this->dispatcher->unfurlType($input->getArgument('type'));
 
-            if (count($event_type_names) > 1) {
-                throw new Exception('More than one job type found');
-            } elseif (count($event_type_names) == 0) {
+            if (empty($event_type_names)) {
                 throw new Exception('No job type that matches type argument found under failed jobs');
             }
+
+            if (count($event_type_names) > 1) {
+                throw new Exception('More than one job type found');
+            }
+
             $type = $event_type_names[0];
 
             $output->writeln("Reasons why <comment>'$type'</comment> job failed:");

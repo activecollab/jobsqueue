@@ -49,10 +49,12 @@ class FailedJobReasonsTest extends TestCase
 
         $command = $application->find('failed_job_reasons');
         $command_tester = new CommandTester($command);
-        $command_tester->execute([
-            'command' => $command->getName(),
-            'type' => 'not-existing-type-on-acctivecollab',
-        ]);
+        $command_tester->execute(
+            [
+                'command' => $command->getName(),
+                'type' => 'not-existing-type-on-acctivecollab',
+            ]
+        );
 
         $this->assertRegExp('/No job type that matches type argument found under failed jobs/', $command_tester->getDisplay());
     }

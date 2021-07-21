@@ -115,8 +115,8 @@ interface JobsDispatcherInterface extends DispatchJobInterface
     /**
      * Search for a full job class name.
      *
-     * @param  string $search_for
-     * @return string
+     * @param  string   $search_for
+     * @return string[]
      */
     public function unfurlType($search_for);
 }

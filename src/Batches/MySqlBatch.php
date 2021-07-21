@@ -12,8 +12,8 @@
 namespace ActiveCollab\JobsQueue\Batches;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
-use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use RuntimeException;
@@ -29,12 +29,17 @@ class MySqlBatch extends Batch
     private $connection;
 
     /**
-     * @param DispatcherInterface $dispatcher
+     * @param JobsDispatcherInterface $dispatcher
      * @param ConnectionInterface $connection
      * @param int                 $queue_id
      * @param string              $name
      */
-    public function __construct(DispatcherInterface &$dispatcher, ConnectionInterface &$connection, $queue_id = null, $name = null)
+    public function __construct(
+        JobsDispatcherInterface &$dispatcher,
+        ConnectionInterface &$connection,
+        $queue_id = null,
+        $name = null
+    )
     {
         parent::__construct($dispatcher, $queue_id, $name);
 

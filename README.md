@@ -52,7 +52,7 @@ Now, lets create a dispatcher instance that manages one MySQL powered queue:
 ```php
 <?php
 
-use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use mysqli;
 use RuntimeException;
@@ -70,7 +70,7 @@ $queue->onJobFailure(function(Job $job, Exception $reason) {
     throw new Exception('Job ' . get_class($job) . ' failed', 0, $reason);
 });
 
-$dispatcher = new Dispatcher($queue);
+$dispatcher = new JobsDispatcher($queue);
 ```
 
 Lets add a job to the queue:

@@ -11,24 +11,18 @@
 
 namespace ActiveCollab\JobsQueue\Batches;
 
-use ActiveCollab\JobsQueue\DispatcherInterface;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 
-/**
- * @package ActiveCollab\JobsQueue
- */
 abstract class Batch implements BatchInterface
 {
-    /**
-     * @var DispatcherInterface
-     */
-    protected $dispatcher;
+    protected JobsDispatcherInterface $dispatcher;
 
     /**
-     * @param DispatcherInterface $dispatcher
+     * @param JobsDispatcherInterface $dispatcher
      * @param int                 $queue_id
      * @param string              $name
      */
-    public function __construct(DispatcherInterface &$dispatcher, $queue_id = null, $name = null)
+    public function __construct(JobsDispatcherInterface &$dispatcher, $queue_id = null, $name = null)
     {
         $this->dispatcher = $dispatcher;
         $this->queue_id = $queue_id;

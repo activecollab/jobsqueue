@@ -24,7 +24,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @property \Psr\Log\LoggerInterface $log
- * @property \ActiveCollab\JobsQueue\DispatcherInterface $dispatcher
+ * @property \ActiveCollab\JobsQueue\JobsDispatcherInterface $dispatcher
  */
 abstract class Command extends SymfonyCommand implements ContainerAccessInterface
 {

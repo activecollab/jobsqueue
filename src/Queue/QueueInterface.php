@@ -12,8 +12,8 @@
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
-use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use Countable;
 
 /**
@@ -141,11 +141,11 @@ interface QueueInterface extends Countable
     /**
      * Create a new batch with the given name.
      *
-     * @param  DispatcherInterface $dispatcher
+     * @param  JobsDispatcherInterface $dispatcher
      * @param  string              $name
      * @return BatchInterface
      */
-    public function createBatch(DispatcherInterface &$dispatcher, $name);
+    public function createBatch(JobsDispatcherInterface &$dispatcher, $name);
 
     /**
      * Return total number of batches in the queue.

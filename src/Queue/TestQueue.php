@@ -11,33 +11,27 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
-use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 
-/**
- * @package ActiveCollab\JobsQueue\Queue
- */
 class TestQueue extends Queue
 {
     /**
      * @var Job[]
      */
-    private $jobs = [];
+    private array $jobs = [];
 
     /**
      * @var Job[]
      */
-    private $failed_jobs = [];
+    private array $failed_jobs = [];
 
     /**
      * @var bool
      */
     private $needs_sort = false;
 
-    /**
-     * {@inheritdoc}
-     */
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         $this->jobs[] = $job;
@@ -49,53 +43,32 @@ class TestQueue extends Queue
         return $this->count() - 1;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function dequeue($job_id)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function dequeueByType($type)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(JobInterface $job, $silent = true)
     {
         return $job->execute();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countByChannel($channel)
     {
         return count($this->jobs);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function exists($job_type, array $properties = null)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getJobById($job_id)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function nextInLine(...$from_channels)
     {
         if (empty($this->jobs)) {
@@ -125,38 +98,23 @@ class TestQueue extends Queue
         return array_slice($this->jobs, 0, $jobs_to_run);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     private function sortByPriority(array &$data)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function restoreFailedJobById($job_id, array $update_data = null)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function restoreFailedJobsByType($job_type, array $update_data = null)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function count()
     {
         return count($this->jobs);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countByType($type1)
     {
         $count = 0;
@@ -172,17 +130,11 @@ class TestQueue extends Queue
         return $count;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countFailed()
     {
         return count($this->failed_jobs);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countFailedByType($type1)
     {
         $count = 0;
@@ -198,30 +150,18 @@ class TestQueue extends Queue
         return $count;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reportBackgroundProcess(JobInterface $job, $process_id)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBackgroundProcesses()
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function checkStuckJobs()
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cleanUp()
     {
     }
@@ -231,78 +171,48 @@ class TestQueue extends Queue
      */
     private $on_job_failure = [];
 
-    /**
-     * {@inheritdoc}
-     */
     public function onJobFailure(callable $callback = null)
     {
         $this->on_job_failure[] = $callback;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createTables(...$additional_tables)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function clear()
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getFailedJobReasons($job_type)
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function unfurlType($search_for)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function failedJobStatistics()
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function failedJobStatisticsByType($event_type)
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countJobsByType()
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function createBatch(DispatcherInterface &$dispatcher, $name)
+    public function createBatch(JobsDispatcherInterface &$dispatcher, $name)
     {
         throw new \LogicException('Method not implemented in test queue');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countBatches()
     {
         return 0;

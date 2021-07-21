@@ -12,7 +12,7 @@
 namespace ActiveCollab\JobQueue\Test\Commands;
 
 use ActiveCollab\JobsQueue\Command\FailedJobReasons;
-use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -72,7 +72,7 @@ class FailedJobReasonsTest extends TestCase
             ->method('unfurlType')
             ->will($this->throwException(new Exception('Expected test exception.')));
 
-        $this->container['dispatcher'] = new Dispatcher($mock_queue);
+        $this->container['dispatcher'] = new JobsDispatcher($mock_queue);
 
         $application = new Application();
         $application->add($this->command);
@@ -102,7 +102,7 @@ class FailedJobReasonsTest extends TestCase
             ->method('unfurlType')
             ->will($this->returnValue(['type1', 'type2']));
 
-        $this->container['dispatcher'] = new Dispatcher($mock_queue);
+        $this->container['dispatcher'] = new JobsDispatcher($mock_queue);
 
         $application = new Application();
         $application->add($this->command);

@@ -13,9 +13,9 @@ namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
 use ActiveCollab\JobsQueue\Batches\MySqlBatch;
-use ActiveCollab\JobsQueue\DispatcherInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
 use InvalidArgumentException;
@@ -793,7 +793,7 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    public function createBatch(DispatcherInterface &$dispatcher, $name)
+    public function createBatch(JobsDispatcherInterface &$dispatcher, $name)
     {
         if ($name) {
             $this->connection->execute('INSERT INTO `' . self::BATCHES_TABLE_NAME . '` (`name`, `created_at`) VALUES (?, UTC_TIMESTAMP())', $name);

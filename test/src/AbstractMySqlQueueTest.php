@@ -12,11 +12,12 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
-use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use Exception;
 use mysqli;
+use RuntimeException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -34,7 +35,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
     protected $connection;
 
     /**
-     * @var Dispatcher
+     * @var JobsDispatcher
      */
     protected $dispatcher;
 
@@ -55,10 +56,10 @@ abstract class AbstractMySqlQueueTest extends TestCase
     {
         parent::setUp();
 
-        $this->link = new \MySQLi('localhost', 'root', '', 'activecollab_jobs_queue_test');
+        $this->link = new mysqli('localhost', 'root', '', 'activecollab_jobs_queue_test');
 
         if ($this->link->connect_error) {
-            throw new \RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);
+            throw new RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);
         }
 
         $this->connection = new MysqliConnection($this->link);
@@ -70,7 +71,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
             $this->last_failure_message = $reason->getMessage();
         });
 
-        $this->dispatcher = new Dispatcher($queue);
+        $this->dispatcher = new JobsDispatcher($queue);
 
         $this->assertCount(0, $this->dispatcher->getQueue());
     }

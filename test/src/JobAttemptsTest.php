@@ -11,7 +11,7 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
-use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\TestQueue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use InvalidArgumentException;
@@ -22,7 +22,7 @@ use InvalidArgumentException;
 class JobAttemptsTest extends TestCase
 {
     /**
-     * @var Dispatcher
+     * @var JobsDispatcher
      */
     private $dispatcher;
 
@@ -30,7 +30,7 @@ class JobAttemptsTest extends TestCase
     {
         parent::setUp();
 
-        $this->dispatcher = new Dispatcher(new TestQueue());
+        $this->dispatcher = new JobsDispatcher(new TestQueue());
 
         $this->assertCount(0, $this->dispatcher->getQueue());
     }

@@ -12,7 +12,7 @@
 namespace ActiveCollab\JobQueue\Test\Commands;
 
 use ActiveCollab\JobsQueue\Command\FailedJobs;
-use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -39,7 +39,7 @@ class FailedJobsTest extends TestCase
      */
     public function testExecuteNoJobFound()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['failedJobStatistics'])
@@ -49,7 +49,7 @@ class FailedJobsTest extends TestCase
             ->method('failedJobStatistics')
             ->will($this->returnValue([]));
 
-        $this->container['dispatcher'] = new Dispatcher($mock_queue);
+        $this->container['dispatcher'] = new JobsDispatcher($mock_queue);
 
         $application = new Application();
         $application->add($this->command);
@@ -79,7 +79,7 @@ class FailedJobsTest extends TestCase
             ->method('failedJobStatistics')
             ->will($this->throwException(new Exception($error_message)));
 
-        $this->container['dispatcher'] = new Dispatcher($mock_queue);
+        $this->container['dispatcher'] = new JobsDispatcher($mock_queue);
 
         $application = new Application();
         $application->add($this->command);
@@ -114,7 +114,7 @@ class FailedJobsTest extends TestCase
                 ],
             ]));
 
-        $this->container['dispatcher'] = new Dispatcher($mock_queue);
+        $this->container['dispatcher'] = new JobsDispatcher($mock_queue);
 
         $application = new Application();
         $application->add($this->command);

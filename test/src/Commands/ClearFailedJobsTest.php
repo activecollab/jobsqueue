@@ -12,9 +12,10 @@
 namespace ActiveCollab\JobQueue\Test\Commands;
 
 use ActiveCollab\JobsQueue\Command\ClearFailedJobs;
-use ActiveCollab\JobsQueue\Dispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -61,7 +62,7 @@ class ClearFailedJobsTest extends TestCase
     {
         $error_message = 'Expected test exception.';
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['clear'])
@@ -71,7 +72,7 @@ class ClearFailedJobsTest extends TestCase
             ->method('clear')
             ->will($this->throwException(new Exception($error_message)));
 
-        $this->container['dispatcher'] = new Dispatcher($mock_queue);
+        $this->container['dispatcher'] = new JobsDispatcher($mock_queue);
 
         $application = new Application();
         $application->add($this->command);

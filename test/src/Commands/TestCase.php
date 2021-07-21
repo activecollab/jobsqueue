@@ -13,8 +13,8 @@ namespace ActiveCollab\JobQueue\Test\Commands;
 
 use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
-use ActiveCollab\JobsQueue\Dispatcher;
-use ActiveCollab\JobsQueue\DispatcherInterface;
+use ActiveCollab\JobsQueue\JobsDispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Test\Fixtures\Container;
@@ -50,7 +50,7 @@ abstract class TestCase extends BaseTestCase
     protected $queue;
 
     /**
-     * @var DispatcherInterface
+     * @var JobsDispatcherInterface
      */
     protected $dispatcher;
 
@@ -85,7 +85,7 @@ abstract class TestCase extends BaseTestCase
 
         $this->connection = new MysqliConnection($this->link);
         $this->queue = new MySqlQueue($this->connection);
-        $this->dispatcher = new Dispatcher($this->queue);
+        $this->dispatcher = new JobsDispatcher($this->queue);
 
         $this->log_file_path = dirname(__DIR__).'/logs/'.date('Y-m-d').'.txt';
 

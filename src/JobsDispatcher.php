@@ -28,13 +28,9 @@ class JobsDispatcher implements DispatcherInterface
     /**
      * @param QueueInterface $queue
      */
-    public function __construct($queue)
+    public function __construct(QueueInterface $queue)
     {
-        if ($queue instanceof QueueInterface) {
-            $this->queue = $queue;
-        } else {
-            throw new InvalidArgumentException('Queue is expected to be a Queue isntance or array of Queue instances');
-        }
+        $this->queue = $queue;
     }
 
     /**

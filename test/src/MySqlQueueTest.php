@@ -17,6 +17,8 @@ use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use DateTime;
+use Exception;
+use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -122,7 +124,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
 
         $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = ?', 1);
 
-        $this->assertInternalType('array', $job);
+        $this->assertIsArray($job);
         $this->assertEquals('ActiveCollab\JobsQueue\Test\Jobs\Inc', $job['type']);
     }
 
@@ -135,7 +137,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
 
         $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE id = ?', 1);
 
-        $this->assertInternalType('array', $job);
+        $this->assertIsArray($job);
         $this->assertEquals(QueueInterface::MAIN_CHANNEL, $job['channel']);
     }
 
@@ -174,7 +176,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->assertStringEndsWith('}', $row['data']);
 
         $decoded_data = json_decode($row['data'], true);
-        $this->assertInternalType('array', $decoded_data);
+        $this->assertIsArray($decoded_data);
 
         $this->assertArrayHasKey('number', $decoded_data);
         $this->assertEquals(123, $decoded_data['number']);
@@ -196,7 +198,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->assertNull($job);
         $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
         $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue_failed`'));
-        $this->assertContains('Failed to parse JSON', $this->connection->executeFirstCell('SELECT `reason` FROM `jobs_queue_failed` WHERE `id` = ?', 1));
+        $this->assertStringContainsString('Failed to parse JSON', $this->connection->executeFirstCell('SELECT `reason` FROM `jobs_queue_failed` WHERE `id` = ?', 1));
     }
 
     /**
@@ -345,11 +347,12 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     /**
      * @dataProvider provideInvalidJobsToRunValues
      * @param mixed $jobs_to_run
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Jobs to run needs to be a number larger than zero
      */
     public function testExceptionOnInvalidJobsToRun($jobs_to_run)
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Jobs to run needs to be a number larger than zero");
+
         $this->dispatcher->getQueue()->nextBatchInLine($jobs_to_run);
     }
 
@@ -379,7 +382,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
 
         $batch_of_tasks = $this->dispatcher->getQueue()->nextBatchInLine(3);
 
-        $this->assertInternalType('array', $batch_of_tasks);
+        $this->assertIsArray($batch_of_tasks);
         $this->assertCount(3, $batch_of_tasks);
 
         $this->assertEquals(1, $batch_of_tasks[0]->getQueueId());
@@ -396,7 +399,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
 
         $batch_of_jobs = $this->dispatcher->getQueue()->nextBatchInLine(10);
 
-        $this->assertInternalType('array', $batch_of_jobs);
+        $this->assertIsArray($batch_of_jobs);
         $this->assertCount(0, $batch_of_jobs);
     }
 
@@ -495,12 +498,11 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
         $this->dispatcher->getQueue()->execute(new Failing());
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Built to fail!
-     */
     public function testExecuteThrowsExceptionWhenNotSilenced()
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage("Built to fail!");
+
         $this->dispatcher->getQueue()->execute(new Failing(), false);
     }
 }

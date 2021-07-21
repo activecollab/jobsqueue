@@ -14,6 +14,7 @@ namespace ActiveCollab\JobsQueue\Test;
 use ActiveCollab\JobsQueue\Batches\Batch;
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use RuntimeException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -58,11 +59,10 @@ class BatchesTest extends AbstractMySqlQueueTest
         $this->assertEquals($batch->getQueueId(), $job->getBatchId());
     }
 
-    /**
-     * @expectedException \RuntimeException
-     */
     public function testBatchCantBeSetForQueuedJob()
     {
+        $this->expectException(RuntimeException::class);
+
         $batch = $this->dispatcher->batch('Testing batch');
         $this->assertEquals(1, $batch->getQueueId());
 

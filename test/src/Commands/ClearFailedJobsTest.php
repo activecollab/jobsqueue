@@ -28,10 +28,7 @@ class ClearFailedJobsTest extends TestCase
      */
     private $command;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -53,7 +50,7 @@ class ClearFailedJobsTest extends TestCase
             'command' => $command->getName(),
         ]);
 
-        $this->assertRegExp('/Done/', $command_tester->getDisplay());
+        $this->assertMatchesRegularExpression('/Done/', $command_tester->getDisplay());
         $this->assertFailedRecordsCount(0);
     }
 
@@ -85,6 +82,6 @@ class ClearFailedJobsTest extends TestCase
             'command' => $command->getName(),
         ]);
 
-        $this->assertContains('Expected test exception.', $command_tester->getDisplay());
+        $this->assertStringContainsString('Expected test exception.', $command_tester->getDisplay());
     }
 }

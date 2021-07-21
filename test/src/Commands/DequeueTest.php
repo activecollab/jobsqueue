@@ -15,6 +15,7 @@ use ActiveCollab\JobsQueue\Command\CreateTables;
 use ActiveCollab\JobsQueue\Command\Dequeue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
@@ -27,10 +28,7 @@ class DequeueTest extends TestCase
      */
     private $command;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -38,12 +36,11 @@ class DequeueTest extends TestCase
         $this->command->setContainer($this->container);
     }
 
-    /**
-     * @expectedException \Symfony\Component\Console\Exception\RuntimeException
-     * @expectedExceptionMessage Not enough arguments (missing: "type").
-     */
     public function testTypeArgumentIsRequired()
     {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Not enough arguments (missing: \"type\").");
+
         $application = new Application();
         $application->add($this->command);
 
@@ -71,7 +68,7 @@ class DequeueTest extends TestCase
         ]);
 
         $this->assertEquals(1, $command_tester->getStatusCode());
-        $this->assertContains('Valid job class expected', $command_tester->getDisplay());
+        $this->assertStringContainsString('Valid job class expected', $command_tester->getDisplay());
     }
 
     /**

@@ -11,6 +11,7 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
+use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
@@ -32,11 +33,10 @@ class ExtractPropertyTest extends AbstractMySqlQueueTest
         $this->assertEquals(Job::HAS_PRIORITY, (integer) $job_row['priority']);
     }
 
-    /**
-     * @expectedException \ActiveCollab\DatabaseConnection\Exception\QueryException
-     */
     public function testExceptionBecauseFieldDoesNotExist()
     {
+        $this->expectException(QueryException::class);
+
         $this->dispatcher->getQueue()->extractPropertyToField('number');
 
         $this->dispatcher->dispatch(new Inc(['number' => 12]));

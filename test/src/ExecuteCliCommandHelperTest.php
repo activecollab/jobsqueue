@@ -12,18 +12,15 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Test\Jobs\ExecuteCliCommandHelperJob;
+use InvalidArgumentException;
 
-/**
- * @package ActiveCollab\JobsQueue\Test
- */
 class ExecuteCliCommandHelperTest extends TestCase
 {
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage 'command' property is required
-     */
     public function testCommandIsRequired()
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("'command' property is required");
+
         new ExecuteCliCommandHelperJob([]);
     }
 

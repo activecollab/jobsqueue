@@ -13,6 +13,7 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -27,21 +28,19 @@ class JobDataTest extends TestCase
         $this->assertEquals(['number' => 1245, 'priority' => JobInterface::NOT_A_PRIORITY], (new Inc(['number' => 1245]))->getData());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage When provided, property can't be an empty value
-     */
     public function testDataPropertyCannotBeEmpty()
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("When provided, property can't be an empty value");
+
         (new Inc(['number' => 1245]))->getData('');
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Property 'unknown property here' not found
-     */
     public function testDataPropertyMustExist()
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Property 'unknown property here' not found");
+
         (new Inc(['number' => 1245]))->getData('unknown property here');
     }
 

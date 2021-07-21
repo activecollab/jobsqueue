@@ -79,7 +79,7 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
 
         $background_processes = $this->dispatcher->getQueue()->getBackgroundProcesses();
 
-        $this->assertInternalType('array', $background_processes);
+        $this->assertIsArray($background_processes);
         $this->assertCount(1, $background_processes);
         $this->assertSame([
             'id' => 1,

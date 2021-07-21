@@ -12,6 +12,7 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Test\Jobs\PortHelperJob;
+use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -45,27 +46,24 @@ class PortHelperTest extends TestCase
         $this->assertSame(4321, $job->getData()['port']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testPortIsLessThan1()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         new PortHelperJob(['port' => -1]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testPortIsLessThan1String()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         new PortHelperJob(['port' => '-1']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testPortIsNotNumericString()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         new PortHelperJob(['port' => 'Some Strange Value']);
     }
 }

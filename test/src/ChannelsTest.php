@@ -15,6 +15,7 @@ use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -56,36 +57,32 @@ class ChannelsTest extends AbstractMySqlQueueTest
         $this->assertSame([QueueInterface::MAIN_CHANNEL, 'old', 'new'], $this->dispatcher->getRegisteredChannels());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testChannelWithTheSameNameCantBeRegisteredTwice()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $this->dispatcher->registerChannel('new');
         $this->dispatcher->registerChannel('new');
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testChannelCantBeEmptyOnDispatch()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $this->dispatcher->dispatch(new Inc(['number' => 123]), '    ');
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testChannelNeedsCantBeAnArrayOfChannels()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $this->dispatcher->dispatch(new Inc(['number' => 123]), [QueueInterface::MAIN_CHANNEL, 'another_channel']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testJobCantBeDispatchedToAnUnknownChannelByDefault()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $this->dispatcher->dispatch(new Inc(['number' => 123]), 'not registered');
     }
 
@@ -201,7 +198,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
 
         $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '`');
 
-        $this->assertInternalType('array', $job);
+        $this->assertIsArray($job);
         $this->assertEquals('second', $job['channel']);
     }
 
@@ -227,7 +224,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
 
         $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '`');
 
-        $this->assertInternalType('array', $job);
+        $this->assertIsArray($job);
         $this->assertEquals('second', $job['channel']);
 
         $this->dispatcher->getQueue()->restoreFailedJobById(1);
@@ -237,7 +234,7 @@ class ChannelsTest extends AbstractMySqlQueueTest
 
         $job = $this->connection->executeFirstRow('SELECT * FROM `' . MySqlQueue::JOBS_TABLE_NAME . '`');
 
-        $this->assertInternalType('array', $job);
+        $this->assertIsArray($job);
         $this->assertEquals('second', $job['channel']);
     }
 }

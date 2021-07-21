@@ -41,12 +41,17 @@ abstract class AbstractMySqlQueueTest extends TestCase
     /**
      * @var string|null
      */
-    protected $last_failed_job = null, $last_failure_message = null;
+    protected $last_failed_job = null;
+
+    /**
+     * @var string|null
+     */
+    protected $last_failure_message = null;
 
     /**
      * Set up test environment.
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -70,10 +75,7 @@ abstract class AbstractMySqlQueueTest extends TestCase
         $this->assertCount(0, $this->dispatcher->getQueue());
     }
 
-    /**
-     * Tear down test environment.
-     */
-    public function tearDown()
+    protected function tearDown(): void
     {
         $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::BATCHES_TABLE_NAME . '`');
         $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::JOBS_TABLE_NAME . '`');

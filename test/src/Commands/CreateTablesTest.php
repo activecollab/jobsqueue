@@ -29,7 +29,7 @@ class CreateTablesTest extends TestCase
     /**
      * Set up test environment.
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -51,7 +51,7 @@ class CreateTablesTest extends TestCase
             'command' => $command->getName(),
         ]);
 
-        $this->assertContains('Done', $command_tester->getDisplay());
+        $this->assertStringContainsString('Done', $command_tester->getDisplay());
 
         $this->assertTrue($this->connection->tableExists(MySqlQueue::BATCHES_TABLE_NAME));
         $this->assertTrue($this->connection->tableExists(MySqlQueue::JOBS_TABLE_NAME));

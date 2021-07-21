@@ -23,11 +23,11 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use mysqli;
+use PHPUnit\Framework\TestCase as BaseTestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
-/**
- */
-abstract class TestCase extends \PHPUnit_Framework_TestCase
+abstract class TestCase extends BaseTestCase
 {
     /**
      * @var ContainerInterface
@@ -69,21 +69,18 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      */
     protected $config_options = false;
 
-    /**
-     * Set up test environment.
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
-        $this->link = new \MySQLi('localhost', 'root', '');
+        $this->link = new mysqli('localhost', 'root', '');
 
         if ($this->link->connect_error) {
-            throw new \RuntimeException('Failed to connect to database. MySQL said: '.$this->link->connect_error);
+            throw new RuntimeException('Failed to connect to database. MySQL said: '.$this->link->connect_error);
         }
 
         if (!$this->link->select_db('activecollab_jobs_queue_test')) {
-            throw new \RuntimeException('Failed to select database.');
+            throw new RuntimeException('Failed to select database.');
         }
 
         $this->connection = new MysqliConnection($this->link);
@@ -113,10 +110,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         ]);
     }
 
-    /**
-     * Tear down test environment.
-     */
-    public function tearDown()
+    protected function tearDown(): void
     {
         foreach ([MySqlQueue::BATCHES_TABLE_NAME, MySqlQueue::JOBS_TABLE_NAME, MySqlQueue::FAILED_JOBS_TABLE_NAME, 'email_log'] as $table_name) {
             if ($this->connection->tableExists($table_name)) {

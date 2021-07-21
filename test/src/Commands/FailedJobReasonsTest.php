@@ -15,6 +15,7 @@ use ActiveCollab\JobsQueue\Command\FailedJobReasons;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -24,14 +25,11 @@ use Symfony\Component\Console\Tester\CommandTester;
 class FailedJobReasonsTest extends TestCase
 {
     /**
-     * @var \ActiveCollab\JobsQueue\Command\FailedJobReasons
+     * @var FailedJobReasons
      */
     private $command;
 
-    /**
-     * Set up test environment.
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -56,7 +54,7 @@ class FailedJobReasonsTest extends TestCase
             ]
         );
 
-        $this->assertRegExp('/No job type that matches type argument found under failed jobs/', $command_tester->getDisplay());
+        $this->assertMatchesRegularExpression('/No job type that matches type argument found under failed jobs/', $command_tester->getDisplay());
     }
 
     /**
@@ -64,7 +62,7 @@ class FailedJobReasonsTest extends TestCase
      */
     public function testExecuteThrowErrorToDisplay()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['unfurlType'])
@@ -85,7 +83,7 @@ class FailedJobReasonsTest extends TestCase
             'command' => $command->getName(),
             'type' => 'type_one',
         ]);
-        $this->assertContains('Expected test exception.', $command_tester->getDisplay());
+        $this->assertStringContainsString('Expected test exception.', $command_tester->getDisplay());
     }
 
     /**
@@ -94,7 +92,7 @@ class FailedJobReasonsTest extends TestCase
     public function testExecuteThrowErrorOnMoreThenOneJobFound()
     {
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['unfurlType'])
@@ -115,6 +113,6 @@ class FailedJobReasonsTest extends TestCase
             'command' => $command->getName(),
             'type' => 'type_one',
         ]);
-        $this->assertContains('More than one job type found', $command_tester->getDisplay());
+        $this->assertStringContainsString('More than one job type found', $command_tester->getDisplay());
     }
 }

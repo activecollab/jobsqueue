@@ -14,6 +14,7 @@ namespace ActiveCollab\JobsQueue\Test;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Queue\TestQueue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use InvalidArgumentException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
@@ -25,10 +26,7 @@ class JobAttemptsTest extends TestCase
      */
     private $dispatcher;
 
-    /**
-     * Set up test environment.
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -37,27 +35,24 @@ class JobAttemptsTest extends TestCase
         $this->assertCount(0, $this->dispatcher->getQueue());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testJobAttemptsNeedsToBeInteger()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         new Inc(['number' => 123, 'attempts' => '123']);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testMinAttemptsIsOne()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         new Inc(['number' => 123, 'attempts' => 0]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testMaxAttemptsIs256()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         new Inc(['number' => 123, 'attempts' => 1000]);
     }
 

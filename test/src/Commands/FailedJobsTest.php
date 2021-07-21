@@ -15,6 +15,7 @@ use ActiveCollab\JobsQueue\Command\FailedJobs;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -25,10 +26,7 @@ class FailedJobsTest extends TestCase
 {
     private $command;
 
-    /**
-     * Set up test environment.
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -61,7 +59,7 @@ class FailedJobsTest extends TestCase
         $commandTester->execute([
             'command' => $command->getName(),
         ]);
-        $this->assertRegExp('/No failed jobs found/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/No failed jobs found/', $commandTester->getDisplay());
     }
 
     /**
@@ -71,7 +69,7 @@ class FailedJobsTest extends TestCase
     {
         $error_message = 'Expected test exception.';
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['failedJobStatistics'])
@@ -90,14 +88,14 @@ class FailedJobsTest extends TestCase
         $commandTester->execute([
             'command' => $command->getName(),
         ]);
-        $this->assertRegExp("/$error_message/", $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression("/$error_message/", $commandTester->getDisplay());
     }
     /**
      * Test data is displayed correctly.
      */
     public function testExecuteDisplayCorrectResponse()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['failedJobStatistics'])
@@ -125,9 +123,9 @@ class FailedJobsTest extends TestCase
         $commandTester->execute([
             'command' => $command->getName(),
         ]);
-        $this->assertRegExp('/type1/', $commandTester->getDisplay());
-        $this->assertRegExp('/2.4.2015/', $commandTester->getDisplay());
-        $this->assertRegExp('/12377/', $commandTester->getDisplay());
-        $this->assertRegExp('/91/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/type1/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/2.4.2015/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/12377/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/91/', $commandTester->getDisplay());
     }
 }

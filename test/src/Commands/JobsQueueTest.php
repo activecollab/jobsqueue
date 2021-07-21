@@ -15,6 +15,7 @@ use ActiveCollab\JobsQueue\Command\JobsQueue;
 use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -28,10 +29,7 @@ class JobsQueueTest extends TestCase
      */
     private $command;
 
-    /**
-     * Set up test environment.
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -64,7 +62,7 @@ class JobsQueueTest extends TestCase
         $commandTester->execute([
             'command' => $command->getName(),
         ]);
-        $this->assertRegExp('/No jobs in the queue/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/No jobs in the queue/', $commandTester->getDisplay());
     }
     /**
      * Test if unexpected exception from queue is handel.
@@ -73,7 +71,7 @@ class JobsQueueTest extends TestCase
     {
         $error_message = 'Expected test exception.';
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['countJobsByType'])
@@ -93,14 +91,14 @@ class JobsQueueTest extends TestCase
         $commandTester->execute([
             'command' => $command->getName(),
         ]);
-        $this->assertRegExp("/$error_message/", $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression("/$error_message/", $commandTester->getDisplay());
     }
     /**
      * Test data is displayed correctly.
      */
     public function testExecuteDisplayCorrectResponse()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|QueueInterface $mock_queue */
+        /** @var MockObject|QueueInterface $mock_queue */
         $mock_queue = $this->getMockBuilder('ActiveCollab\\JobsQueue\\Queue\\MySqlQueue')
             ->disableOriginalConstructor()
             ->setMethods(['countJobsByType'])
@@ -123,9 +121,9 @@ class JobsQueueTest extends TestCase
         $commandTester->execute([
             'command' => $command->getName(),
         ]);
-        $this->assertRegExp('/type1/', $commandTester->getDisplay());
-        $this->assertRegExp('/123/', $commandTester->getDisplay());
-        $this->assertRegExp('/type2/', $commandTester->getDisplay());
-        $this->assertRegExp('/345/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/type1/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/123/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/type2/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/345/', $commandTester->getDisplay());
     }
 }

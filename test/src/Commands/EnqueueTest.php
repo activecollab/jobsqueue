@@ -15,11 +15,9 @@ use ActiveCollab\JobsQueue\Command\CreateTables;
 use ActiveCollab\JobsQueue\Command\Enqueue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
 
-/**
- * @package ActiveCollab\JobQueue\Test\Commands
- */
 class EnqueueTest extends TestCase
 {
     /**
@@ -27,10 +25,7 @@ class EnqueueTest extends TestCase
      */
     private $command;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -38,12 +33,11 @@ class EnqueueTest extends TestCase
         $this->command->setContainer($this->container);
     }
 
-    /**
-     * @expectedException \Symfony\Component\Console\Exception\RuntimeException
-     * @expectedExceptionMessage Not enough arguments (missing: "type").
-     */
     public function testTypeArgumentIsRequired()
     {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Not enough arguments (missing: \"type\").");
+
         $application = new Application();
         $application->add($this->command);
 
@@ -71,7 +65,7 @@ class EnqueueTest extends TestCase
         ]);
 
         $this->assertEquals(1, $command_tester->getStatusCode());
-        $this->assertContains('Valid job class expected', $command_tester->getDisplay());
+        $this->assertStringContainsString('Valid job class expected', $command_tester->getDisplay());
     }
 
     /**
@@ -92,7 +86,7 @@ class EnqueueTest extends TestCase
         ]);
 
         $this->assertEquals(1, $command_tester->getStatusCode());
-        $this->assertContains('Failed to parse JSON. Reason: Syntax error', $command_tester->getDisplay());
+        $this->assertStringContainsString('Failed to parse JSON. Reason: Syntax error', $command_tester->getDisplay());
     }
 
     /**
@@ -113,7 +107,7 @@ class EnqueueTest extends TestCase
         ]);
 
         $this->assertEquals(1, $command_tester->getStatusCode());
-        $this->assertContains('Number is required and it needs to be an integer value', $command_tester->getDisplay());
+        $this->assertStringContainsString('Number is required and it needs to be an integer value', $command_tester->getDisplay());
     }
 
     /**
@@ -134,7 +128,7 @@ class EnqueueTest extends TestCase
         ]);
 
         $this->assertEquals(0, $command_tester->getStatusCode());
-        $this->assertContains('Job #1 enqueued', $command_tester->getDisplay());
+        $this->assertStringContainsString('Job #1 enqueued', $command_tester->getDisplay());
 
         $this->assertEquals(1, $this->dispatcher->getQueue()->count());
 

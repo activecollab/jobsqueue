@@ -13,16 +13,11 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
+use RuntimeException;
 
-/**
- * @package ActiveCollab\JobsQueue\Test
- */
 class RestoreFailedJobTest extends AbstractMySqlQueueTest
 {
-    /**
-     * Set up test environment.
-     */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -37,28 +32,25 @@ class RestoreFailedJobTest extends AbstractMySqlQueueTest
         $this->assertFailedRecordsCount(2);
     }
 
-    /**
-     * @expectedException \RuntimeException
-     */
     public function testRestoreByIdReturnsNullForNonExistingJob()
     {
+        $this->expectException(RuntimeException::class);
+
         $this->dispatcher->getQueue()->restoreFailedJobById(1234);
     }
 
-    /**
-     * @expectedException \RuntimeException
-     */
     public function testExceptinOnInvalidJobType()
     {
+        $this->expectException(RuntimeException::class);
+
         $this->connection->execute('UPDATE `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` SET `type` = ? WHERE `id` = ?', 'ThisClassDoesNotExist', 1);
         $this->dispatcher->getQueue()->restoreFailedJobById(1);
     }
 
-    /**
-     * @expectedException \RuntimeException
-     */
     public function testExceptionOnInvalidJson()
     {
+        $this->expectException(RuntimeException::class);
+
         $this->connection->execute('UPDATE `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` SET `data` = ? WHERE `id` = ?', '{invalidJSON', 1);
 
         $this->dispatcher->getQueue()->restoreFailedJobById(1234);

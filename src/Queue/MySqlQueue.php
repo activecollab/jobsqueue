@@ -52,9 +52,6 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createTables(...$additional_tables)
     {
         $table_names = $this->connection->getTableNames();
@@ -149,9 +146,6 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         $job_data = $job->getData();
@@ -167,7 +161,19 @@ class MySqlQueue extends Queue
 
         $available_at_timestamp = date('Y-m-d H:i:s', time() + $job->getFirstJobDelay());
 
-        $this->connection->execute('INSERT INTO `' . self::JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `available_at`' . $extract_fields . ') VALUES (?, ?, ?, ?, ?' . $extract_values . ')', get_class($job), $channel, $job->getBatchId(), json_encode($job_data), $available_at_timestamp);
+        $this->connection->execute(
+            sprintf(
+                'INSERT INTO `%s` (`type`, `channel`, `batch_id`, `data`, `available_at`%s) VALUES (?, ?, ?, ?, ?%s)', 
+                self::JOBS_TABLE_NAME,
+                $extract_fields,
+                $extract_values
+            ),
+            get_class($job),
+            $channel,
+            $job->getBatchId(),
+            json_encode($job_data),
+            $available_at_timestamp
+        );
 
         $job_id = $this->connection->lastInsertId();
 
@@ -182,25 +188,16 @@ class MySqlQueue extends Queue
         return $job_id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function dequeue($job_id)
     {
         $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function dequeueByType($type)
     {
         $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $type);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(JobInterface $job, $silent = true)
     {
         try {
@@ -238,17 +235,11 @@ class MySqlQueue extends Queue
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countByChannel($channel)
     {
         return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `channel` = ?', $channel);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function exists($job_type, array $properties = null)
     {
         if (empty($properties)) {
@@ -346,9 +337,6 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getJobById($job_id)
     {
         if ($row = $this->connection->executeFirstRow('SELECT `id`, `channel`, `batch_id`, `type`, `data` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
@@ -437,9 +425,6 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function nextInLine(...$from_channels)
     {
         $reserved_job_ids = $this->reserveNextJobs($from_channels, 1);
@@ -550,9 +535,6 @@ class MySqlQueue extends Queue
         return $reserved_job_ids;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     private function prepareNewReservationKey()
     {
         do {
@@ -562,9 +544,6 @@ class MySqlQueue extends Queue
         return $reservation_key;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function restoreFailedJobById($job_id, array $update_data = null)
     {
         $job = null;
@@ -611,9 +590,6 @@ class MySqlQueue extends Queue
         return $job;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function restoreFailedJobsByType($job_type, array $update_data = null)
     {
         if ($job_ids = $this->connection->executeFirstColumn('SELECT `id` FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` LIKE ?', "%$job_type%")) {
@@ -623,17 +599,11 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function count()
     {
         return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '`');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countByType($type1)
     {
         if (func_num_args()) {
@@ -643,17 +613,11 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countFailed()
     {
         return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::FAILED_JOBS_TABLE_NAME . '`');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countFailedByType($type1)
     {
         if (func_num_args()) {
@@ -663,9 +627,6 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reportBackgroundProcess(JobInterface $job, $process_id)
     {
         if ($job->getQueue() && get_class($job->getQueue()) == get_class($this)) {
@@ -687,9 +648,6 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBackgroundProcesses()
     {
         if ($result = $this->connection->execute('SELECT `id`, `type`, `process_id` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `reserved_at` IS NOT NULL AND `process_id` > ? ORDER BY `reserved_at`', 0)) {
@@ -699,9 +657,6 @@ class MySqlQueue extends Queue
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function checkStuckJobs()
     {
         if ($rows = $this->connection->execute('SELECT * FROM `' . self::JOBS_TABLE_NAME . '` WHERE `reserved_at` < ?', date('Y-m-d H:i:s', time() - 3600))) {
@@ -739,9 +694,6 @@ class MySqlQueue extends Queue
         return DIRECTORY_SEPARATOR != '\\' && posix_kill($process_id, 0); // Note: 0 signal does not kill the process, but kill will check for process existance
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cleanUp()
     {
         $this->connection->execute('DELETE FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `failed_at` < ?', date('Y-m-d H:i:s', strtotime('-7 days')));
@@ -750,11 +702,8 @@ class MySqlQueue extends Queue
     /**
      * @var callable[]
      */
-    private $on_job_failure = [];
+    private array $on_job_failure = [];
 
-    /**
-     * {@inheritdoc}
-     */
     public function onJobFailure(callable $callback = null)
     {
         $this->on_job_failure[] = $callback;
@@ -783,9 +732,6 @@ class MySqlQueue extends Queue
         return $data;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function clear()
     {
         $this->connection->execute('TRUNCATE TABLE `' . self::JOBS_TABLE_NAME . '`');
@@ -793,9 +739,6 @@ class MySqlQueue extends Queue
         $this->connection->execute('TRUNCATE TABLE `' . self::BATCHES_TABLE_NAME . '`');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getFailedJobReasons($job_type)
     {
         if ($result = $this->connection->execute('SELECT DISTINCT(`reason`) AS "reason" FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
@@ -805,17 +748,11 @@ class MySqlQueue extends Queue
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function unfurlType($search_for)
     {
         return $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` LIKE ?', '%' . $search_for . '%');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function failedJobStatistics()
     {
         $result = [];
@@ -830,9 +767,6 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function failedJobStatisticsByType($event_type)
     {
         $result = [];
@@ -846,9 +780,6 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countJobsByType()
     {
         $result = [];
@@ -862,9 +793,6 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createBatch(DispatcherInterface &$dispatcher, $name)
     {
         if ($name) {
@@ -876,9 +804,6 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countBatches()
     {
         return $this->connection->count(self::BATCHES_TABLE_NAME);

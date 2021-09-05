@@ -52,9 +52,6 @@ interface JobsDispatcherInterface extends DispatchJobInterface
      */
     public function &getQueue();
 
-    /**
-     * Register multiple channels.
-     */
     public function registerChannels(string ...$channels): JobsDispatcherInterface;
 
     /**

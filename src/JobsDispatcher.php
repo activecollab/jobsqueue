@@ -82,9 +82,6 @@ class JobsDispatcher implements DispatcherInterface
      */
     private $registered_channels = [QueueInterface::MAIN_CHANNEL];
 
-    /**
-     * {@inheritdoc}
-     */
     public function registerChannels(string ...$channels): JobsDispatcherInterface
     {
         foreach ($channels as $channel) {

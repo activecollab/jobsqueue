@@ -38,6 +38,10 @@
     "autoload": {
         "psr-4": {
             "ActiveCollab\\JobsQueue\\": "src",
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "ActiveCollab\\JobsQueue\\Test\\": "test/src"
         }
     }

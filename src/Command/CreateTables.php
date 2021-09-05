@@ -39,7 +39,7 @@ class CreateTables extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         try {
-            $this->dispatcher->getQueue()->createTables(...$this->getAdditionalTables());
+            $this->dispatcher->getQueue()->createTables(...$this->getAdditionalTables($input));
 
             return $this->success('Done', $input, $output);
         } catch (Exception $e) {
@@ -47,10 +47,12 @@ class CreateTables extends Command
         }
     }
 
-    private function getAdditionalTables(): array
+    private function getAdditionalTables(InputInterface $input): array
     {
-        if ($this->getContainer()->has('additional-tables-resolver')) {
-            $additional_tables_resolver = $this->getContainer()->get('additional-tables-resolver');
+        $container_key = $input->getOption('additional-tables-resolver');
+
+        if ($container_key && $this->getContainer()->has($container_key)) {
+            $additional_tables_resolver = $this->getContainer()->get($container_key);
 
             if ($additional_tables_resolver instanceof AdditionalTablesResolverInterface) {
                 return $additional_tables_resolver->getAdditionalTables();

@@ -16,14 +16,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @package ActiveCollab\JobQueue\Command
- */
 class FailedJobReasons extends Command
 {
-    /**
-     * {@inheritdoc}
-     */
     protected function configure()
     {
         parent::configure();
@@ -33,9 +27,6 @@ class FailedJobReasons extends Command
             ->setDescription('List distinct reasons why a particular job type failed');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         try {

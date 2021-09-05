@@ -20,14 +20,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @package ActiveCollab\JobQueue\Command
- */
 class RunJobs extends Command
 {
-    /**
-     * Configure command.
-     */
     protected function configure()
     {
         parent::configure();
@@ -58,11 +52,6 @@ class RunJobs extends Command
             );
     }
 
-    /**
-     * @param  InputInterface  $input
-     * @param  OutputInterface $output
-     * @return int
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $reference_time = microtime(true);

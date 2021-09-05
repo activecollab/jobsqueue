@@ -13,26 +13,25 @@ namespace ActiveCollab\JobsQueue\Command;
 
 use ActiveCollab\ContainerAccess\ContainerAccessInterface;
 use ActiveCollab\ContainerAccess\ContainerAccessInterface\Implementation as ContainerAccessInterfaceImplementation;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use DateTime;
 use DateTimeZone;
 use Doctrine\Common\Inflector\Inflector;
 use Exception;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @property \Psr\Log\LoggerInterface $log
- * @property \ActiveCollab\JobsQueue\JobsDispatcherInterface $dispatcher
+ * @property LoggerInterface $log
+ * @property JobsDispatcherInterface $dispatcher
  */
 abstract class Command extends SymfonyCommand implements ContainerAccessInterface
 {
     use ContainerAccessInterfaceImplementation;
 
-    /**
-     * Configure command.
-     */
     protected function configure()
     {
         $bits = explode('\\', get_class($this));
@@ -56,11 +55,10 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
     /**
      * Abort due to error.
      *
-     * @param string          $message
-     * @param int             $error_code
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
+     * @param  string          $message
+     * @param  int             $error_code
+     * @param  InputInterface  $input
+     * @param  OutputInterface $output
      * @return int
      */
     protected function abort($message, $error_code, InputInterface $input, OutputInterface $output)
@@ -81,10 +79,9 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
     /**
      * Show success message.
      *
-     * @param string          $message
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
+     * @param  string          $message
+     * @param  InputInterface  $input
+     * @param  OutputInterface $output
      * @return int
      */
     protected function success($message, InputInterface $input, OutputInterface $output)
@@ -102,9 +99,8 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
     }
 
     /**
-     * @param array|null      $data
-     * @param OutputInterface $output
-     *
+     * @param  array|null      $data
+     * @param  OutputInterface $output
      * @return int
      */
     protected function successJson(array $data = null, OutputInterface $output)
@@ -127,10 +123,9 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
     /**
      * Abort due to an exception.
      *
-     * @param Exception       $e
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
+     * @param  Exception       $e
+     * @param  InputInterface  $input
+     * @param  OutputInterface $output
      * @return int
      */
     protected function abortDueToException(Exception $e, InputInterface $input, OutputInterface $output)
@@ -171,8 +166,7 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
     /**
      * Get command error code from exception.
      *
-     * @param Exception $e
-     *
+     * @param  Exception $e
      * @return int
      */
     protected function exceptionToErrorCode(Exception $e)
@@ -183,10 +177,9 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
     /**
      * Return a date time instance from input argument.
      *
-     * @param InputInterface $input
-     * @param string         $argument
-     * @param string         $default
-     *
+     * @param  InputInterface $input
+     * @param  string         $argument
+     * @param  string         $default
      * @return DateTime
      */
     protected function getDateTimeFromArgument(InputInterface $input, $argument, $default)

@@ -19,6 +19,7 @@
     ],
     "require": {
         "php": ">=7.4",
+        "ext-json": "*",
         "activecollab/containeraccess": "^1.0",
         "activecollab/databaseconnection": "^3.0",
         "doctrine/inflector": "^1.1.0",

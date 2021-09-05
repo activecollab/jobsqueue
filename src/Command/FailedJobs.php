@@ -16,14 +16,8 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @package ActiveCollab\JobQueue\Command
- */
 class FailedJobs extends Command
 {
-    /**
-     * {@inheritdoc}
-     */
     protected function configure()
     {
         parent::configure();
@@ -32,9 +26,6 @@ class FailedJobs extends Command
             ->setDescription('List failed jobs grouped by type and date');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         try {

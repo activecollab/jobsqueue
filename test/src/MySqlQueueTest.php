@@ -11,6 +11,7 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
+use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
@@ -187,18 +188,14 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     /**
      * Test if invalid JSON data is treated as a reason for job to fail.
      */
-    public function testJobDataCanBeBrokenJson()
+    public function testJobDataCanBeBrokenJson(): void
     {
+        $this->expectException(QueryException::class);
+        $this->expectDeprecationMessage("CONSTRAINT `jobs_queue.data` failed");
+
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
         $this->connection->execute('UPDATE `jobs_queue` SET `data` = ? WHERE `id` = ?', 'broken JSON', 1);
-
-        $job = $this->dispatcher->getQueue()->getJobById(1);
-
-        $this->assertNull($job);
-        $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
-        $this->assertEquals(1, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue_failed`'));
-        $this->assertStringContainsString('Failed to parse JSON', $this->connection->executeFirstCell('SELECT `reason` FROM `jobs_queue_failed` WHERE `id` = ?', 1));
     }
 
     /**

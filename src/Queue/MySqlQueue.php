@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
@@ -22,28 +24,21 @@ use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-/**
- * @package ActiveCollab\JobsQueue\Queue
- */
 class MySqlQueue extends Queue
 {
     const BATCHES_TABLE_NAME = 'job_batches';
     const JOBS_TABLE_NAME = 'jobs_queue';
     const FAILED_JOBS_TABLE_NAME = 'jobs_queue_failed';
 
-    /**
-     * @var ConnectionInterface
-     */
-    private $connection;
+    private ConnectionInterface $connection;
 
-    /**
-     * @param ConnectionInterface  $connection
-     * @param bool|true            $create_tables_if_missing
-     * @param LoggerInterface|null $log
-     */
-    public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true, LoggerInterface &$log = null)
+    public function __construct(
+        ConnectionInterface $connection,
+        bool $create_tables_if_missing = true,
+        LoggerInterface $logger = null
+    )
     {
-        parent::__construct($log);
+        parent::__construct($logger);
 
         $this->connection = $connection;
 
@@ -58,8 +53,8 @@ class MySqlQueue extends Queue
 
         try {
             if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
-                if ($this->log) {
-                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::BATCHES_TABLE_NAME]);
+                if ($this->logger) {
+                    $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::BATCHES_TABLE_NAME]);
                 }
 
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::BATCHES_TABLE_NAME . "` (
@@ -73,8 +68,8 @@ class MySqlQueue extends Queue
             }
 
             if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
-                if ($this->log) {
-                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
+                if ($this->logger) {
+                    $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
                 }
 
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::JOBS_TABLE_NAME . "` (
@@ -83,7 +78,7 @@ class MySqlQueue extends Queue
                     `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
                     `batch_id` int(10) unsigned,
                     `priority` int(10) unsigned DEFAULT '0',
-                    `data` longtext CHARACTER SET utf8 NOT NULL,
+                    `data` JSON NOT NULL,
                     `available_at` datetime DEFAULT NULL,
                     `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
                     `reserved_at` datetime DEFAULT NULL,
@@ -101,8 +96,8 @@ class MySqlQueue extends Queue
             }
 
             if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
-                if ($this->log) {
-                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
+                if ($this->logger) {
+                    $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
                 }
 
                 $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::FAILED_JOBS_TABLE_NAME . "` (
@@ -110,7 +105,7 @@ class MySqlQueue extends Queue
                     `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                     `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
                     `batch_id` int(10) unsigned,
-                    `data` longtext CHARACTER SET utf8 NOT NULL,
+                    `data` JSON NOT NULL,
                     `failed_at` datetime DEFAULT NULL,
                     `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
                     PRIMARY KEY (`id`),
@@ -124,7 +119,7 @@ class MySqlQueue extends Queue
             foreach ($additional_tables as $additional_table) {
                 $this->connection->execute($additional_table);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new Exception('Error on create table execute. MySql error message:' . $e->getMessage());
         }
     }
@@ -177,8 +172,8 @@ class MySqlQueue extends Queue
 
         $job_id = $this->connection->lastInsertId();
 
-        if ($this->log) {
-            $this->log->info('Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}', [
+        if ($this->logger) {
+            $this->logger->info('Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}', [
                 'job_id' => $job_id,
                 'job_type' => get_class($job),
                 'available_at' => $available_at_timestamp,
@@ -201,8 +196,8 @@ class MySqlQueue extends Queue
     public function execute(JobInterface $job, $silent = true)
     {
         try {
-            if ($this->log) {
-                $this->log->info('Executing #{job_id} ({job_type})', [
+            if ($this->logger) {
+                $this->logger->info('Executing #{job_id} ({job_type})', [
                     'job_id' => $job->getQueueId(),
                     'job_type' => get_class($job),
                     'event' => 'job_started',
@@ -219,8 +214,8 @@ class MySqlQueue extends Queue
                 $this->deleteJob($job);
             }
 
-            if ($this->log) {
-                $this->log->info($log_message, [
+            if ($this->logger) {
+                $this->logger->info($log_message, [
                     'job_id' => $job->getQueueId(),
                     'job_type' => get_class($job),
                     'event' => 'job_executed',
@@ -228,7 +223,7 @@ class MySqlQueue extends Queue
             }
 
             return $result;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->failJob($job, $e, $silent);
         }
 
@@ -296,7 +291,7 @@ class MySqlQueue extends Queue
             if (($previous_attempts + 1) >= $job->getAttempts()) {
                 $log_arguments['event'] = 'job_failed';
 
-                if ($this->log) {
+                if ($this->logger) {
                     $log_message = 'Job #{job_id} ({job_type}) failed after {attempts} attemtps';
                     $log_arguments['attempts'] = $previous_attempts + 1;
 
@@ -304,14 +299,14 @@ class MySqlQueue extends Queue
                         $log_message .= '. Exception: {exception}';
                     }
 
-                    $this->log->error($log_message, $log_arguments);
+                    $this->logger->error($log_message, $log_arguments);
                 }
 
                 $this->logFailedJob($job, ($reason instanceof Exception ? $reason->getMessage() : ''));
             } else {
                 $log_arguments['event'] = 'job_attempt_failed';
 
-                if ($this->log) {
+                if ($this->logger) {
                     $log_message = 'Job #{job_id} ({job_type}) failed at attempt {attempt}';
                     $log_arguments['attempt'] = $previous_attempts + 1;
 
@@ -319,7 +314,7 @@ class MySqlQueue extends Queue
                         $log_message .= '. Exception: {exception}';
                     }
 
-                    $this->log->error($log_message, $log_arguments);
+                    $this->logger->error($log_message, $log_arguments);
                 }
 
                 $this->prepareForNextAttempt($job_id, $previous_attempts, $job->getDelay());

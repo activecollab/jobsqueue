@@ -36,4 +36,11 @@ class IntegratedConnectionTestCase extends TestCase
         $this->connection = new MysqliConnection($this->link);
         $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::JOBS_TABLE_NAME . '`');
     }
+
+    protected function tearDown(): void
+    {
+        $this->link->close();
+
+        parent::tearDown();
+    }
 }

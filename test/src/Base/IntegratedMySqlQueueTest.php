@@ -50,8 +50,6 @@ abstract class IntegratedMySqlQueueTest extends IntegratedConnectionTestCase
         $this->connection->dropTable(MySqlQueue::FAILED_JOBS_TABLE_NAME);
         $this->connection->dropTable('email_log');
 
-        $this->link->close();
-
         parent::tearDown();
     }
 

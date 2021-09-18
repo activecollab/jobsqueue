@@ -9,27 +9,18 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use Psr\Log\LoggerInterface;
 
-/**
- * @package ActiveCollab\JobsQueue\Queue
- */
 abstract class Queue implements QueueInterface
 {
-    /**
-     * @var null|LoggerInterface
-     */
-    protected $log;
+    protected ?LoggerInterface $logger;
 
-    /**
-     * @param LoggerInterface|null $log
-     */
-    public function __construct(LoggerInterface &$log = null)
+    public function __construct(LoggerInterface $logger = null)
     {
-        if ($log) {
-            $this->log = $log;
-        }
+        $this->logger = $logger;
     }
 }

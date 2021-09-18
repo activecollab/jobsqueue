@@ -9,8 +9,9 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ActiveCollab\JobQueue\Test\Commands;
+namespace ActiveCollab\JobsQueue\Test\Commands;
 
+use ActiveCollab\JobsQueue\Test\Base\IntegratedContainerTestCase;
 use ActiveCollab\JobsQueue\Command\CreateTables;
 use ActiveCollab\JobsQueue\Command\Dequeue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
@@ -18,10 +19,7 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
 
-/**
- * @package ActiveCollab\JobQueue\Test\Commands
- */
-class DequeueTest extends TestCase
+class DequeueTest extends IntegratedContainerTestCase
 {
     /**
      * @var CreateTables

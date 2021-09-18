@@ -11,10 +11,8 @@
 
 declare(strict_types=1);
 
-namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Queue\PropertyExtractors;
 
-use PHPUnit\Framework\TestCase as BaseTestCase;
-
-abstract class TestCase extends BaseTestCase
+class IntPropertyExtractor extends PropertyExtractor
 {
 }

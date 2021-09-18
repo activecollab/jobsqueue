@@ -9,16 +9,16 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Signals\ProcessLaunched;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher;
 
-/**
- * @package ActiveCollab\JobsQueue\Test
- */
-class BackgroundProcessTest extends AbstractMySqlQueueTest
+class BackgroundProcessTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test if new jobs have an empty process_id value.
@@ -28,7 +28,16 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
         $job_id = $this->dispatcher->dispatch(new ProcessLauncher());
 
         $this->assertSame(1, $job_id);
-        $this->assertSame(0, $this->connection->executeFirstCell('SELECT `process_id` FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id));
+        $this->assertSame(
+            0,
+            $this->connection->executeFirstCell(
+                sprintf(
+                    'SELECT `process_id` FROM `%s` WHERE `id` = ?',
+                    MySqlQueue::JOBS_TABLE_NAME
+                ),
+                $job_id
+            )
+        );
         $this->assertEmpty($this->dispatcher->getQueue()->getBackgroundProcesses());
     }
 
@@ -44,7 +53,7 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
 
         $next_in_line = $this->dispatcher->getQueue()->nextInLine();
 
-        $this->assertInstanceOf('\ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher', $next_in_line);
+        $this->assertInstanceOf(ProcessLauncher::class, $next_in_line);
 
         /** @var ProcessLaunched $result */
         $result = $this->dispatcher->getQueue()->execute($next_in_line);
@@ -73,18 +82,30 @@ class BackgroundProcessTest extends AbstractMySqlQueueTest
         $result = $this->dispatcher->getQueue()->execute($next_in_line);
 
         $this->assertInstanceOf(ProcessLaunched::class, $result);
-        $this->assertEquals($result->getProcessId(), ProcessLauncher::TEST_PROCESS_ID);
+        $this->assertEquals(ProcessLauncher::TEST_PROCESS_ID, $result->getProcessId());
 
-        $this->assertSame(ProcessLauncher::TEST_PROCESS_ID, $this->connection->executeFirstCell('SELECT `process_id` FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id));
+        $this->assertSame(
+            ProcessLauncher::TEST_PROCESS_ID,
+            $this->connection->executeFirstCell(
+                sprintf(
+                    'SELECT `process_id` FROM `%s` WHERE `id` = ?',
+                    MySqlQueue::JOBS_TABLE_NAME
+                ),
+                $job_id
+            )
+        );
 
         $background_processes = $this->dispatcher->getQueue()->getBackgroundProcesses();
 
         $this->assertIsArray($background_processes);
         $this->assertCount(1, $background_processes);
-        $this->assertSame([
-            'id' => 1,
-            'type' => get_class($next_in_line),
-            'process_id' => ProcessLauncher::TEST_PROCESS_ID,
-        ], $background_processes[0]);
+        $this->assertSame(
+            [
+                'id' => 1,
+                'type' => get_class($next_in_line),
+                'process_id' => ProcessLauncher::TEST_PROCESS_ID,
+            ],
+            $background_processes[0]
+        );
     }
 }

@@ -9,164 +9,144 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Batches\MySqlBatch;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\IntPropertyExtractor;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\PropertyExtractorInterface;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\StringPropertyExtractor;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-/**
- * @package ActiveCollab\JobsQueue\Queue
- */
 class MySqlQueue extends Queue
 {
     const BATCHES_TABLE_NAME = 'job_batches';
     const JOBS_TABLE_NAME = 'jobs_queue';
     const FAILED_JOBS_TABLE_NAME = 'jobs_queue_failed';
 
-    /**
-     * @var ConnectionInterface
-     */
-    private $connection;
+    const TABLE_NAMES = [
+        self::BATCHES_TABLE_NAME,
+        self::JOBS_TABLE_NAME,
+        self::FAILED_JOBS_TABLE_NAME,
+    ];
+
+    private ConnectionInterface $connection;
 
     /**
-     * @param ConnectionInterface  $connection
-     * @param bool|true            $create_tables_if_missing
-     * @param LoggerInterface|null $log
+     * @var PropertyExtractorInterface[]
      */
-    public function __construct(ConnectionInterface &$connection, $create_tables_if_missing = true, LoggerInterface &$log = null)
+    private array $property_extractors;
+
+    public function __construct(
+        ConnectionInterface $connection,
+        array $additional_extractors = [],
+        bool $create_tables_if_missing = true,
+        LoggerInterface $logger = null
+    )
     {
-        parent::__construct($log);
+        parent::__construct($logger);
 
         $this->connection = $connection;
+        $this->property_extractors = array_merge(
+            [new IntPropertyExtractor('priority')],
+            $additional_extractors,
+        );
 
         if ($create_tables_if_missing) {
             $this->createTables();
         }
     }
 
-    public function createTables(...$additional_tables)
+    public function createTables(string ...$additional_tables): void
     {
-        $table_names = $this->connection->getTableNames();
+        $existing_table_names = $this->connection->getTableNames();
 
         try {
-            if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
-                if ($this->log) {
-                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::BATCHES_TABLE_NAME]);
+            foreach (self::TABLE_NAMES as $table_name) {
+                if (!in_array($table_name, $existing_table_names)) {
+                    if ($this->logger) {
+                        $this->logger->info(
+                            'Creating {table_name} MySQL queue table',
+                            [
+                                'table_name' => $table_name,
+                            ]
+                        );
+                    }
+
+                    $this->connection->execute(
+                        file_get_contents(
+                            sprintf(__DIR__ . '/MySqlQueue/table.%s.sql', $table_name)
+                        )
+                    );
                 }
-
-                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::BATCHES_TABLE_NAME . "` (
-                    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-                    `name` varchar(191) NOT NULL DEFAULT '',
-                    `jobs_count` int(10) unsigned NOT NULL DEFAULT '0',
-                    `created_at` datetime DEFAULT NULL,
-                    PRIMARY KEY (`id`),
-                    KEY (`created_at`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-            }
-
-            if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
-                if ($this->log) {
-                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
-                }
-
-                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::JOBS_TABLE_NAME . "` (
-                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                    `batch_id` int(10) unsigned,
-                    `priority` int(10) unsigned DEFAULT '0',
-                    `data` longtext CHARACTER SET utf8 NOT NULL,
-                    `available_at` datetime DEFAULT NULL,
-                    `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-                    `reserved_at` datetime DEFAULT NULL,
-                    `attempts` smallint(6) DEFAULT '0',
-                    `process_id` int(10) unsigned DEFAULT '0',
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `reservation_key` (`reservation_key`),
-                    KEY `type` (`type`),
-                    KEY `channel` (`channel`),
-                    KEY `batch_id` (`batch_id`),
-                    KEY `priority` (`priority`),
-                    KEY `available_at` (`available_at`),
-                    KEY `reserved_at` (`reserved_at`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
-            }
-
-            if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
-                if ($this->log) {
-                    $this->log->info('Creating {table_name} MySQL queue table', ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
-                }
-
-                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::FAILED_JOBS_TABLE_NAME . "` (
-                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                    `batch_id` int(10) unsigned,
-                    `data` longtext CHARACTER SET utf8 NOT NULL,
-                    `failed_at` datetime DEFAULT NULL,
-                    `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                    PRIMARY KEY (`id`),
-                    KEY `type` (`type`),
-                    KEY `channel` (`channel`),
-                    KEY `batch_id` (`batch_id`),
-                    KEY `failed_at` (`failed_at`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
             }
 
             foreach ($additional_tables as $additional_table) {
                 $this->connection->execute($additional_table);
             }
-        } catch (\Exception $e) {
+
+            $after_column = 'data';
+
+            foreach ($this->property_extractors as $property_extractor) {
+                if (!$this->connection->fieldExists(self::JOBS_TABLE_NAME, $property_extractor->getName())) {
+                    $this->connection->execute(
+                        sprintf(
+                            'ALTER TABLE `%s` ADD %s AFTER `%s`',
+                            self::JOBS_TABLE_NAME,
+                            $this->prepareExtractionDefinition($property_extractor),
+                            $after_column
+                        )
+                    );
+
+                    $after_column = $property_extractor->getName();
+                }
+            }
+        } catch (Exception $e) {
             throw new Exception('Error on create table execute. MySql error message:' . $e->getMessage());
         }
     }
 
-    /**
-     * @var array
-     */
-    private $extract_properties_to_fields = ['priority'];
-
-    /**
-     * Extract property value to field value.
-     *
-     * @param string $property
-     */
-    public function extractPropertyToField($property)
+    private function prepareExtractionDefinition(PropertyExtractorInterface $property_extractor): string
     {
-        if (!in_array($property, $this->extract_properties_to_fields)) {
-            $this->extract_properties_to_fields[] = $property;
+        return sprintf(
+            "`%s` %s GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '%s'))) STORED",
+            $property_extractor->getName(),
+            $this->getExtractorTypeDefinition($property_extractor),
+            $property_extractor->getDataPath(),
+        );
+    }
+
+    private function getExtractorTypeDefinition(PropertyExtractorInterface $property_extractor): string
+    {
+        if ($property_extractor instanceof StringPropertyExtractor) {
+            return sprintf('VARCHAR(%d)', $property_extractor->getLength());
+        } elseif ($property_extractor instanceof IntPropertyExtractor) {
+            return 'INT UNSIGNED';
         }
+
+        throw new RuntimeException(sprintf('Unsupported extractor type %s.', get_class($property_extractor)));
     }
 
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         $job_data = $job->getData();
 
-        $extract = [];
-
-        foreach ($this->extract_properties_to_fields as $property) {
-            $extract[ '`' . $property . '`' ] = $this->connection->escapeValue($job->getData()[ $property ]);
-        }
-
-        $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
-        $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
-
         $available_at_timestamp = date('Y-m-d H:i:s', time() + $job->getFirstJobDelay());
 
         $this->connection->execute(
             sprintf(
-                'INSERT INTO `%s` (`type`, `channel`, `batch_id`, `data`, `available_at`%s) VALUES (?, ?, ?, ?, ?%s)', 
+                'INSERT INTO `%s` (`type`, `channel`, `batch_id`, `data`, `available_at`) VALUES (?, ?, ?, ?, ?)',
                 self::JOBS_TABLE_NAME,
-                $extract_fields,
-                $extract_values
             ),
             get_class($job),
             $channel,
@@ -177,12 +157,15 @@ class MySqlQueue extends Queue
 
         $job_id = $this->connection->lastInsertId();
 
-        if ($this->log) {
-            $this->log->info('Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}', [
-                'job_id' => $job_id,
-                'job_type' => get_class($job),
-                'available_at' => $available_at_timestamp,
-            ]);
+        if ($this->logger) {
+            $this->logger->info(
+                'Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}',
+                [
+                    'job_id' => $job_id,
+                    'job_type' => get_class($job),
+                    'available_at' => $available_at_timestamp,
+                ]
+            );
         }
 
         return $job_id;
@@ -201,8 +184,8 @@ class MySqlQueue extends Queue
     public function execute(JobInterface $job, $silent = true)
     {
         try {
-            if ($this->log) {
-                $this->log->info('Executing #{job_id} ({job_type})', [
+            if ($this->logger) {
+                $this->logger->info('Executing #{job_id} ({job_type})', [
                     'job_id' => $job->getQueueId(),
                     'job_type' => get_class($job),
                     'event' => 'job_started',
@@ -219,8 +202,8 @@ class MySqlQueue extends Queue
                 $this->deleteJob($job);
             }
 
-            if ($this->log) {
-                $this->log->info($log_message, [
+            if ($this->logger) {
+                $this->logger->info($log_message, [
                     'job_id' => $job->getQueueId(),
                     'job_type' => get_class($job),
                     'event' => 'job_executed',
@@ -228,7 +211,7 @@ class MySqlQueue extends Queue
             }
 
             return $result;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->failJob($job, $e, $silent);
         }
 
@@ -296,7 +279,7 @@ class MySqlQueue extends Queue
             if (($previous_attempts + 1) >= $job->getAttempts()) {
                 $log_arguments['event'] = 'job_failed';
 
-                if ($this->log) {
+                if ($this->logger) {
                     $log_message = 'Job #{job_id} ({job_type}) failed after {attempts} attemtps';
                     $log_arguments['attempts'] = $previous_attempts + 1;
 
@@ -304,14 +287,14 @@ class MySqlQueue extends Queue
                         $log_message .= '. Exception: {exception}';
                     }
 
-                    $this->log->error($log_message, $log_arguments);
+                    $this->logger->error($log_message, $log_arguments);
                 }
 
                 $this->logFailedJob($job, ($reason instanceof Exception ? $reason->getMessage() : ''));
             } else {
                 $log_arguments['event'] = 'job_attempt_failed';
 
-                if ($this->log) {
+                if ($this->logger) {
                     $log_message = 'Job #{job_id} ({job_type}) failed at attempt {attempt}';
                     $log_arguments['attempt'] = $previous_attempts + 1;
 
@@ -319,7 +302,7 @@ class MySqlQueue extends Queue
                         $log_message .= '. Exception: {exception}';
                     }
 
-                    $this->log->error($log_message, $log_arguments);
+                    $this->logger->error($log_message, $log_arguments);
                 }
 
                 $this->prepareForNextAttempt($job_id, $previous_attempts, $job->getDelay());
@@ -780,11 +763,16 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    public function countJobsByType()
+    public function countJobsByType(): array
     {
         $result = [];
-        $type_rows = $this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::JOBS_TABLE_NAME . '` GROUP BY `type`');
-        if (count($type_rows)) {
+        $type_rows = $this->connection->execute(
+            sprintf(
+                'SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `%s` GROUP BY `type`',
+                self::JOBS_TABLE_NAME
+            )
+        );
+        if (!empty($type_rows)) {
             foreach ($type_rows as $row) {
                 $result[ $row['type'] ] = $row['queued_jobs_count'];
             }
@@ -793,18 +781,29 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    public function createBatch(JobsDispatcherInterface &$dispatcher, $name)
+    public function createBatch(JobsDispatcherInterface $dispatcher, string $name): BatchInterface
     {
-        if ($name) {
-            $this->connection->execute('INSERT INTO `' . self::BATCHES_TABLE_NAME . '` (`name`, `created_at`) VALUES (?, UTC_TIMESTAMP())', $name);
-
-            return new MySqlBatch($dispatcher, $this->connection, $this->connection->lastInsertId(), $name);
-        } else {
+        if (!$name) {
             throw new InvalidArgumentException('Batch name is required');
         }
+
+        $this->connection->execute(
+            sprintf(
+                'INSERT INTO `%s` (`name`, `created_at`) VALUES (?, UTC_TIMESTAMP())',
+                self::BATCHES_TABLE_NAME
+            ),
+            $name
+        );
+
+        return new MySqlBatch(
+            $dispatcher,
+            $this->connection,
+            $this->connection->lastInsertId(),
+            $name
+        );
     }
 
-    public function countBatches()
+    public function countBatches(): int
     {
         return $this->connection->count(self::BATCHES_TABLE_NAME);
     }

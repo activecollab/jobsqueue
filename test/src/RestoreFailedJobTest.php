@@ -9,13 +9,17 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Test;
 
+use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use RuntimeException;
 
-class RestoreFailedJobTest extends AbstractMySqlQueueTest
+class RestoreFailedJobTest extends IntegratedMySqlQueueTest
 {
     public function setUp(): void
     {
@@ -45,15 +49,6 @@ class RestoreFailedJobTest extends AbstractMySqlQueueTest
 
         $this->connection->execute('UPDATE `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` SET `type` = ? WHERE `id` = ?', 'ThisClassDoesNotExist', 1);
         $this->dispatcher->getQueue()->restoreFailedJobById(1);
-    }
-
-    public function testExceptionOnInvalidJson()
-    {
-        $this->expectException(RuntimeException::class);
-
-        $this->connection->execute('UPDATE `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` SET `data` = ? WHERE `id` = ?', '{invalidJSON', 1);
-
-        $this->dispatcher->getQueue()->restoreFailedJobById(1234);
     }
 
     /**

@@ -12,13 +12,14 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use Exception;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
  */
-class OnJobFailedCallbacksTest extends AbstractMySqlQueueTest
+class OnJobFailedCallbacksTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test to check if we can set multiple failure callbacks.

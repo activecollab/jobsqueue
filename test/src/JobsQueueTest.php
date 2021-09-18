@@ -12,6 +12,7 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\TestQueue;
+use ActiveCollab\JobsQueue\Test\Base\TestCase;
 use Countable;
 
 /**

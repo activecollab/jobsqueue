@@ -9,8 +9,11 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ActiveCollab\JobQueue\Test\Commands;
+declare(strict_types=1);
 
+namespace ActiveCollab\JobsQueue\Test\Commands;
+
+use ActiveCollab\JobsQueue\Test\Base\IntegratedContainerTestCase;
 use ActiveCollab\JobsQueue\Command\FailedJobReasons;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
@@ -19,10 +22,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-/**
- * @package ActiveCollab\JobQueue\Test\Commands
- */
-class FailedJobReasonsTest extends TestCase
+class FailedJobReasonsTest extends IntegratedContainerTestCase
 {
     /**
      * @var FailedJobReasons

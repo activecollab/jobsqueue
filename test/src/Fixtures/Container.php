@@ -15,7 +15,7 @@ use Interop\Container\ContainerInterface;
 use Pimple\Container as BaseContainer;
 
 /**
- * @package ActiveCollab\JobQueue\Test\Commands\Fixtures
+ * @package ActiveCollab\JobsQueue\Test\Commands\Fixtures
  */
 class Container extends BaseContainer implements ContainerInterface
 {

@@ -9,23 +9,39 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\JobsDispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\IntPropertyExtractor;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\PropertyExtractorInterface;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\StringPropertyExtractor;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedConnectionTestCase;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Test\Jobs\WebhookUrl;
 
-/**
- * @package ActiveCollab\JobsQueue\Test
- */
-class ExtractPropertyTest extends AbstractMySqlQueueTest
+class ExtractPropertyTest extends IntegratedConnectionTestCase
 {
     /**
      * Test to confirm that priority is extracted field by default.
      */
-    public function testPriorityIsExtractedByDefault()
+    public function testPriorityIsExtractedByDefault(): void
     {
-        $job_id = $this->dispatcher->dispatch(new Inc(['number' => 12, 'priority' => Job::HAS_PRIORITY]));
+        $dispatcher = $this->createDispatcher();
+
+        $job_id = $dispatcher->dispatch(
+            new Inc(
+                [
+                    'number' => 12,
+                    'priority' => Job::HAS_PRIORITY
+                ]
+            )
+        );
         $this->assertEquals(1, $job_id);
 
         $job_row = $this->connection->executeFirstRow('SELECT * FROM `jobs_queue` WHERE `id` = ?', $job_id);
@@ -33,29 +49,70 @@ class ExtractPropertyTest extends AbstractMySqlQueueTest
         $this->assertEquals(Job::HAS_PRIORITY, (integer) $job_row['priority']);
     }
 
-    public function testExceptionBecauseFieldDoesNotExist()
+    public function testWillPrepareFieldForExtractor(): void
     {
-        $this->expectException(QueryException::class);
+        $this->createDispatcher(
+            new IntPropertyExtractor('number'),
+        );
 
-        $this->dispatcher->getQueue()->extractPropertyToField('number');
-
-        $this->dispatcher->dispatch(new Inc(['number' => 12]));
+        $this->assertTrue($this->connection->fieldExists('jobs_queue', 'number'));
     }
 
     /**
      * Test if property is extracted to field properly.
      */
-    public function testExtractPropertyToField()
+    public function testExtractIntPropertyToField(): void
     {
-        $this->connection->execute("ALTER TABLE `jobs_queue` ADD `number` INT(10) UNSIGNED NULL DEFAULT '0' AFTER `type`");
+        $dispatcher = $this->createDispatcher(
+            new IntPropertyExtractor('number'),
+        );
 
-        $this->dispatcher->getQueue()->extractPropertyToField('number');
-
-        $job_id = $this->dispatcher->dispatch(new Inc(['number' => 12]));
+        $job_id = $dispatcher->dispatch(new Inc(['number' => 12]));
         $this->assertEquals(1, $job_id);
 
         $job_row = $this->connection->executeFirstRow('SELECT * FROM `jobs_queue` WHERE `id` = ?', $job_id);
 
         $this->assertEquals(12, (integer) $job_row['number']);
+    }
+
+    public function testExtractStringPropertyToField(): void
+    {
+        $dispatcher = $this->createDispatcher(
+            new StringPropertyExtractor('webhook_url'),
+        );
+
+        $job_id = $dispatcher->dispatch(new WebhookUrl(['webhook_url' => 'https://example.com']));
+        $this->assertEquals(1, $job_id);
+
+        $job_row = $this->connection->executeFirstRow('SELECT * FROM `jobs_queue` WHERE `id` = ?', $job_id);
+
+        $this->assertEquals('https://example.com', $job_row['webhook_url']);
+    }
+
+    public function testCreateTableWillAddMissingColumns(): void
+    {
+        $additional_extractors = [
+            new StringPropertyExtractor('webhook_url')
+        ];
+
+        $this->createDispatcher(...$additional_extractors);
+
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'priority'));
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'webhook_url'));
+
+        $this->connection->dropField(MySqlQueue::JOBS_TABLE_NAME, 'priority');
+        $this->connection->dropField(MySqlQueue::JOBS_TABLE_NAME, 'webhook_url');
+
+        new MySqlQueue($this->connection, $additional_extractors);
+
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'priority'));
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'webhook_url'));
+    }
+
+    private function createDispatcher(
+        PropertyExtractorInterface ...$additional_extractors
+    ): JobsDispatcherInterface
+    {
+        return new JobsDispatcher(new MySqlQueue($this->connection, $additional_extractors));
     }
 }

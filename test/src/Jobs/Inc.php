@@ -14,9 +14,6 @@ namespace ActiveCollab\JobsQueue\Test\Jobs;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use InvalidArgumentException;
 
-/**
- * @package ActiveCollab\JobsQueue\Test\Jobs
- */
 class Inc extends Job
 {
     /**

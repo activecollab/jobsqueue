@@ -13,13 +13,14 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Batches\Batch;
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use RuntimeException;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
  */
-class BatchesTest extends AbstractMySqlQueueTest
+class BatchesTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test if job batches table exists.

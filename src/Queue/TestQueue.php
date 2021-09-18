@@ -11,6 +11,7 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
@@ -174,7 +175,7 @@ class TestQueue extends Queue
         $this->on_job_failure[] = $callback;
     }
 
-    public function createTables(...$additional_tables)
+    public function createTables(string ...$additional_tables): void
     {
     }
 
@@ -201,17 +202,17 @@ class TestQueue extends Queue
         return [];
     }
 
-    public function countJobsByType()
+    public function countJobsByType(): array
     {
         return [];
     }
 
-    public function createBatch(JobsDispatcherInterface &$dispatcher, $name)
+    public function createBatch(JobsDispatcherInterface $dispatcher, string $name): BatchInterface
     {
         throw new LogicException('Method not implemented in test queue');
     }
 
-    public function countBatches()
+    public function countBatches(): int
     {
         return 0;
     }

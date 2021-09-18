@@ -34,6 +34,12 @@ class MySqlQueue extends Queue
     const JOBS_TABLE_NAME = 'jobs_queue';
     const FAILED_JOBS_TABLE_NAME = 'jobs_queue_failed';
 
+    const TABLE_NAMES = [
+        self::BATCHES_TABLE_NAME,
+        self::JOBS_TABLE_NAME,
+        self::FAILED_JOBS_TABLE_NAME,
+    ];
+
     private ConnectionInterface $connection;
 
     /**
@@ -61,116 +67,53 @@ class MySqlQueue extends Queue
         }
     }
 
-    public function createTables(string ...$additional_tables)
+    public function createTables(string ...$additional_tables): void
     {
-        $table_names = $this->connection->getTableNames();
+        $existing_table_names = $this->connection->getTableNames();
 
         try {
-            if (!in_array(self::BATCHES_TABLE_NAME, $table_names)) {
-                if ($this->logger) {
-                    $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::BATCHES_TABLE_NAME]);
-                }
-
-                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::BATCHES_TABLE_NAME . "` (
-                    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-                    `name` varchar(191) NOT NULL DEFAULT '',
-                    `jobs_count` int(10) unsigned NOT NULL DEFAULT '0',
-                    `created_at` datetime DEFAULT NULL,
-                    PRIMARY KEY (`id`),
-                    KEY (`created_at`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-            }
-
-            if (!in_array(self::JOBS_TABLE_NAME, $table_names)) {
-                if ($this->logger) {
-                    $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
-                }
-
-                $property_extractions = implode(",\n", $this->prepareExtractionDefinitions());
-
-                if (!empty($property_extractions)) {
-                    $property_extractions .= ",\n";
-                }
-
-                $this->connection->execute(
-                    sprintf(
-                        "CREATE TABLE IF NOT EXISTS `%s` (
-                            `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                            `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                            `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                            `batch_id` int(10) unsigned,
-                            `data` JSON NOT NULL,
-                            %s
-                            `available_at` datetime DEFAULT NULL,
-                            `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-                            `reserved_at` datetime DEFAULT NULL,
-                            `attempts` smallint(6) DEFAULT '0',
-                            `process_id` int(10) unsigned DEFAULT '0',
-                            PRIMARY KEY (`id`),
-                            UNIQUE KEY `reservation_key` (`reservation_key`),
-                            KEY `type` (`type`),
-                            KEY `channel` (`channel`),
-                            KEY `batch_id` (`batch_id`),
-                            KEY `priority` (`priority`),
-                            KEY `available_at` (`available_at`),
-                            KEY `reserved_at` (`reserved_at`)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
-                        self::JOBS_TABLE_NAME,
-                        $property_extractions
-                    )
-                );
-            } else {
-                foreach ($this->property_extractors as $property_extractor) {
-                    if (!$this->connection->fieldExists(self::JOBS_TABLE_NAME, $property_extractor->getName())) {
-                        $this->connection->execute(
-                            sprintf(
-                                'ALTER TABLE `%s` ADD %s',
-                                self::JOBS_TABLE_NAME,
-                                $this->prepareExtractionDefinition($property_extractor)
-                            )
+            foreach (self::TABLE_NAMES as $table_name) {
+                if (!in_array($table_name, $existing_table_names)) {
+                    if ($this->logger) {
+                        $this->logger->info(
+                            'Creating {table_name} MySQL queue table',
+                            [
+                                'table_name' => $table_name,
+                            ]
                         );
                     }
-                }
-            }
 
-            if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
-                if ($this->logger) {
-                    $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::FAILED_JOBS_TABLE_NAME]);
+                    $this->connection->execute(
+                        file_get_contents(
+                            sprintf(__DIR__ . '/MySqlQueue/table.%s.sql', $table_name)
+                        )
+                    );
                 }
-
-                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::FAILED_JOBS_TABLE_NAME . "` (
-                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                    `batch_id` int(10) unsigned,
-                    `data` JSON NOT NULL,
-                    `failed_at` datetime DEFAULT NULL,
-                    `reason` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                    PRIMARY KEY (`id`),
-                    KEY `type` (`type`),
-                    KEY `channel` (`channel`),
-                    KEY `batch_id` (`batch_id`),
-                    KEY `failed_at` (`failed_at`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
             }
 
             foreach ($additional_tables as $additional_table) {
                 $this->connection->execute($additional_table);
             }
+
+            $after_column = 'data';
+
+            foreach ($this->property_extractors as $property_extractor) {
+                if (!$this->connection->fieldExists(self::JOBS_TABLE_NAME, $property_extractor->getName())) {
+                    $this->connection->execute(
+                        sprintf(
+                            'ALTER TABLE `%s` ADD %s AFTER `%s`',
+                            self::JOBS_TABLE_NAME,
+                            $this->prepareExtractionDefinition($property_extractor),
+                            $after_column
+                        )
+                    );
+
+                    $after_column = $property_extractor->getName();
+                }
+            }
         } catch (Exception $e) {
             throw new Exception('Error on create table execute. MySql error message:' . $e->getMessage());
         }
-    }
-
-    private function prepareExtractionDefinitions(): array
-    {
-        $result = [];
-
-        foreach ($this->property_extractors as $property_extractor) {
-            $result[] = $this->prepareExtractionDefinition($property_extractor);
-        }
-
-        return $result;
     }
 
     private function prepareExtractionDefinition(PropertyExtractorInterface $property_extractor): string
@@ -820,7 +763,7 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    public function countJobsByType()
+    public function countJobsByType(): array
     {
         $result = [];
         $type_rows = $this->connection->execute(

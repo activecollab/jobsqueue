@@ -204,10 +204,10 @@ interface QueueInterface extends Countable
     /**
      * @return array
      */
-    public function countJobsByType();
+    public function countJobsByType(): array;
 
     /**
      * Create one or more tables.
      */
-    public function createTables(string ...$additional_tables);
+    public function createTables(string ...$additional_tables): void;
 }

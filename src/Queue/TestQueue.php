@@ -175,7 +175,7 @@ class TestQueue extends Queue
         $this->on_job_failure[] = $callback;
     }
 
-    public function createTables(string ...$additional_tables)
+    public function createTables(string ...$additional_tables): void
     {
     }
 
@@ -202,7 +202,7 @@ class TestQueue extends Queue
         return [];
     }
 
-    public function countJobsByType()
+    public function countJobsByType(): array
     {
         return [];
     }

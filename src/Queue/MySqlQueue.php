@@ -124,17 +124,14 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * @var array
-     */
-    private $extract_properties_to_fields = ['priority'];
+    private array $extract_properties_to_fields = [
+        'priority'
+    ];
 
     /**
      * Extract property value to field value.
-     *
-     * @param string $property
      */
-    public function extractPropertyToField($property)
+    public function extractPropertyToField(string $property): void
     {
         if (!in_array($property, $this->extract_properties_to_fields)) {
             $this->extract_properties_to_fields[] = $property;

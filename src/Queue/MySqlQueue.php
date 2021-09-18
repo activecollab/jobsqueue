@@ -21,6 +21,7 @@ use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use ActiveCollab\JobsQueue\Queue\PropertyExtractors\IntPropertyExtractor;
 use ActiveCollab\JobsQueue\Queue\PropertyExtractors\PropertyExtractorInterface;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\StringPropertyExtractor;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
 use InvalidArgumentException;
@@ -149,8 +150,9 @@ class MySqlQueue extends Queue
 
         foreach ($this->extract_properties_to_fields as $field) {
             $result[] = sprintf(
-                "`%s` INT UNSIGNED GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '%s'))) STORED,",
+                "`%s` %s GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '%s'))) STORED,",
                 $field->getName(),
+                $this->getExtractorTypeDefinition($field),
                 $field->getDataPath(),
             );
         }
@@ -158,14 +160,15 @@ class MySqlQueue extends Queue
         return implode("\n", $result);
     }
 
-    /**
-     * Extract property value to field value.
-     */
-    public function extractPropertyToField(string $property): void
+    private function getExtractorTypeDefinition(PropertyExtractorInterface $extractor): string
     {
-        if (!in_array($property, $this->extract_properties_to_fields)) {
-            $this->extract_properties_to_fields[] = $property;
+        if ($extractor instanceof StringPropertyExtractor) {
+            return sprintf('VARCHAR(%d)', $extractor->getLength());
+        } elseif ($extractor instanceof IntPropertyExtractor) {
+            return 'INT UNSIGNED';
         }
+
+        throw new RuntimeException(sprintf('Unsupported extractor type %s.', get_class($extractor)));
     }
 
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)

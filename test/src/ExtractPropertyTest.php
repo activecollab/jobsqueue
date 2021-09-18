@@ -20,8 +20,10 @@ use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\PropertyExtractors\IntPropertyExtractor;
 use ActiveCollab\JobsQueue\Queue\PropertyExtractors\PropertyExtractorInterface;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\StringPropertyExtractor;
 use ActiveCollab\JobsQueue\Test\Base\IntegratedConnectionTestCase;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
+use ActiveCollab\JobsQueue\Test\Jobs\WebhookUrl;
 
 class ExtractPropertyTest extends IntegratedConnectionTestCase
 {
@@ -71,6 +73,20 @@ class ExtractPropertyTest extends IntegratedConnectionTestCase
         $job_row = $this->connection->executeFirstRow('SELECT * FROM `jobs_queue` WHERE `id` = ?', $job_id);
 
         $this->assertEquals(12, (integer) $job_row['number']);
+    }
+
+    public function testExtractStringPropertyToField(): void
+    {
+        $dispatcher = $this->createDispatcher(
+            new StringPropertyExtractor('webhook_url'),
+        );
+
+        $job_id = $dispatcher->dispatch(new WebhookUrl(['webhook_url' => 'https://example.com']));
+        $this->assertEquals(1, $job_id);
+
+        $job_row = $this->connection->executeFirstRow('SELECT * FROM `jobs_queue` WHERE `id` = ?', $job_id);
+
+        $this->assertEquals('https://example.com', $job_row['webhook_url']);
     }
 
     private function createDispatcher(

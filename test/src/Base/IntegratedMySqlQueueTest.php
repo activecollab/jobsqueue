@@ -13,40 +13,22 @@ declare(strict_types=1);
 
 namespace ActiveCollab\JobsQueue\Test\Base;
 
-use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use ActiveCollab\JobsQueue\Test\Base\TestCase;
 use Exception;
-use mysqli;
-use RuntimeException;
 
-abstract class IntegratedMySqlQueueTest extends TestCase
+abstract class IntegratedMySqlQueueTest extends IntegratedConnectionTestCase
 {
-    protected mysqli $link;
-    protected MysqliConnection $connection;
     protected QueueInterface $queue;
     protected JobsDispatcher $dispatcher;
     protected ?string $last_failed_job = null;
     protected ?string $last_failure_message = null;
 
-    /**
-     * Set up test environment.
-     */
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->link = new mysqli('localhost', 'root', '', 'activecollab_jobs_queue_test');
-
-        if ($this->link->connect_error) {
-            throw new RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);
-        }
-
-        $this->connection = new MysqliConnection($this->link);
-        $this->connection->execute('DROP TABLE IF EXISTS `' . MySqlQueue::JOBS_TABLE_NAME . '`');
 
         $this->queue = new MySqlQueue($this->connection);
         $this->queue->onJobFailure(

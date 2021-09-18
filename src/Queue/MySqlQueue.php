@@ -72,27 +72,33 @@ class MySqlQueue extends Queue
                     $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
                 }
 
-                $this->connection->execute('CREATE TABLE IF NOT EXISTS `' . self::JOBS_TABLE_NAME . "` (
-                    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-                    `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                    `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
-                    `batch_id` int(10) unsigned,
-                    `priority` int(10) unsigned DEFAULT '0',
-                    `data` JSON NOT NULL,
-                    `available_at` datetime DEFAULT NULL,
-                    `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-                    `reserved_at` datetime DEFAULT NULL,
-                    `attempts` smallint(6) DEFAULT '0',
-                    `process_id` int(10) unsigned DEFAULT '0',
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `reservation_key` (`reservation_key`),
-                    KEY `type` (`type`),
-                    KEY `channel` (`channel`),
-                    KEY `batch_id` (`batch_id`),
-                    KEY `priority` (`priority`),
-                    KEY `available_at` (`available_at`),
-                    KEY `reserved_at` (`reserved_at`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+                $this->connection->execute(
+                    sprintf(
+                        "CREATE TABLE IF NOT EXISTS `%s` (
+                            `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                            `type` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT '',
+                            `channel` varchar(191) CHARACTER SET utf8 NOT NULL DEFAULT 'main',
+                            `batch_id` int(10) unsigned,
+                            `data` JSON NOT NULL,
+                            %s
+                            `available_at` datetime DEFAULT NULL,
+                            `reservation_key` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                            `reserved_at` datetime DEFAULT NULL,
+                            `attempts` smallint(6) DEFAULT '0',
+                            `process_id` int(10) unsigned DEFAULT '0',
+                            PRIMARY KEY (`id`),
+                            UNIQUE KEY `reservation_key` (`reservation_key`),
+                            KEY `type` (`type`),
+                            KEY `channel` (`channel`),
+                            KEY `batch_id` (`batch_id`),
+                            KEY `priority` (`priority`),
+                            KEY `available_at` (`available_at`),
+                            KEY `reserved_at` (`reserved_at`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+                        self::JOBS_TABLE_NAME,
+                        $this->prepareExtractionDefinitions()
+                    )
+                );
             }
 
             if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
@@ -128,6 +134,21 @@ class MySqlQueue extends Queue
         'priority'
     ];
 
+    private function prepareExtractionDefinitions(): string
+    {
+        $result = [];
+
+        foreach ($this->extract_properties_to_fields as $field) {
+            $result[] = sprintf(
+                "`%s` INT UNSIGNED GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '$.%s'))) STORED,",
+                $field,
+                $field,
+            );
+        }
+
+        return implode("\n", $result);
+    }
+
     /**
      * Extract property value to field value.
      */
@@ -142,23 +163,12 @@ class MySqlQueue extends Queue
     {
         $job_data = $job->getData();
 
-        $extract = [];
-
-        foreach ($this->extract_properties_to_fields as $property) {
-            $extract[ '`' . $property . '`' ] = $this->connection->escapeValue($job->getData()[ $property ]);
-        }
-
-        $extract_fields = empty($extract) ? '' : ', ' . implode(', ', array_keys($extract));
-        $extract_values = empty($extract) ? '' : ', ' . implode(', ', $extract);
-
         $available_at_timestamp = date('Y-m-d H:i:s', time() + $job->getFirstJobDelay());
 
         $this->connection->execute(
             sprintf(
-                'INSERT INTO `%s` (`type`, `channel`, `batch_id`, `data`, `available_at`%s) VALUES (?, ?, ?, ?, ?%s)', 
+                'INSERT INTO `%s` (`type`, `channel`, `batch_id`, `data`, `available_at`) VALUES (?, ?, ?, ?, ?)',
                 self::JOBS_TABLE_NAME,
-                $extract_fields,
-                $extract_values
             ),
             get_class($job),
             $channel,

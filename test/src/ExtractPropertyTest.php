@@ -9,15 +9,14 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-/**
- * @package ActiveCollab\JobsQueue\Test
- */
 class ExtractPropertyTest extends AbstractMySqlQueueTest
 {
     /**
@@ -25,7 +24,14 @@ class ExtractPropertyTest extends AbstractMySqlQueueTest
      */
     public function testPriorityIsExtractedByDefault()
     {
-        $job_id = $this->dispatcher->dispatch(new Inc(['number' => 12, 'priority' => Job::HAS_PRIORITY]));
+        $job_id = $this->dispatcher->dispatch(
+            new Inc(
+                [
+                    'number' => 12,
+                    'priority' => Job::HAS_PRIORITY
+                ]
+            )
+        );
         $this->assertEquals(1, $job_id);
 
         $job_row = $this->connection->executeFirstRow('SELECT * FROM `jobs_queue` WHERE `id` = ?', $job_id);

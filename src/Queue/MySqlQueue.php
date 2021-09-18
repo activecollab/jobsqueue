@@ -47,7 +47,7 @@ class MySqlQueue extends Queue
         }
     }
 
-    public function createTables(...$additional_tables)
+    public function createTables(string ...$additional_tables)
     {
         $table_names = $this->connection->getTableNames();
 
@@ -180,11 +180,14 @@ class MySqlQueue extends Queue
         $job_id = $this->connection->lastInsertId();
 
         if ($this->logger) {
-            $this->logger->info('Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}', [
-                'job_id' => $job_id,
-                'job_type' => get_class($job),
-                'available_at' => $available_at_timestamp,
-            ]);
+            $this->logger->info(
+                'Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}',
+                [
+                    'job_id' => $job_id,
+                    'job_type' => get_class($job),
+                    'available_at' => $available_at_timestamp,
+                ]
+            );
         }
 
         return $job_id;

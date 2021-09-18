@@ -174,7 +174,7 @@ class TestQueue extends Queue
         $this->on_job_failure[] = $callback;
     }
 
-    public function createTables(...$additional_tables)
+    public function createTables(string ...$additional_tables)
     {
     }
 

@@ -222,8 +222,6 @@ interface QueueInterface extends Countable
 
     /**
      * Create one or more tables.
-     *
-     * @param string[] ...$additional_tables
      */
-    public function createTables(...$additional_tables);
+    public function createTables(string ...$additional_tables);
 }

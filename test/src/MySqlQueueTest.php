@@ -191,7 +191,7 @@ class MySqlQueueTest extends AbstractMySqlQueueTest
     public function testJobDataCanBeBrokenJson(): void
     {
         $this->expectException(QueryException::class);
-        $this->expectDeprecationMessage("CONSTRAINT `jobs_queue.data` failed");
+        $this->expectDeprecationMessage('Syntax error in JSON text');
 
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 

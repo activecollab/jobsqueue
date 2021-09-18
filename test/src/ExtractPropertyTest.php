@@ -15,17 +15,23 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
-use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
+use ActiveCollab\JobsQueue\JobsDispatcher;
+use ActiveCollab\JobsQueue\JobsDispatcherInterface;
+use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\PropertyExtractorInterface;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedConnectionTestCase;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-class ExtractPropertyTest extends IntegratedMySqlQueueTest
+class ExtractPropertyTest extends IntegratedConnectionTestCase
 {
     /**
      * Test to confirm that priority is extracted field by default.
      */
-    public function testPriorityIsExtractedByDefault()
+    public function testPriorityIsExtractedByDefault(): void
     {
-        $job_id = $this->dispatcher->dispatch(
+        $dispatcher = $this->createDispatcher();
+
+        $job_id = $dispatcher->dispatch(
             new Inc(
                 [
                     'number' => 12,
@@ -40,29 +46,40 @@ class ExtractPropertyTest extends IntegratedMySqlQueueTest
         $this->assertEquals(Job::HAS_PRIORITY, (integer) $job_row['priority']);
     }
 
-    public function testExceptionBecauseFieldDoesNotExist()
+    public function testExceptionBecauseFieldDoesNotExist(): void
     {
+        $dispatcher = $this->createDispatcher();
+
         $this->expectException(QueryException::class);
 
-        $this->dispatcher->getQueue()->extractPropertyToField('number');
+        $dispatcher->getQueue()->extractPropertyToField('number');
 
-        $this->dispatcher->dispatch(new Inc(['number' => 12]));
+        $dispatcher->dispatch(new Inc(['number' => 12]));
     }
 
     /**
      * Test if property is extracted to field properly.
      */
-    public function testExtractPropertyToField()
+    public function testExtractPropertyToField(): void
     {
+        $dispatcher = $this->createDispatcher();
+
         $this->connection->execute("ALTER TABLE `jobs_queue` ADD `number` INT(10) UNSIGNED NULL DEFAULT '0' AFTER `type`");
 
-        $this->dispatcher->getQueue()->extractPropertyToField('number');
+        $dispatcher->getQueue()->extractPropertyToField('number');
 
-        $job_id = $this->dispatcher->dispatch(new Inc(['number' => 12]));
+        $job_id = $dispatcher->dispatch(new Inc(['number' => 12]));
         $this->assertEquals(1, $job_id);
 
         $job_row = $this->connection->executeFirstRow('SELECT * FROM `jobs_queue` WHERE `id` = ?', $job_id);
 
         $this->assertEquals(12, (integer) $job_row['number']);
+    }
+
+    private function createDispatcher(
+        PropertyExtractorInterface ...$additional_extractors
+    ): JobsDispatcherInterface
+    {
+        return new JobsDispatcher(new MySqlQueue($this->connection));
     }
 }

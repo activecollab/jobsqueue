@@ -97,11 +97,8 @@ interface JobsDispatcherInterface extends DispatchJobInterface
      * @return BatchInterface
      */
     public function batch($name, callable $add_jobs = null);
-
-    /**
-     * @return int
-     */
-    public function countBatches();
+    
+    public function countBatches(): int;
 
     /**
      * Search for a full job class name.

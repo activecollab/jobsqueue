@@ -211,7 +211,7 @@ class TestQueue extends Queue
         throw new LogicException('Method not implemented in test queue');
     }
 
-    public function countBatches()
+    public function countBatches(): int
     {
         return 0;
     }

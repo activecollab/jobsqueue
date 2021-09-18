@@ -817,7 +817,7 @@ class MySqlQueue extends Queue
         }
     }
 
-    public function countBatches()
+    public function countBatches(): int
     {
         return $this->connection->count(self::BATCHES_TABLE_NAME);
     }

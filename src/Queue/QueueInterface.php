@@ -147,12 +147,7 @@ interface QueueInterface extends Countable
      */
     public function createBatch(JobsDispatcherInterface &$dispatcher, $name);
 
-    /**
-     * Return total number of batches in the queue.
-     *
-     * @return int
-     */
-    public function countBatches();
+    public function countBatches(): int;
 
     /**
      * Let jobs report that they raised background process.

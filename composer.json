@@ -27,10 +27,12 @@
     },
     "suggest": {
         "ext-mysqli": "*",
+        "ext-posix": "*",
         "symfony/console": "Use Symfony console to easily create CLI jobs consumer"
     },
     "require-dev": {
         "ext-mysqli": "*",
+        "ext-posix": "*",
         "friendsofphp/php-cs-fixer": "^2.0",
         "monolog/monolog": "~1.0",
         "phpunit/phpunit": "^9.0",

@@ -184,10 +184,7 @@ class JobsDispatcher implements DispatcherInterface
         return $batch;
     }
 
-    /**
-     * @return int
-     */
-    public function countBatches()
+    public function countBatches(): int
     {
         return $this->getQueue()->countBatches();
     }

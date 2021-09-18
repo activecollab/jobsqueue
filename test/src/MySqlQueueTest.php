@@ -15,7 +15,7 @@ use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use DateTime;
@@ -25,7 +25,7 @@ use InvalidArgumentException;
 /**
  * @package ActiveCollab\JobsQueue\Test
  */
-class MySqlQueueTest extends AbstractMySqlQueueTest
+class MySqlQueueTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test if job queue table is prepared for testing.

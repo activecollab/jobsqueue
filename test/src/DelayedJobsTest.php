@@ -11,14 +11,14 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
-use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
 /**
  * @package ActiveCollab\JobsQueue\Test
  */
-class DelayedJobsTest extends AbstractMySqlQueueTest
+class DelayedJobsTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test getting a delayed job.

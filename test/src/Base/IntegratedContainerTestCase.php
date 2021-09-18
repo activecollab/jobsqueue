@@ -20,7 +20,7 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
-abstract class IntegratedTestCase extends IntegratedMySqlQueueTest
+abstract class IntegratedContainerTestCase extends IntegratedMySqlQueueTest
 {
     protected ContainerInterface $container;
     protected string $log_file_path;

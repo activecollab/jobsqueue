@@ -13,7 +13,7 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
-use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use InvalidArgumentException;
@@ -21,7 +21,7 @@ use InvalidArgumentException;
 /**
  * @package ActiveCollab\JobsQueue\Test
  */
-class ChannelsTest extends AbstractMySqlQueueTest
+class ChannelsTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test if main channel is registered by default.

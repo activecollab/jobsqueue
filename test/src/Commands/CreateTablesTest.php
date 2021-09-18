@@ -13,14 +13,14 @@ declare(strict_types=1);
 
 namespace ActiveCollab\JobsQueue\Test\Commands;
 
-use ActiveCollab\JobsQueue\Test\Base\IntegratedTestCase;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedContainerTestCase;
 use ActiveCollab\JobsQueue\Command\CreateTables;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue\AdditionalTablesResolverInterface;
 
-class CreateTablesTest extends IntegratedTestCase
+class CreateTablesTest extends IntegratedContainerTestCase
 {
     private CreateTables $command;
 

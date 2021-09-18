@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ActiveCollab\JobsQueue\Test\Commands;
 
-use ActiveCollab\JobsQueue\Test\Base\IntegratedTestCase;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedContainerTestCase;
 use ActiveCollab\JobsQueue\Command\CreateTables;
 use ActiveCollab\JobsQueue\Command\Enqueue;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
@@ -21,7 +21,7 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
 
-class EnqueueTest extends IntegratedTestCase
+class EnqueueTest extends IntegratedContainerTestCase
 {
     /**
      * @var CreateTables

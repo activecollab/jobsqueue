@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ActiveCollab\JobsQueue\Test\Commands;
 
-use ActiveCollab\JobsQueue\Test\Base\IntegratedTestCase;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedContainerTestCase;
 use ActiveCollab\JobsQueue\Command\FailedJobs;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
@@ -22,7 +22,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-class FailedJobsTest extends IntegratedTestCase
+class FailedJobsTest extends IntegratedContainerTestCase
 {
     private $command;
 

@@ -12,7 +12,7 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
-use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher;
@@ -20,7 +20,7 @@ use ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher;
 /**
  * @package ActiveCollab\JobsQueue\Test
  */
-class MySqlQueueMaintenanceTest extends AbstractMySqlQueueTest
+class MySqlQueueMaintenanceTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test clean-up method removes failed job logs older than 7 days.

@@ -11,7 +11,7 @@
 
 namespace ActiveCollab\JobsQueue\Test\Commands;
 
-use ActiveCollab\JobsQueue\Test\Base\IntegratedTestCase;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedContainerTestCase;
 use ActiveCollab\JobsQueue\Command\JobsQueue;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
@@ -20,7 +20,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-class JobsQueueTest extends IntegratedTestCase
+class JobsQueueTest extends IntegratedContainerTestCase
 {
     /**
      * @var JobsQueue

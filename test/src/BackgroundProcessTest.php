@@ -15,10 +15,10 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Signals\ProcessLaunched;
-use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher;
 
-class BackgroundProcessTest extends AbstractMySqlQueueTest
+class BackgroundProcessTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test if new jobs have an empty process_id value.

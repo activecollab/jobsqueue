@@ -23,7 +23,7 @@ use Exception;
 use mysqli;
 use RuntimeException;
 
-abstract class AbstractMySqlQueueTest extends TestCase
+abstract class IntegratedMySqlQueueTest extends TestCase
 {
     protected mysqli $link;
     protected MysqliConnection $connection;

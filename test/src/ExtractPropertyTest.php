@@ -15,10 +15,10 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
-use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
+use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
-class ExtractPropertyTest extends AbstractMySqlQueueTest
+class ExtractPropertyTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test to confirm that priority is extracted field by default.

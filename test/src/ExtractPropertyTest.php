@@ -89,6 +89,26 @@ class ExtractPropertyTest extends IntegratedConnectionTestCase
         $this->assertEquals('https://example.com', $job_row['webhook_url']);
     }
 
+    public function testCreateTableWillAddMissingColumns(): void
+    {
+        $additional_extractors = [
+            new StringPropertyExtractor('webhook_url')
+        ];
+
+        $this->createDispatcher(...$additional_extractors);
+
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'priority'));
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'webhook_url'));
+
+        $this->connection->dropField(MySqlQueue::JOBS_TABLE_NAME, 'priority');
+        $this->connection->dropField(MySqlQueue::JOBS_TABLE_NAME, 'webhook_url');
+
+        new MySqlQueue($this->connection, $additional_extractors);
+
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'priority'));
+        $this->assertTrue($this->connection->fieldExists(MySqlQueue::JOBS_TABLE_NAME, 'webhook_url'));
+    }
+
     private function createDispatcher(
         PropertyExtractorInterface ...$additional_extractors
     ): JobsDispatcherInterface

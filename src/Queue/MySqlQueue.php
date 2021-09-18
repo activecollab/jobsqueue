@@ -36,6 +36,11 @@ class MySqlQueue extends Queue
 
     private ConnectionInterface $connection;
 
+    /**
+     * @var PropertyExtractorInterface[]
+     */
+    private array $property_extractors;
+
     public function __construct(
         ConnectionInterface $connection,
         array $additional_extractors = [],
@@ -46,7 +51,7 @@ class MySqlQueue extends Queue
         parent::__construct($logger);
 
         $this->connection = $connection;
-        $this->extract_properties_to_fields = array_merge(
+        $this->property_extractors = array_merge(
             [new IntPropertyExtractor('priority')],
             $additional_extractors,
         );
@@ -81,6 +86,12 @@ class MySqlQueue extends Queue
                     $this->logger->info('Creating {table_name} MySQL queue table', ['table_name' => self::JOBS_TABLE_NAME]);
                 }
 
+                $property_extractions = implode(",\n", $this->prepareExtractionDefinitions());
+
+                if (!empty($property_extractions)) {
+                    $property_extractions .= ",\n";
+                }
+
                 $this->connection->execute(
                     sprintf(
                         "CREATE TABLE IF NOT EXISTS `%s` (
@@ -105,9 +116,21 @@ class MySqlQueue extends Queue
                             KEY `reserved_at` (`reserved_at`)
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
                         self::JOBS_TABLE_NAME,
-                        $this->prepareExtractionDefinitions()
+                        $property_extractions
                     )
                 );
+            } else {
+                foreach ($this->property_extractors as $property_extractor) {
+                    if (!$this->connection->fieldExists(self::JOBS_TABLE_NAME, $property_extractor->getName())) {
+                        $this->connection->execute(
+                            sprintf(
+                                'ALTER TABLE `%s` ADD %s',
+                                self::JOBS_TABLE_NAME,
+                                $this->prepareExtractionDefinition($property_extractor)
+                            )
+                        );
+                    }
+                }
             }
 
             if (!in_array(self::FAILED_JOBS_TABLE_NAME, $table_names)) {
@@ -139,36 +162,36 @@ class MySqlQueue extends Queue
         }
     }
 
-    /**
-     * @var PropertyExtractorInterface[]
-     */
-    private array $extract_properties_to_fields = [];
-
-    private function prepareExtractionDefinitions(): string
+    private function prepareExtractionDefinitions(): array
     {
         $result = [];
 
-        foreach ($this->extract_properties_to_fields as $field) {
-            $result[] = sprintf(
-                "`%s` %s GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '%s'))) STORED,",
-                $field->getName(),
-                $this->getExtractorTypeDefinition($field),
-                $field->getDataPath(),
-            );
+        foreach ($this->property_extractors as $property_extractor) {
+            $result[] = $this->prepareExtractionDefinition($property_extractor);
         }
 
-        return implode("\n", $result);
+        return $result;
     }
 
-    private function getExtractorTypeDefinition(PropertyExtractorInterface $extractor): string
+    private function prepareExtractionDefinition(PropertyExtractorInterface $property_extractor): string
     {
-        if ($extractor instanceof StringPropertyExtractor) {
-            return sprintf('VARCHAR(%d)', $extractor->getLength());
-        } elseif ($extractor instanceof IntPropertyExtractor) {
+        return sprintf(
+            "`%s` %s GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '%s'))) STORED",
+            $property_extractor->getName(),
+            $this->getExtractorTypeDefinition($property_extractor),
+            $property_extractor->getDataPath(),
+        );
+    }
+
+    private function getExtractorTypeDefinition(PropertyExtractorInterface $property_extractor): string
+    {
+        if ($property_extractor instanceof StringPropertyExtractor) {
+            return sprintf('VARCHAR(%d)', $property_extractor->getLength());
+        } elseif ($property_extractor instanceof IntPropertyExtractor) {
             return 'INT UNSIGNED';
         }
 
-        throw new RuntimeException(sprintf('Unsupported extractor type %s.', get_class($extractor)));
+        throw new RuntimeException(sprintf('Unsupported extractor type %s.', get_class($property_extractor)));
     }
 
     public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)

@@ -18,6 +18,7 @@ use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\IntPropertyExtractor;
 use ActiveCollab\JobsQueue\Queue\PropertyExtractors\PropertyExtractorInterface;
 use ActiveCollab\JobsQueue\Test\Base\IntegratedConnectionTestCase;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
@@ -46,27 +47,23 @@ class ExtractPropertyTest extends IntegratedConnectionTestCase
         $this->assertEquals(Job::HAS_PRIORITY, (integer) $job_row['priority']);
     }
 
-    public function testExceptionBecauseFieldDoesNotExist(): void
+    public function testWillPrepareFieldForExtractor(): void
     {
-        $dispatcher = $this->createDispatcher();
+        $this->createDispatcher(
+            new IntPropertyExtractor('number'),
+        );
 
-        $this->expectException(QueryException::class);
-
-        $dispatcher->getQueue()->extractPropertyToField('number');
-
-        $dispatcher->dispatch(new Inc(['number' => 12]));
+        $this->assertTrue($this->connection->fieldExists('jobs_queue', 'number'));
     }
 
     /**
      * Test if property is extracted to field properly.
      */
-    public function testExtractPropertyToField(): void
+    public function testExtractIntPropertyToField(): void
     {
-        $dispatcher = $this->createDispatcher();
-
-        $this->connection->execute("ALTER TABLE `jobs_queue` ADD `number` INT(10) UNSIGNED NULL DEFAULT '0' AFTER `type`");
-
-        $dispatcher->getQueue()->extractPropertyToField('number');
+        $dispatcher = $this->createDispatcher(
+            new IntPropertyExtractor('number'),
+        );
 
         $job_id = $dispatcher->dispatch(new Inc(['number' => 12]));
         $this->assertEquals(1, $job_id);
@@ -80,6 +77,6 @@ class ExtractPropertyTest extends IntegratedConnectionTestCase
         PropertyExtractorInterface ...$additional_extractors
     ): JobsDispatcherInterface
     {
-        return new JobsDispatcher(new MySqlQueue($this->connection));
+        return new JobsDispatcher(new MySqlQueue($this->connection, $additional_extractors));
     }
 }

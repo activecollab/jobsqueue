@@ -36,6 +36,7 @@ class MySqlQueue extends Queue
 
     public function __construct(
         ConnectionInterface $connection,
+        array $additional_extractors = [],
         bool $create_tables_if_missing = true,
         LoggerInterface $logger = null
     )
@@ -43,7 +44,10 @@ class MySqlQueue extends Queue
         parent::__construct($logger);
 
         $this->connection = $connection;
-        $this->extract_properties_to_fields[] = new IntPropertyExtractor('priority');
+        $this->extract_properties_to_fields = array_merge(
+            [new IntPropertyExtractor('priority')],
+            $additional_extractors,
+        );
 
         if ($create_tables_if_missing) {
             $this->createTables();

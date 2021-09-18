@@ -9,15 +9,14 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue;
 
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use InvalidArgumentException;
 
-/**
- * @package ActiveCollab\JobsQueue
- */
 class JobsDispatcher implements DispatcherInterface
 {
     /**
@@ -80,7 +79,9 @@ class JobsDispatcher implements DispatcherInterface
     /**
      * @var string[]
      */
-    private $registered_channels = [QueueInterface::MAIN_CHANNEL];
+    private array $registered_channels = [
+        QueueInterface::MAIN_CHANNEL
+    ];
 
     public function registerChannels(string ...$channels): JobsDispatcherInterface
     {

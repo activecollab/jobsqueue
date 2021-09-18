@@ -13,6 +13,7 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Batches\Batch;
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
+use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use RuntimeException;
 

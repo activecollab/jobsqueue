@@ -12,6 +12,7 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use ActiveCollab\JobsQueue\Test\Jobs\ProcessLauncher;

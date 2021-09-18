@@ -15,6 +15,7 @@ namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Test\Base\AbstractMySqlQueueTest;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 
 class ExtractPropertyTest extends AbstractMySqlQueueTest

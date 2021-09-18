@@ -13,88 +13,34 @@ declare(strict_types=1);
 
 namespace ActiveCollab\JobsQueue\Test\Base;
 
-use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
-use ActiveCollab\DatabaseConnection\ConnectionInterface;
-use ActiveCollab\JobsQueue\JobsDispatcher;
-use ActiveCollab\JobsQueue\JobsDispatcherInterface;
-use ActiveCollab\JobsQueue\Queue\MySqlQueue;
-use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Test\Fixtures\Container;
 use Interop\Container\ContainerInterface;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use mysqli;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
-abstract class IntegratedTestCase extends TestCase
+abstract class IntegratedTestCase extends AbstractMySqlQueueTest
 {
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
-
-    /**
-     * @var mysqli
-     */
-    protected $link;
-
-    /**
-     * @var ConnectionInterface
-     */
-    protected $connection;
-
-    /**
-     * @var QueueInterface
-     */
-    protected $queue;
-
-    /**
-     * @var JobsDispatcherInterface
-     */
-    protected $dispatcher;
-
-    /**
-     * @var string
-     */
-    protected $log_file_path;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $log;
-
-    /**
-     * @var array
-     */
-    protected $config_options = false;
+    protected ContainerInterface $container;
+    protected string $log_file_path;
+    protected LoggerInterface $logger;
 
     public function setUp(): void
     {
         parent::setUp();
 
-        $this->link = new mysqli('localhost', 'root', '');
-
-        if ($this->link->connect_error) {
-            throw new RuntimeException('Failed to connect to database. MySQL said: '.$this->link->connect_error);
-        }
-
-        if (!$this->link->select_db('activecollab_jobs_queue_test')) {
-            throw new RuntimeException('Failed to select database.');
-        }
-
-        $this->connection = new MysqliConnection($this->link);
-        $this->queue = new MySqlQueue($this->connection);
-        $this->dispatcher = new JobsDispatcher($this->queue);
-
-        $this->log_file_path = dirname(__DIR__).'/logs/'.date('Y-m-d').'.txt';
+        $this->log_file_path = sprintf(
+            '%s/%s.txt',
+            dirname(__DIR__) . '/logs',
+            date('Y-m-d')
+        );
 
         if (is_file($this->log_file_path)) {
             unlink($this->log_file_path);
         }
 
-        $this->log = new Logger('cli');
+        $this->logger = new Logger('cli');
 
         $handler = new StreamHandler($this->log_file_path, Logger::DEBUG);
 
@@ -103,50 +49,23 @@ abstract class IntegratedTestCase extends TestCase
 
         $handler->setFormatter($formatter);
 
-        $this->log->pushHandler($handler);
+        $this->logger->pushHandler($handler);
 
-        $this->container = new Container([
-            'dispatcher' => $this->dispatcher,
-            'log' => $this->log,
-        ]);
+        $this->container = new Container(
+            [
+                'dispatcher' => $this->dispatcher,
+                'log' => $this->logger,
+            ]
+        );
+        
     }
 
     protected function tearDown(): void
     {
-        foreach ([MySqlQueue::BATCHES_TABLE_NAME, MySqlQueue::JOBS_TABLE_NAME, MySqlQueue::FAILED_JOBS_TABLE_NAME, 'email_log'] as $table_name) {
-            if ($this->connection->tableExists($table_name)) {
-                $this->connection->dropTable($table_name);
-            }
-        }
-
-        if ($this->link) {
-            $this->link->close();
-        }
-
         if (is_file($this->log_file_path)) {
             unlink($this->log_file_path);
         }
 
         parent::tearDown();
-    }
-
-    /**
-     * Check number of records in jobs queue table.
-     *
-     * @param int $expected
-     */
-    protected function assertRecordsCount($expected)
-    {
-        $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `'.MySqlQueue::JOBS_TABLE_NAME.'`'));
-    }
-
-    /**
-     * Check number of records in failed jobs queue table.
-     *
-     * @param int $expected
-     */
-    protected function assertFailedRecordsCount($expected)
-    {
-        $this->assertSame($expected, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `'.MySqlQueue::FAILED_JOBS_TABLE_NAME.'`'));
     }
 }

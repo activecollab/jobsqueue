@@ -15,6 +15,7 @@ use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
+use ActiveCollab\JobsQueue\Test\Base\TestCase;
 use Exception;
 use mysqli;
 use RuntimeException;

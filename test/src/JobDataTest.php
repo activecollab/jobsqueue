@@ -12,6 +12,7 @@
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
+use ActiveCollab\JobsQueue\Test\Base\TestCase;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use InvalidArgumentException;
 

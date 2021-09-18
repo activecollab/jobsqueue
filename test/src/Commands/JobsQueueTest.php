@@ -9,10 +9,10 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ActiveCollab\JobQueue\Test\Commands;
+namespace ActiveCollab\JobsQueue\Test\Commands;
 
+use ActiveCollab\JobsQueue\Test\Base\IntegratedTestCase;
 use ActiveCollab\JobsQueue\Command\JobsQueue;
-use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use Exception;
@@ -20,10 +20,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-/**
- * @package ActiveCollab\JobQueue\Test\Commands
- */
-class JobsQueueTest extends TestCase
+class JobsQueueTest extends IntegratedTestCase
 {
     /**
      * @var JobsQueue

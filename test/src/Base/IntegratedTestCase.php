@@ -9,7 +9,9 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ActiveCollab\JobQueue\Test\Commands;
+declare(strict_types=1);
+
+namespace ActiveCollab\JobsQueue\Test\Base;
 
 use ActiveCollab\DatabaseConnection\Connection\MysqliConnection;
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
@@ -23,11 +25,10 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use mysqli;
-use PHPUnit\Framework\TestCase as BaseTestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-abstract class TestCase extends BaseTestCase
+abstract class IntegratedTestCase extends TestCase
 {
     /**
      * @var ContainerInterface

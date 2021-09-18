@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace ActiveCollab\JobsQueue\Test;
+namespace ActiveCollab\JobsQueue\Test\Base;
 
 use PHPUnit\Framework\TestCase as BaseTestCase;
 

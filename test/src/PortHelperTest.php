@@ -11,6 +11,7 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
+use ActiveCollab\JobsQueue\Test\Base\TestCase;
 use ActiveCollab\JobsQueue\Test\Jobs\PortHelperJob;
 use InvalidArgumentException;
 

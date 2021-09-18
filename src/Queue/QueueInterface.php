@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
@@ -16,9 +18,6 @@ use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use Countable;
 
-/**
- * @package ActiveCollab\JobsQueue\Queue
- */
 interface QueueInterface extends Countable
 {
     const MAIN_CHANNEL = 'main';
@@ -138,15 +137,7 @@ interface QueueInterface extends Countable
      */
     public function countFailedByType($type1);
 
-    /**
-     * Create a new batch with the given name.
-     *
-     * @param  JobsDispatcherInterface $dispatcher
-     * @param  string              $name
-     * @return BatchInterface
-     */
-    public function createBatch(JobsDispatcherInterface &$dispatcher, $name);
-
+    public function createBatch(JobsDispatcherInterface $dispatcher, string $name): BatchInterface;
     public function countBatches(): int;
 
     /**

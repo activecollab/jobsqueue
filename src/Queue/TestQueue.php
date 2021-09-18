@@ -11,6 +11,7 @@
 
 namespace ActiveCollab\JobsQueue\Queue;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
@@ -206,7 +207,7 @@ class TestQueue extends Queue
         return [];
     }
 
-    public function createBatch(JobsDispatcherInterface &$dispatcher, $name)
+    public function createBatch(JobsDispatcherInterface $dispatcher, string $name): BatchInterface
     {
         throw new LogicException('Method not implemented in test queue');
     }

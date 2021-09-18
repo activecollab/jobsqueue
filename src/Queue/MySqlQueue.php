@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Batches\MySqlBatch;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
@@ -796,8 +797,13 @@ class MySqlQueue extends Queue
     public function countJobsByType()
     {
         $result = [];
-        $type_rows = $this->connection->execute('SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `' . self::JOBS_TABLE_NAME . '` GROUP BY `type`');
-        if (count($type_rows)) {
+        $type_rows = $this->connection->execute(
+            sprintf(
+                'SELECT `type`, COUNT(`id`) AS "queued_jobs_count" FROM `%s` GROUP BY `type`',
+                self::JOBS_TABLE_NAME
+            )
+        );
+        if (!empty($type_rows)) {
             foreach ($type_rows as $row) {
                 $result[ $row['type'] ] = $row['queued_jobs_count'];
             }
@@ -806,15 +812,26 @@ class MySqlQueue extends Queue
         return $result;
     }
 
-    public function createBatch(JobsDispatcherInterface &$dispatcher, $name)
+    public function createBatch(JobsDispatcherInterface $dispatcher, string $name): BatchInterface
     {
-        if ($name) {
-            $this->connection->execute('INSERT INTO `' . self::BATCHES_TABLE_NAME . '` (`name`, `created_at`) VALUES (?, UTC_TIMESTAMP())', $name);
-
-            return new MySqlBatch($dispatcher, $this->connection, $this->connection->lastInsertId(), $name);
-        } else {
+        if (!$name) {
             throw new InvalidArgumentException('Batch name is required');
         }
+
+        $this->connection->execute(
+            sprintf(
+                'INSERT INTO `%s` (`name`, `created_at`) VALUES (?, UTC_TIMESTAMP())',
+                self::BATCHES_TABLE_NAME
+            ),
+            $name
+        );
+
+        return new MySqlBatch(
+            $dispatcher,
+            $this->connection,
+            $this->connection->lastInsertId(),
+            $name
+        );
     }
 
     public function countBatches(): int

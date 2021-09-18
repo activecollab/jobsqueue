@@ -20,7 +20,7 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
-abstract class IntegratedTestCase extends AbstractMySqlQueueTest
+abstract class IntegratedTestCase extends IntegratedMySqlQueueTest
 {
     protected ContainerInterface $container;
     protected string $log_file_path;
@@ -57,7 +57,6 @@ abstract class IntegratedTestCase extends AbstractMySqlQueueTest
                 'log' => $this->logger,
             ]
         );
-        
     }
 
     protected function tearDown(): void

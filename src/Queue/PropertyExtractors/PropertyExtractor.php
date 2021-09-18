@@ -18,10 +18,10 @@ abstract class PropertyExtractor implements PropertyExtractorInterface
     private string $name;
     private string $data_path;
 
-    public function __construct(string $name, string $data_path)
+    public function __construct(string $name, string $data_path = null)
     {
         $this->name = $name;
-        $this->data_path = $data_path;
+        $this->data_path = $data_path ?? sprintf('$.%s', $name);
     }
 
     public function getName(): string

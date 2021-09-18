@@ -18,6 +18,8 @@ use ActiveCollab\JobsQueue\Batches\MySqlBatch;
 use ActiveCollab\JobsQueue\Jobs\Job;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\IntPropertyExtractor;
+use ActiveCollab\JobsQueue\Queue\PropertyExtractors\PropertyExtractorInterface;
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
 use Exception;
 use InvalidArgumentException;
@@ -41,6 +43,7 @@ class MySqlQueue extends Queue
         parent::__construct($logger);
 
         $this->connection = $connection;
+        $this->extract_properties_to_fields[] = new IntPropertyExtractor('priority');
 
         if ($create_tables_if_missing) {
             $this->createTables();
@@ -130,9 +133,10 @@ class MySqlQueue extends Queue
         }
     }
 
-    private array $extract_properties_to_fields = [
-        'priority'
-    ];
+    /**
+     * @var PropertyExtractorInterface[]
+     */
+    private array $extract_properties_to_fields = [];
 
     private function prepareExtractionDefinitions(): string
     {
@@ -140,9 +144,9 @@ class MySqlQueue extends Queue
 
         foreach ($this->extract_properties_to_fields as $field) {
             $result[] = sprintf(
-                "`%s` INT UNSIGNED GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '$.%s'))) STORED,",
-                $field,
-                $field,
+                "`%s` INT UNSIGNED GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(`data`, '%s'))) STORED,",
+                $field->getName(),
+                $field->getDataPath(),
             );
         }
 

@@ -179,7 +179,7 @@ class MySqlQueue extends Queue
     public function dequeueByType(string $type, array $properties = null): void
     {
         $conditions = [
-            $this->connection->prepare('`type` = ?', $type),
+            $this->connection->prepare('`type` = ? AND `reservation_key` IS NULL', $type),
         ];
 
         if ($properties) {

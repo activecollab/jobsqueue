@@ -41,7 +41,7 @@ interface QueueInterface extends Countable
     /**
      * Remove jobs from jobs queue by type.
      */
-    public function dequeueByType(string $type): void;
+    public function dequeueByType(string $type, array $properties = null): void;
 
     /**
      * Execute a job now (sync, waits for a response).

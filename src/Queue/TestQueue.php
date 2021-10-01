@@ -46,7 +46,7 @@ class TestQueue extends Queue
     {
     }
 
-    public function dequeueByType(string $type): void
+    public function dequeueByType(string $type, array $properties = null): void
     {
     }
 

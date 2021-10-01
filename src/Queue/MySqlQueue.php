@@ -176,9 +176,37 @@ class MySqlQueue extends Queue
         $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
 
-    public function dequeueByType(string $type): void
+    public function dequeueByType(string $type, array $properties = null): void
     {
-        $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $type);
+        $conditions = [
+            $this->connection->prepare('`type` = ?', $type),
+        ];
+
+        if ($properties) {
+            foreach ($properties as $property => $value_to_match) {
+                if ($this->connection->fieldExists(self::JOBS_TABLE_NAME, $property)) {
+                    $conditions[] = $this->connection->prepare(
+                        sprintf('`%s` = ?', $property),
+                        $value_to_match
+                    );
+
+                    continue;
+                }
+
+                $conditions[] = $this->connection->prepare(
+                    sprintf('JSON_UNQUOTE(JSON_EXTRACT(`data`, "$.%s")) = ?', $property),
+                    $value_to_match
+                );
+            }
+        }
+
+        $this->connection->execute(
+            sprintf(
+                'DELETE FROM `%s` WHERE %s',
+                self::JOBS_TABLE_NAME,
+                implode(' AND ', $conditions)
+            ),
+        );
     }
 
     public function execute(JobInterface $job, $silent = true)

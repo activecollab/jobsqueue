@@ -60,10 +60,7 @@ class JobsDispatcher implements DispatcherInterface
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function exists($job_type, array $properties = null)
+    public function exists(string $job_type, array $properties = null): bool
     {
         return $this->getQueue()->exists($job_type, $properties);
     }

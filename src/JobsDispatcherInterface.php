@@ -38,12 +38,8 @@ interface JobsDispatcherInterface extends DispatchJobInterface
 
     /**
      * Return true if job of the given type and with the given properties exists in queue.
-     *
-     * @param  string     $job_type
-     * @param  array|null $properties
-     * @return bool
      */
-    public function exists($job_type, array $properties = null);
+    public function exists(string $job_type, array $properties = null): bool;
 
     /**
      * Return queue instance.

@@ -40,10 +40,8 @@ interface QueueInterface extends Countable
 
     /**
      * Remove jobs from jobs queue by type.
-     *
-     * @param string $type
      */
-    public function dequeueByType($type);
+    public function dequeueByType(string $type, array $properties = null): void;
 
     /**
      * Execute a job now (sync, waits for a response).
@@ -56,12 +54,8 @@ interface QueueInterface extends Countable
 
     /**
      * Return true if there's an active job of the give type with the given properties.
-     *
-     * @param  string     $job_type
-     * @param  array|null $properties
-     * @return bool
      */
-    public function exists($job_type, array $properties = null);
+    public function exists(string $job_type, array $properties = null): bool;
 
     /**
      * Return a total number of jobs that are in the given channel.

@@ -176,9 +176,37 @@ class MySqlQueue extends Queue
         $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
 
-    public function dequeueByType($type)
+    public function dequeueByType(string $type, array $properties = null): void
     {
-        $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $type);
+        $conditions = [
+            $this->connection->prepare('`type` = ?', $type),
+        ];
+
+        if ($properties) {
+            foreach ($properties as $property => $value_to_match) {
+                if ($this->connection->fieldExists(self::JOBS_TABLE_NAME, $property)) {
+                    $conditions[] = $this->connection->prepare(
+                        sprintf('`%s` = ?', $property),
+                        $value_to_match
+                    );
+
+                    continue;
+                }
+
+                $conditions[] = $this->connection->prepare(
+                    sprintf('JSON_UNQUOTE(JSON_EXTRACT(`data`, "$.%s")) = ?', $property),
+                    $value_to_match
+                );
+            }
+        }
+
+        $this->connection->execute(
+            sprintf(
+                'DELETE FROM `%s` WHERE %s',
+                self::JOBS_TABLE_NAME,
+                implode(' AND ', $conditions)
+            ),
+        );
     }
 
     public function execute(JobInterface $job, $silent = true)
@@ -203,11 +231,14 @@ class MySqlQueue extends Queue
             }
 
             if ($this->logger) {
-                $this->logger->info($log_message, [
-                    'job_id' => $job->getQueueId(),
-                    'job_type' => get_class($job),
-                    'event' => 'job_executed',
-                ]);
+                $this->logger->info(
+                    $log_message,
+                    [
+                        'job_id' => $job->getQueueId(),
+                        'job_type' => get_class($job),
+                        'event' => 'job_executed',
+                    ]
+                );
             }
 
             return $result;
@@ -220,38 +251,51 @@ class MySqlQueue extends Queue
 
     public function countByChannel($channel)
     {
-        return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `channel` = ?', $channel);
+        return $this->connection->executeFirstCell(
+            sprintf('SELECT COUNT(`id`) AS "row_count" FROM `%s` WHERE `channel` = ?', self::JOBS_TABLE_NAME),
+            $channel
+        );
     }
 
-    public function exists($job_type, array $properties = null)
+    public function exists(string $job_type, array $properties = null): bool
     {
         if (empty($properties)) {
-            return (boolean) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type);
-        } else {
-            if ($rows = $this->connection->execute('SELECT `data` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `type` = ?', $job_type)) {
-                foreach ($rows as $row) {
-                    try {
-                        $data = $this->jsonDecode($row['data']);
+            return (bool) $this->connection->executeFirstCell(
+                sprintf('SELECT COUNT(`id`) AS "row_count" FROM `%s` WHERE `type` = ?', self::JOBS_TABLE_NAME),
+                $job_type
+            );
+        }
 
-                        $all_properties_found = true;
+        $rows = $this->connection->execute(
+            sprintf('SELECT `data` FROM `%s` WHERE `type` = ?', self::JOBS_TABLE_NAME),
+            $job_type
+        );
 
-                        foreach ($properties as $k => $v) {
-                            if (!(array_key_exists($k, $data) && $data[ $k ] === $v)) {
-                                $all_properties_found = false;
-                                break;
-                            }
-                        }
-
-                        if ($all_properties_found) {
-                            return true;
-                        }
-                    } catch (RuntimeException $e) {
-                    }
-                }
-            }
-
+        if (empty($rows)) {
             return false;
         }
+
+        foreach ($rows as $row) {
+            try {
+                $data = $this->jsonDecode($row['data']);
+
+                $all_properties_found = true;
+
+                foreach ($properties as $k => $v) {
+                    if (!(array_key_exists($k, $data) && $data[$k] === $v)) {
+                        $all_properties_found = false;
+                        break;
+                    }
+                }
+
+                if ($all_properties_found) {
+                    return true;
+                }
+            } catch (RuntimeException $e) {
+            }
+        }
+
+        return false;
     }
 
     /**

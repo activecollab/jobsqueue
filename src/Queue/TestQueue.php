@@ -46,7 +46,7 @@ class TestQueue extends Queue
     {
     }
 
-    public function dequeueByType($type)
+    public function dequeueByType(string $type, array $properties = null): void
     {
     }
 
@@ -60,8 +60,9 @@ class TestQueue extends Queue
         return count($this->jobs);
     }
 
-    public function exists($job_type, array $properties = null)
+    public function exists(string $job_type, array $properties = null): bool
     {
+        return false;
     }
 
     public function getJobById($job_id)

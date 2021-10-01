@@ -9,10 +9,13 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\DatabaseConnection\Exception\QueryException;
 use ActiveCollab\JobsQueue\Jobs\Job;
+use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use ActiveCollab\JobsQueue\Test\Base\IntegratedMySqlQueueTest;
@@ -22,9 +25,6 @@ use DateTime;
 use Exception;
 use InvalidArgumentException;
 
-/**
- * @package ActiveCollab\JobsQueue\Test
- */
 class MySqlQueueTest extends IntegratedMySqlQueueTest
 {
     /**
@@ -77,7 +77,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if jobs by be removed from the queue by type.
      */
-    public function testDequeueByTypeRemovesJobsOfSpecificType()
+    public function testDequeueByTypeRemovesJobsOfSpecificType(): void
     {
         $this->dispatcher->dispatch(new Inc(['number' => 1245]));
         $this->dispatcher->dispatch(new Failing());
@@ -85,6 +85,30 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
         $this->assertEquals(2, $this->dispatcher->getQueue()->count());
         $this->dispatcher->getQueue()->dequeueByType(Inc::class);
         $this->assertEquals(1, $this->dispatcher->getQueue()->count());
+    }
+
+    public function testDequeueByTypeWithProperties(): void
+    {
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->dispatcher->dispatch(new Inc(['number' => 54321]));
+        $this->dispatcher->dispatch(
+            new Inc(
+                [
+                    'number' => 54321,
+                    'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+                ]
+            )
+        );
+
+        $this->assertEquals(3, $this->dispatcher->getQueue()->count());
+        $this->dispatcher->getQueue()->dequeueByType(
+            Inc::class,
+            [
+                'number' => 54321,
+                'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+            ]
+        );
+        $this->assertEquals(2, $this->dispatcher->getQueue()->count());
     }
 
     /**

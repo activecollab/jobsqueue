@@ -19,38 +19,23 @@ use InvalidArgumentException;
 
 class JobsDispatcher implements DispatcherInterface
 {
-    /**
-     * @var QueueInterface
-     */
-    private $queue;
+    private QueueInterface $queue;
 
-    /**
-     * @param QueueInterface $queue
-     */
     public function __construct(QueueInterface $queue)
     {
         $this->queue = $queue;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $this->getQueue()->enqueue($job, $this->validateChannel($channel));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(JobInterface $job, $silent = true)
     {
         return $this->getQueue()->execute($job, $silent);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function executeNextInLine(...$from_channels)
     {
         if ($job = $this->getQueue()->nextInLine(...$from_channels)) {
@@ -65,9 +50,6 @@ class JobsDispatcher implements DispatcherInterface
         return $this->getQueue()->exists($job_type, $properties);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function &getQueue()
     {
         return $this->queue;
@@ -100,48 +82,30 @@ class JobsDispatcher implements DispatcherInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRegisteredChannels()
     {
         return $this->registered_channels;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isChannelRegistered($channel)
     {
         return in_array($channel, $this->registered_channels);
     }
 
-    /**
-     * @var bool
-     */
-    private $exception_on_unregistered_channel = true;
+    private bool $exception_on_unregistered_channel = true;
 
-    /**
-     * {@inheritdoc}
-     */
     public function getExceptionOnUnregisteredChannel()
     {
         return $this->exception_on_unregistered_channel;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function &exceptionOnUnregisteredChannel($value = true)
     {
-        $this->exception_on_unregistered_channel = (boolean) $value;
+        $this->exception_on_unregistered_channel = (bool) $value;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     private function validateChannel($channel)
     {
         if (is_string($channel)) {
@@ -165,9 +129,6 @@ class JobsDispatcher implements DispatcherInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function batch($name, callable $add_jobs = null)
     {
         $batch = $this->getQueue()->createBatch($this, $name);
@@ -186,9 +147,6 @@ class JobsDispatcher implements DispatcherInterface
         return $this->getQueue()->countBatches();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function unfurlType($search_for)
     {
         return  $this->getQueue()->unfurlType($search_for);

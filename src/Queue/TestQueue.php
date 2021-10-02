@@ -55,7 +55,7 @@ class TestQueue extends Queue
         return $job->execute();
     }
 
-    public function countByChannel($channel)
+    public function countByChannel(string $channel): int
     {
         return count($this->jobs);
     }
@@ -65,8 +65,9 @@ class TestQueue extends Queue
         return false;
     }
 
-    public function getJobById($job_id)
+    public function getJobById(int $job_id): ?JobInterface
     {
+        return null;
     }
 
     public function nextInLine(...$from_channels)

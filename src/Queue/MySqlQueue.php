@@ -178,27 +178,12 @@ class MySqlQueue extends Queue
 
     public function dequeueByType(string $type, array $properties = null): void
     {
-        $conditions = [
-            $this->connection->prepare('`type` = ? AND `reservation_key` IS NULL', $type),
-        ];
-
-        if ($properties) {
-            foreach ($properties as $property => $value_to_match) {
-                if ($this->connection->fieldExists(self::JOBS_TABLE_NAME, $property)) {
-                    $conditions[] = $this->connection->prepare(
-                        sprintf('`%s` = ?', $property),
-                        $value_to_match
-                    );
-
-                    continue;
-                }
-
-                $conditions[] = $this->connection->prepare(
-                    sprintf('JSON_UNQUOTE(JSON_EXTRACT(`data`, "$.%s")) = ?', $property),
-                    $value_to_match
-                );
-            }
-        }
+        $conditions = $this->propertiesToConditions(
+            $properties,
+            [
+                $this->connection->prepare('`type` = ? AND `reservation_key` IS NULL', $type),
+            ]
+        );
 
         $this->connection->execute(
             sprintf(
@@ -249,9 +234,9 @@ class MySqlQueue extends Queue
         return null;
     }
 
-    public function countByChannel($channel)
+    public function countByChannel(string $channel): int
     {
-        return $this->connection->executeFirstCell(
+        return (int) $this->connection->executeFirstCell(
             sprintf('SELECT COUNT(`id`) AS "row_count" FROM `%s` WHERE `channel` = ?', self::JOBS_TABLE_NAME),
             $channel
         );
@@ -259,43 +244,59 @@ class MySqlQueue extends Queue
 
     public function exists(string $job_type, array $properties = null): bool
     {
-        if (empty($properties)) {
-            return (bool) $this->connection->executeFirstCell(
-                sprintf('SELECT COUNT(`id`) AS "row_count" FROM `%s` WHERE `type` = ?', self::JOBS_TABLE_NAME),
-                $job_type
-            );
-        }
-
-        $rows = $this->connection->execute(
-            sprintf('SELECT `data` FROM `%s` WHERE `type` = ?', self::JOBS_TABLE_NAME),
-            $job_type
+        $conditions = $this->propertiesToConditions(
+            $properties,
+            [
+                $this->connection->prepare('`type` = ?', $job_type),
+            ]
         );
 
-        if (empty($rows)) {
-            return false;
-        }
+        return (bool) $this->connection->executeFirstCell(
+            sprintf(
+                'SELECT COUNT(`id`) AS "row_count" FROM `%s` WHERE %s',
+                self::JOBS_TABLE_NAME,
+                implode(' AND ', $conditions)
+            ),
+        );
+    }
 
-        foreach ($rows as $row) {
-            try {
-                $data = $this->jsonDecode($row['data']);
-
-                $all_properties_found = true;
-
-                foreach ($properties as $k => $v) {
-                    if (!(array_key_exists($k, $data) && $data[$k] === $v)) {
-                        $all_properties_found = false;
-                        break;
-                    }
+    private function propertiesToConditions(?array $properties, array $conditions = []): array
+    {
+        if ($properties) {
+            foreach ($properties as $property => $value_to_match) {
+                if (is_bool($value_to_match)) {
+                    $prepared_value = $value_to_match ? 'true' : 'false';
+                } else {
+                    $prepared_value = $this->connection->escapeValue($value_to_match);
                 }
 
-                if ($all_properties_found) {
-                    return true;
+                if ($this->connection->fieldExists(self::JOBS_TABLE_NAME, $property)) {
+                    $conditions[] = $this->connection->prepare(
+                        sprintf('`%s` = ?', $property),
+                        $value_to_match
+                    );
+
+                    continue;
                 }
-            } catch (RuntimeException $e) {
+
+                if (is_bool($value_to_match)) {
+                    $conditions[] = sprintf(
+                        'IF(JSON_EXTRACT(`data`, "$.%s"), TRUE, FALSE) IS %s',
+                        $property,
+                        $value_to_match ? 'TRUE' : 'FALSE'
+                    );
+
+                    continue;
+                }
+
+                $conditions[] = $this->connection->prepare(
+                    sprintf('JSON_UNQUOTE(JSON_EXTRACT(`data`, "$.%s")) = ?', $property),
+                    $value_to_match
+                );
             }
         }
 
-        return false;
+        return $conditions;
     }
 
     /**
@@ -364,7 +365,7 @@ class MySqlQueue extends Queue
         }
     }
 
-    public function getJobById($job_id)
+    public function getJobById(int $job_id): ?JobInterface
     {
         if ($row = $this->connection->executeFirstRow('SELECT `id`, `channel`, `batch_id`, `type`, `data` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id)) {
             try {

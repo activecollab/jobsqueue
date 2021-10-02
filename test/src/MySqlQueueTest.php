@@ -111,10 +111,58 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
         $this->assertEquals(2, $this->dispatcher->getQueue()->count());
     }
 
-    /**
-     * Test count jobs.
-     */
-    public function testCountJobs()
+    public function testWillFindExistingJob(): void
+    {
+        $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $this->dispatcher->dispatch(
+            new Inc(
+                [
+                    'number' => 54321,
+                    'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+                ]
+            )
+        );
+
+        $this->assertTrue($this->dispatcher->getQueue()->exists(Inc::class));
+        $this->assertTrue(
+            $this->dispatcher->getQueue()->exists(
+                Inc::class,
+                [
+                    'number' => 54321,
+                ]
+            )
+        );
+        $this->assertTrue(
+            $this->dispatcher->getQueue()->exists(
+                Inc::class,
+                [
+                    'number' => 54321,
+                    'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+                ]
+            )
+        );
+
+        $this->assertFalse(
+            $this->dispatcher->getQueue()->exists(
+                Inc::class,
+                [
+                    'number' => 12345,
+                    'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+                ]
+            )
+        );
+        $this->assertFalse(
+            $this->dispatcher->getQueue()->exists(
+                Inc::class,
+                [
+                    'number' => 54321,
+                    'priority' => JobInterface::NOT_A_PRIORITY,
+                ]
+            )
+        );
+    }
+
+    public function testCountJobs(): void
     {
         $this->assertRecordsCount(0);
 
@@ -231,21 +279,18 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'extra' => true])));
 
         $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Something'));
-        $this->assertTrue($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc'));
+        $this->assertTrue($this->dispatcher->exists(Inc::class));
     }
 
-    /**
-     * Test check for existing job.
-     */
-    public function testCheckForExistingJobWithMatchigProperties()
+    public function testCheckForExistingJobWithMatchingProperties(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'extra' => true])));
 
-        $this->assertTrue($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 123]));
-        $this->assertTrue($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 123, 'extra' => true]));
-        $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => '123']));
-        $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 123, 'extra' => false]));
-        $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Inc', ['number' => 234]));
+        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => 123]));
+        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => 123, 'extra' => true]));
+        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => '123']));
+        $this->assertFalse($this->dispatcher->exists(Inc::class, ['number' => 123, 'extra' => false]));
+        $this->assertFalse($this->dispatcher->exists(Inc::class, ['number' => 234]));
     }
 
     /**

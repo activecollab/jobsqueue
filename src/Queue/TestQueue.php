@@ -65,6 +65,14 @@ class TestQueue extends Queue
         return false;
     }
 
+    public function changePriority(
+        string $job_type,
+        int $new_priority,
+        array $properties = null
+    ): void
+    {
+    }
+
     public function getJobById(int $job_id): ?JobInterface
     {
         return null;

@@ -57,6 +57,12 @@ interface QueueInterface extends Countable
      */
     public function exists(string $job_type, array $properties = null): bool;
 
+    public function changePriority(
+        string $job_type,
+        int $new_priority,
+        array $properties = null
+    ): void;
+
     /**
      * Return a total number of jobs that are in the given channel.
      */

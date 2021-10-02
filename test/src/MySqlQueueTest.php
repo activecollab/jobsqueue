@@ -111,6 +111,17 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
         $this->assertEquals(2, $this->dispatcher->getQueue()->count());
     }
 
+    public function testCheckForExistingJobWithMatchingProperties(): void
+    {
+        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'extra' => true])));
+
+        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => 123]));
+        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => 123, 'extra' => true]));
+        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => '123']));
+        $this->assertFalse($this->dispatcher->exists(Inc::class, ['number' => 123, 'extra' => false]));
+        $this->assertFalse($this->dispatcher->exists(Inc::class, ['number' => 234]));
+    }
+
     public function testWillFindExistingJob(): void
     {
         $this->dispatcher->dispatch(new Inc(['number' => 1245]));
@@ -160,6 +171,48 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
                 ]
             )
         );
+    }
+
+    public function testWillChangePriority(): void
+    {
+        $first_job = $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $second_job = $this->dispatcher->dispatch(
+            new Inc(
+                [
+                    'number' => 54321,
+                    'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+                ]
+            )
+        );
+
+        $this->dispatcher->getQueue()->changePriority(Inc::class, JobInterface::HAS_PRIORITY);
+
+        $this->assertSame(JobInterface::HAS_PRIORITY, $this->queue->getJobById($first_job)->getPriority());
+        $this->assertSame(JobInterface::HAS_PRIORITY, $this->queue->getJobById($second_job)->getPriority());
+    }
+
+    public function testWillChangePriorityOnMatchinJobs(): void
+    {
+        $first_job = $this->dispatcher->dispatch(new Inc(['number' => 1245]));
+        $second_job = $this->dispatcher->dispatch(
+            new Inc(
+                [
+                    'number' => 54321,
+                    'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+                ]
+            )
+        );
+
+        $this->dispatcher->getQueue()->changePriority(
+            Inc::class,
+            JobInterface::HAS_PRIORITY,
+            [
+                'priority' => JobInterface::HAS_HIGHEST_PRIORITY,
+            ]
+        );
+
+        $this->assertSame(JobInterface::NOT_A_PRIORITY, $this->queue->getJobById($first_job)->getPriority());
+        $this->assertSame(JobInterface::HAS_PRIORITY, $this->queue->getJobById($second_job)->getPriority());
     }
 
     public function testCountJobs(): void
@@ -280,17 +333,6 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
 
         $this->assertFalse($this->dispatcher->exists('ActiveCollab\\JobsQueue\\Test\\Jobs\\Something'));
         $this->assertTrue($this->dispatcher->exists(Inc::class));
-    }
-
-    public function testCheckForExistingJobWithMatchingProperties(): void
-    {
-        $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'extra' => true])));
-
-        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => 123]));
-        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => 123, 'extra' => true]));
-        $this->assertTrue($this->dispatcher->exists(Inc::class, ['number' => '123']));
-        $this->assertFalse($this->dispatcher->exists(Inc::class, ['number' => 123, 'extra' => false]));
-        $this->assertFalse($this->dispatcher->exists(Inc::class, ['number' => 234]));
     }
 
     /**

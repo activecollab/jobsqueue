@@ -260,6 +260,29 @@ class MySqlQueue extends Queue
         );
     }
 
+    public function changePriority(
+        string $job_type,
+        int $new_priority,
+        array $properties = null
+    ): void
+    {
+        $conditions = $this->propertiesToConditions(
+            $properties,
+            [
+                $this->connection->prepare('`type` = ? AND `reservation_key` IS NULL', $job_type),
+            ]
+        );
+
+        $this->connection->execute(
+            sprintf(
+                'UPDATE `%s` SET `data` = JSON_SET(`data`, "$.priority", %d) WHERE %s',
+                self::JOBS_TABLE_NAME,
+                $new_priority,
+                implode(' AND ', $conditions)
+            ),
+        );
+    }
+
     private function propertiesToConditions(?array $properties, array $conditions = []): array
     {
         if ($properties) {

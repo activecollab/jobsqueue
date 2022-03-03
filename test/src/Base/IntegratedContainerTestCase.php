@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace ActiveCollab\JobsQueue\Test\Base;
 
 use ActiveCollab\JobsQueue\Test\Fixtures\Container;
-use Interop\Container\ContainerInterface;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 abstract class IntegratedContainerTestCase extends IntegratedMySqlQueueTest

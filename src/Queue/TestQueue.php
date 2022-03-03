@@ -119,7 +119,7 @@ class TestQueue extends Queue
     {
     }
 
-    public function count()
+    public function count(): int
     {
         return count($this->jobs);
     }

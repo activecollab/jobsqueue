@@ -73,10 +73,7 @@ abstract class Job implements JobInterface
      */
     abstract public function execute();
 
-    /**
-     * @return array
-     */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->data;
     }

@@ -11,26 +11,17 @@
 
 namespace ActiveCollab\JobsQueue\Test\Fixtures;
 
-use Interop\Container\ContainerInterface;
 use Pimple\Container as BaseContainer;
+use Psr\Container\ContainerInterface;
 
-/**
- * @package ActiveCollab\JobsQueue\Test\Commands\Fixtures
- */
 class Container extends BaseContainer implements ContainerInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function get($id)
+    public function get(string $id)
     {
         return $this->offsetGet($id);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function has($id)
+    public function has(string $id)
     {
         return $this->offsetExists($id);
     }

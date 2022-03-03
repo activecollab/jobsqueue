@@ -497,11 +497,11 @@ class MySqlQueue extends Queue
     public function nextBatchInLine($jobs_to_run, ...$from_channels)
     {
         if (!is_int($jobs_to_run)) {
-            if (ctype_digit($jobs_to_run)) {
-                $jobs_to_run = (int) $jobs_to_run;
-            } else {
+            if ($jobs_to_run === null || !ctype_digit($jobs_to_run)) {
                 throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero');
             }
+
+            $jobs_to_run = (int) $jobs_to_run;
         }
 
         if ($jobs_to_run < 1) {
@@ -650,7 +650,7 @@ class MySqlQueue extends Queue
         }
     }
 
-    public function count()
+    public function count(): int
     {
         return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '`');
     }

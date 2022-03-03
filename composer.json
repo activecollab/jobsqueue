@@ -18,10 +18,9 @@
         }
     ],
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.0",
         "ext-json": "*",
-        "activecollab/containeraccess": "^1.0",
-        "activecollab/databaseconnection": "^3.0",
+        "activecollab/databaseconnection": "^5.0",
         "doctrine/inflector": "^1.1.0",
         "psr/log": "^1.0"
     },

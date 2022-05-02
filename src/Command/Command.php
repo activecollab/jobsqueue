@@ -17,6 +17,7 @@ use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use DateTime;
 use DateTimeZone;
 use Doctrine\Common\Inflector\Inflector;
+use Doctrine\Inflector\InflectorFactory;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
@@ -36,7 +37,12 @@ abstract class Command extends SymfonyCommand implements ContainerAccessInterfac
     {
         $bits = explode('\\', get_class($this));
 
-        $this->setName($this->getCommandNamePrefix() . Inflector::tableize(array_pop($bits)))
+        $this
+            ->setName(
+                sprintf('%s%s',
+                    $this->getCommandNamePrefix(),
+                    InflectorFactory::create()->build()->tableize(array_pop($bits)))
+            )
             ->addOption('debug', '', InputOption::VALUE_NONE, 'Output debug details')
             ->addOption('json', '', InputOption::VALUE_NONE, 'Output JSON')
             ->addOption('environment', 'e', InputOption::VALUE_REQUIRED, 'Environment in which we are are running (development, staging or production)', 'development');

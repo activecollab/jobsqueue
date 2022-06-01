@@ -195,6 +195,8 @@ trait ExecuteCliCommand
      */
     public function prepareCommandFromData(array $data)
     {
+        setlocale(LC_CTYPE, "en_US.UTF-8");
+
         $command = $data['command'];
 
         foreach ($data['command_arguments'] as $k => $v) {

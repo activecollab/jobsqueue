@@ -260,6 +260,12 @@ will produce a CLI command:
 export FOO='bar' && php foobar.php --baz=1 
 ```
 
+## Version 5.0 upgrade
+
+Backward compatibility notes:
+
+1. Check all calls to `JobsDispatcher::batch()` method, and make sure that callbacks do not expect `$batch` to be passed on by reference.
+
 ## To do
 
 1. Add logging to all relevant methods in MySQL queue

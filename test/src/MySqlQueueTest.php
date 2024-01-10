@@ -30,7 +30,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if job queue table is prepared for testing.
      */
-    public function testJobsQueueTableIsCreated()
+    public function testJobsQueueTableIsCreated(): void
     {
         $this->assertContains(MySqlQueue::JOBS_TABLE_NAME, $this->connection->getTableNames());
     }
@@ -38,7 +38,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test jobs are added to the queue.
      */
-    public function testJobsAreAddedToTheQueue()
+    public function testJobsAreAddedToTheQueue(): void
     {
         $this->assertRecordsCount(0);
 
@@ -52,7 +52,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test jobs can be removed from queue.
      */
-    public function testJobsAreRemovedFromTheQueue()
+    public function testJobsAreRemovedFromTheQueue(): void
     {
         $job_id = $this->dispatcher->dispatch(new Inc(['number' => 1245]));
         $this->assertEquals(1, $job_id);
@@ -68,7 +68,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Check if there will be no exception if we try to dequeue a job that doesn't exist.
      */
-    public function testDequeueNoExceptionOnMissingJob()
+    public function testDequeueNoExceptionOnMissingJob(): void
     {
         $this->assertEquals(0, $this->dispatcher->getQueue()->count());
         $this->dispatcher->getQueue()->dequeue(12345);
@@ -191,7 +191,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
         $this->assertSame(JobInterface::HAS_PRIORITY, $this->queue->getJobById($second_job)->getPriority());
     }
 
-    public function testWillChangePriorityOnMatchinJobs(): void
+    public function testWillChangePriorityOnMatchingJobs(): void
     {
         $first_job = $this->dispatcher->dispatch(new Inc(['number' => 1245]));
         $second_job = $this->dispatcher->dispatch(
@@ -229,7 +229,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test count jobs by type.
      */
-    public function testCountJobsByType()
+    public function testCountJobsByType(): void
     {
         $this->assertRecordsCount(0);
 
@@ -245,7 +245,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Make sure that full job class is recorded.
      */
-    public function testFullJobClassIsRecorded()
+    public function testFullJobClassIsRecorded(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
@@ -258,7 +258,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if channel is properly set.
      */
-    public function testChannelIsSet()
+    public function testChannelIsSet(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
@@ -271,7 +271,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if priority is properly set.
      */
-    public function testPriorityIsProperlySetFromData()
+    public function testPriorityIsProperlySetFromData(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'priority' => Job::HAS_HIGHEST_PRIORITY])));
 
@@ -288,7 +288,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test job data is properly serialized to JSON.
      */
-    public function testJobDataIsSerializedToJson()
+    public function testJobDataIsSerializedToJson(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
@@ -317,7 +317,6 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     public function testJobDataCanBeBrokenJson(): void
     {
         $this->expectException(QueryException::class);
-        $this->expectDeprecationMessage('Syntax error in JSON text');
 
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
@@ -327,7 +326,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test check for existing job.
      */
-    public function testCheckForExistingJob()
+    public function testCheckForExistingJob(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'extra' => true])));
 
@@ -338,7 +337,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if new jobs are instantly available.
      */
-    public function testNewJobsAreAvailableInstantly()
+    public function testNewJobsAreAvailableInstantly(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
@@ -355,7 +354,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test new jobs can be delayed by a specified number of seconds.
      */
-    public function testNewJobsCanBeDelayed()
+    public function testNewJobsCanBeDelayed(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123, 'delay' => 5])));
 
@@ -369,7 +368,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if we can use first_attempt_delay to set a delay of the first attempt.
      */
-    public function testNewJobsCanBeDelayedWithFirstAttemptExecutedNow()
+    public function testNewJobsCanBeDelayedWithFirstAttemptExecutedNow(): void
     {
         $inc_job_with_no_first_attempt_delay = new Inc([
             'number' => 123,
@@ -392,7 +391,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test that jobs are not reserved by default.
      */
-    public function testJobsAreNotReservedByDefault()
+    public function testJobsAreNotReservedByDefault(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
@@ -412,7 +411,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test that jobs start with zero attempts.
      */
-    public function testAttemptsAreZeroByDefault()
+    public function testAttemptsAreZeroByDefault(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
 
@@ -429,7 +428,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test next in line when no priority is set (FIFO).
      */
-    public function testNextInLineReturnsNullOnNoJobs()
+    public function testNextInLineReturnsNullOnNoJobs(): void
     {
         $this->assertRecordsCount(0);
         $this->assertNull($this->dispatcher->getQueue()->nextInLine());
@@ -438,7 +437,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test next in line when no priority is set (FIFO).
      */
-    public function testNextInLine()
+    public function testNextInLine(): void
     {
         $this->assertRecordsCount(0);
 
@@ -457,7 +456,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
      * @dataProvider provideInvalidJobsToRunValues
      * @param mixed $jobs_to_run
      */
-    public function testExceptionOnInvalidJobsToRun($jobs_to_run)
+    public function testExceptionOnInvalidJobsToRun(mixed $jobs_to_run): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Jobs to run needs to be a number larger than zero");
@@ -478,7 +477,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test next batch in line when no priority is set (FIFO).
      */
-    public function testNextBatchInLine()
+    public function testNextBatchInLine(): void
     {
         $this->assertRecordsCount(0);
 
@@ -502,7 +501,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test next in line when no priority is set (FIFO).
      */
-    public function testNextBatchInLineReturnsAnEmptyArrayOnNoJobs()
+    public function testNextBatchInLineReturnsAnEmptyArrayOnNoJobs(): void
     {
         $this->assertRecordsCount(0);
 
@@ -515,7 +514,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if nextInLine works fine when another worker process "snatches" the job (returns NULL).
      */
-    public function testJobSnatching()
+    public function testJobSnatching(): void
     {
         $this->assertEquals(0, $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `jobs_queue`'));
 
@@ -547,7 +546,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if queue instance is properly set.
      */
-    public function testJobGetsQueueProperlySet()
+    public function testJobGetsQueueProperlySet(): void
     {
         $this->assertEquals(1, $this->dispatcher->dispatch(new Inc(['number' => 123])));
         $this->assertRecordsCount(1);
@@ -563,7 +562,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test priority tasks are front in line.
      */
-    public function testPriorityJobsAreFrontInLine()
+    public function testPriorityJobsAreFrontInLine(): void
     {
         $this->assertRecordsCount(0);
 
@@ -582,7 +581,7 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if job execution removes it from the queue.
      */
-    public function testExecuteJobRemovesItFromQueue()
+    public function testExecuteJobRemovesItFromQueue(): void
     {
         $this->assertRecordsCount(0);
 
@@ -602,12 +601,12 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
     /**
      * Test if execute suppresses exceptions by default.
      */
-    public function testExecuteIsSilencedByDefault()
+    public function testExecuteIsSilencedByDefault(): void
     {
         $this->dispatcher->getQueue()->execute(new Failing());
     }
 
-    public function testExecuteThrowsExceptionWhenNotSilenced()
+    public function testExecuteThrowsExceptionWhenNotSilenced(): void
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage("Built to fail!");

@@ -8,6 +8,7 @@
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace ActiveCollab\JobsQueue\Batches;
 
@@ -15,41 +16,19 @@ use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 
 abstract class Batch implements BatchInterface
 {
-    protected JobsDispatcherInterface $dispatcher;
-
-    /**
-     * @param JobsDispatcherInterface $dispatcher
-     * @param int                 $queue_id
-     * @param string              $name
-     */
-    public function __construct(JobsDispatcherInterface &$dispatcher, $queue_id = null, $name = null)
+    public function __construct(
+        protected JobsDispatcherInterface $dispatcher,
+        private ?int $queue_id = null,
+        private ?string $name = null,
+    )
     {
-        $this->dispatcher = $dispatcher;
-        $this->queue_id = $queue_id;
-        $this->name = $name;
     }
 
-    /**
-     * @var mixed
-     */
-    private $queue_id;
-
-    /**
-     * {@inheritdoc}
-     */
     public function getQueueId()
     {
         return $this->queue_id;
     }
 
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @return string
-     */
     public function getName()
     {
         return $this->name;

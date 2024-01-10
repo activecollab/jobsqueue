@@ -78,11 +78,7 @@ interface JobInterface extends JsonSerializable
      * @return int|null
      */
     public function getFirstJobDelay();
-
-    /**
-     * @return QueueInterface
-     */
-    public function &getQueue();
+    public function getQueue(): QueueInterface;
 
     /**
      * Return queue ID that this job is enqueued under.

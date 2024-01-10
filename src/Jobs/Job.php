@@ -171,10 +171,7 @@ abstract class Job implements JobInterface
      */
     private $queue;
 
-    /**
-     * @return QueueInterface
-     */
-    public function &getQueue()
+    public function getQueue(): QueueInterface
     {
         return $this->queue;
     }

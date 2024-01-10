@@ -50,7 +50,7 @@ class TestQueue extends Queue
     {
     }
 
-    public function execute(JobInterface $job, $silent = true)
+    public function execute(JobInterface $job, bool $silent = true)
     {
         return $job->execute();
     }
@@ -198,8 +198,9 @@ class TestQueue extends Queue
         return [];
     }
 
-    public function unfurlType($search_for)
+    public function unfurlType(string $search_for): ?array
     {
+        return null;
     }
 
     public function failedJobStatistics()

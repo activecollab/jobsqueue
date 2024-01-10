@@ -81,7 +81,7 @@ class BatchesTest extends IntegratedMySqlQueueTest
 
     public function testCountBatchJobs()
     {
-        $batch = $this->dispatcher->batch('Testing batch', function (Batch &$batch) {
+        $batch = $this->dispatcher->batch('Testing batch', function (Batch $batch) {
             for ($i = 1; $i <= 5; ++$i) {
                 $batch->dispatch(new Inc(['number' => $i]));
             }
@@ -93,7 +93,7 @@ class BatchesTest extends IntegratedMySqlQueueTest
 
     public function testCountBatchProgress()
     {
-        $batch = $this->dispatcher->batch('Testing batch', function (Batch &$batch) {
+        $batch = $this->dispatcher->batch('Testing batch', function (Batch $batch) {
             for ($i = 1; $i <= 5; ++$i) {
                 $batch->dispatch(new Inc(['number' => $i]));
             }
@@ -121,7 +121,7 @@ class BatchesTest extends IntegratedMySqlQueueTest
 
     public function testAllBatchJobsExecution()
     {
-        $batch = $this->dispatcher->batch('Testing batch', function (Batch &$batch) {
+        $batch = $this->dispatcher->batch('Testing batch', function (Batch $batch) {
             for ($i = 1; $i <= 5; ++$i) {
                 $batch->dispatch(new Inc(['number' => $i]));
             }

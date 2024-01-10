@@ -9,45 +9,33 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue;
 
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 
-/**
- * @package ActiveCollab\JobsQueue
- */
 interface JobsDispatcherInterface extends DispatchJobInterface
 {
     /**
      * Execute a job now (sync, waits for a response).
      *
-     * @param  JobInterface $job
-     * @param  bool|true    $silent
      * @return mixed
      */
-    public function execute(JobInterface $job, $silent = true);
+    public function execute(JobInterface $job, bool $silent = true);
 
     /**
      * Execute next job in line of execution.
-     *
-     * @param string[] ...$from_channels
      */
-    public function executeNextInLine(...$from_channels);
+    public function executeNextInLine(string ...$from_channels);
 
     /**
      * Return true if job of the given type and with the given properties exists in queue.
      */
     public function exists(string $job_type, array $properties = null): bool;
-
-    /**
-     * Return queue instance.
-     *
-     * @return QueueInterface
-     */
-    public function &getQueue();
-
+    public function getQueue(): QueueInterface;
     public function registerChannels(string ...$channels): JobsDispatcherInterface;
 
     /**
@@ -58,49 +46,32 @@ interface JobsDispatcherInterface extends DispatchJobInterface
     /**
      * Return an array of registered channels.
      *
-     * @return array
+     * @return string[]
      */
-    public function getRegisteredChannels();
+    public function getRegisteredChannels(): array;
 
     /**
      * Return true if $channel is registered.
-     *
-     * @param  string $channel
-     * @return bool
      */
-    public function isChannelRegistered($channel);
-
-    /**
-     * @return bool
-     */
-    public function getExceptionOnUnregisteredChannel();
+    public function isChannelRegistered(string $channel): bool;
+    public function getExceptionOnUnregisteredChannel(): bool;
 
     /**
      * Set if exception should be thrown when producer tries to add a job to an unregistered channel.
      *
-     * Default is TRUE. FALSE may be useful during testing and if there's only one channel used
-     *
-     * @param  bool  $value
-     * @return $this
+     * Default is TRUE. FALSE may be useful during testing and if there's only one channel used.
      */
-    public function &exceptionOnUnregisteredChannel($value = true);
+    public function exceptionOnUnregisteredChannel(bool $value = true): static;
 
     /**
      * Create a job batch and optionally add jobs to it (via $add_jobs closure).
-     *
-     * @param  string         $name
-     * @param  callable|null  $add_jobs
-     * @return BatchInterface
      */
-    public function batch($name, callable $add_jobs = null);
+    public function batch(string $name, callable $add_jobs = null): BatchInterface;
     
     public function countBatches(): int;
 
     /**
      * Search for a full job class name.
-     *
-     * @param  string   $search_for
-     * @return string[]
      */
-    public function unfurlType($search_for);
+    public function unfurlType(string $search_for): ?array;
 }

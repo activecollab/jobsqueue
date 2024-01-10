@@ -46,11 +46,9 @@ interface QueueInterface extends Countable
     /**
      * Execute a job now (sync, waits for a response).
      *
-     * @param  JobInterface $job
-     * @param  bool         $silent
      * @return mixed
      */
-    public function execute(JobInterface $job, $silent = true);
+    public function execute(JobInterface $job, bool $silent = true);
 
     /**
      * Return true if there's an active job of the give type with the given properties.
@@ -174,11 +172,8 @@ interface QueueInterface extends Countable
 
     /**
      * Search for a full job class name.
-     *
-     * @param  string   $search_for
-     * @return string[]
      */
-    public function unfurlType($search_for);
+    public function unfurlType(string $search_for): ?array;
 
     /**
      * Method that returns failed job statistics.

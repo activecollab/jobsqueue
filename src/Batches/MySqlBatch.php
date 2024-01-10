@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Batches;
 
 use ActiveCollab\DatabaseConnection\ConnectionInterface;
@@ -18,38 +20,19 @@ use ActiveCollab\JobsQueue\Queue\MySqlQueue;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use RuntimeException;
 
-/**
- * @package ActiveCollab\JobsQueue\Queue
- */
 class MySqlBatch extends Batch
 {
-    /**
-     * @var ConnectionInterface
-     */
-    private $connection;
-
-    /**
-     * @param JobsDispatcherInterface $dispatcher
-     * @param ConnectionInterface $connection
-     * @param int                 $queue_id
-     * @param string              $name
-     */
     public function __construct(
-        JobsDispatcherInterface &$dispatcher,
-        ConnectionInterface &$connection,
-        $queue_id = null,
-        $name = null
+        JobsDispatcherInterface $dispatcher,
+        private ConnectionInterface $connection,
+        int $queue_id = null,
+        string $name = null
     )
     {
         parent::__construct($dispatcher, $queue_id, $name);
-
-        $this->connection = $connection;
     }
 
-    /**
-     * @var array
-     */
-    private $dispatched_job_ids = [];
+    private array $dispatched_job_ids = [];
 
     /**
      * Add a job to the queue.
@@ -58,7 +41,7 @@ class MySqlBatch extends Batch
      * @param  string       $channel
      * @return mixed
      */
-    public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function dispatch(JobInterface $job, string $channel = QueueInterface::MAIN_CHANNEL)
     {
         $dispatched_job_id = $this->dispatcher->dispatch($job->setBatch($this), $channel);
 
@@ -67,71 +50,70 @@ class MySqlBatch extends Batch
         return $dispatched_job_id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function commitDispatchedJobIds()
+    public function commitDispatchedJobIds(): void
     {
-        if ($queue_id = $this->getQueueId()) {
-            if (!empty($this->dispatched_job_ids)) {
-                $this->connection->transact(function () use ($queue_id) {
-                    $this->connection->execute('UPDATE `' . MySqlQueue::BATCHES_TABLE_NAME . '` SET `jobs_count` = `jobs_count` + ? WHERE `id` = ?', count($this->dispatched_job_ids), $queue_id);
-                });
-            }
-        } else {
+        $queue_id = $this->getQueueId();
+
+        if (empty($queue_id)) {
             throw new RuntimeException("Can't commit dispatched job ID-s in an unsaved batch");
+        }
+
+        if (!empty($this->dispatched_job_ids)) {
+            $this->connection->transact(
+                function () use ($queue_id) {
+                    $this->connection->execute(
+                        'UPDATE `' . MySqlQueue::BATCHES_TABLE_NAME . '` SET `jobs_count` = `jobs_count` + ? WHERE `id` = ?',
+                        count($this->dispatched_job_ids),
+                        $queue_id,
+                    );
+                },
+            );
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function isComplete()
+    public function isComplete(): bool
     {
         return empty($this->countPendingJobs());
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function countJobs()
+    public function countJobs(): int
     {
         if ($queue_id = $this->getQueueId()) {
-            return (integer) $this->connection->executeFirstCell('SELECT `jobs_count` FROM `' . MySqlQueue::BATCHES_TABLE_NAME . '` WHERE `id` = ?', $queue_id);
-        } else {
-            throw new RuntimeException("Can't get number of jobs from an unsaved batch");
+            return (int) $this->connection->executeFirstCell(
+                'SELECT `jobs_count` FROM `' . MySqlQueue::BATCHES_TABLE_NAME . '` WHERE `id` = ?',
+                $queue_id,
+            );
         }
+
+        throw new RuntimeException("Can't get number of jobs from an unsaved batch");
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function countPendingJobs()
+    public function countPendingJobs(): int
     {
         if ($queue_id = $this->getQueueId()) {
-            return (integer) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE `batch_id` = ?', $queue_id);
-        } else {
-            throw new RuntimeException("Can't get number of jobs from an unsaved batch");
+            return (integer) $this->connection->executeFirstCell(
+                'SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::JOBS_TABLE_NAME . '` WHERE `batch_id` = ?',
+                $queue_id,
+            );
         }
+
+        throw new RuntimeException("Can't get number of jobs from an unsaved batch");
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function countCompletedJobs()
+    public function countCompletedJobs(): int
     {
         return $this->countJobs() - $this->countPendingJobs() - $this->countFailedJobs();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function countFailedJobs()
+    public function countFailedJobs(): int
     {
         if ($queue_id = $this->getQueueId()) {
-            return (integer) $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` WHERE `batch_id` = ?', $queue_id);
-        } else {
-            throw new RuntimeException("Can't get number of jobs from an unsaved batch");
+            return (integer) $this->connection->executeFirstCell(
+                'SELECT COUNT(`id`) AS "row_count" FROM `' . MySqlQueue::FAILED_JOBS_TABLE_NAME . '` WHERE `batch_id` = ?',
+                $queue_id,
+            );
         }
+
+        throw new RuntimeException("Can't get number of jobs from an unsaved batch");
     }
 }

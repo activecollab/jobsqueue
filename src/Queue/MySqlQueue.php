@@ -194,7 +194,7 @@ class MySqlQueue extends Queue
         );
     }
 
-    public function execute(JobInterface $job, $silent = true)
+    public function execute(JobInterface $job, bool $silent = true)
     {
         try {
             if ($this->logger) {
@@ -799,7 +799,7 @@ class MySqlQueue extends Queue
         return [];
     }
 
-    public function unfurlType($search_for)
+    public function unfurlType(string $search_for): ?array
     {
         return $this->connection->executeFirstColumn('SELECT DISTINCT(`type`) FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `type` LIKE ?', '%' . $search_for . '%');
     }

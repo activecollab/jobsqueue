@@ -13,36 +13,38 @@ declare(strict_types=1);
 
 namespace ActiveCollab\JobsQueue;
 
+use ActiveCollab\JobsQueue\Batches\BatchInterface;
 use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use InvalidArgumentException;
 
 class JobsDispatcher implements DispatcherInterface
 {
-    private QueueInterface $queue;
-
-    public function __construct(QueueInterface $queue)
+    public function __construct(
+        private QueueInterface $queue,
+    )
     {
-        $this->queue = $queue;
     }
 
-    public function dispatch(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function dispatch(JobInterface $job, string $channel = QueueInterface::MAIN_CHANNEL)
     {
         return $this->getQueue()->enqueue($job, $this->validateChannel($channel));
     }
 
-    public function execute(JobInterface $job, $silent = true)
+    public function execute(JobInterface $job, bool $silent = true)
     {
         return $this->getQueue()->execute($job, $silent);
     }
 
-    public function executeNextInLine(...$from_channels)
+    public function executeNextInLine(string ...$from_channels)
     {
-        if ($job = $this->getQueue()->nextInLine(...$from_channels)) {
-            return $this->getQueue()->execute($job, $job->getChannel());
+        $job = $this->getQueue()->nextInLine(...$from_channels);
+
+        if (empty($job)) {
+            return null;
         }
 
-        return null;
+        return $this->getQueue()->execute($job);
     }
 
     public function exists(string $job_type, array $properties = null): bool
@@ -50,16 +52,13 @@ class JobsDispatcher implements DispatcherInterface
         return $this->getQueue()->exists($job_type, $properties);
     }
 
-    public function &getQueue()
+    public function getQueue(): QueueInterface
     {
         return $this->queue;
     }
 
-    /**
-     * @var string[]
-     */
     private array $registered_channels = [
-        QueueInterface::MAIN_CHANNEL
+        QueueInterface::MAIN_CHANNEL,
     ];
 
     public function registerChannels(string ...$channels): JobsDispatcherInterface
@@ -82,59 +81,59 @@ class JobsDispatcher implements DispatcherInterface
         return $this;
     }
 
-    public function getRegisteredChannels()
+    public function getRegisteredChannels(): array
     {
         return $this->registered_channels;
     }
 
-    public function isChannelRegistered($channel)
+    public function isChannelRegistered(string $channel): bool
     {
         return in_array($channel, $this->registered_channels);
     }
 
     private bool $exception_on_unregistered_channel = true;
 
-    public function getExceptionOnUnregisteredChannel()
+    public function getExceptionOnUnregisteredChannel(): bool
     {
         return $this->exception_on_unregistered_channel;
     }
 
-    public function &exceptionOnUnregisteredChannel($value = true)
+    public function exceptionOnUnregisteredChannel(bool $value = true): static
     {
-        $this->exception_on_unregistered_channel = (bool) $value;
+        $this->exception_on_unregistered_channel = $value;
 
         return $this;
     }
 
-    private function validateChannel($channel)
+    private function validateChannel(string $channel): string
     {
-        if (is_string($channel)) {
-            $channel = trim($channel);
+        $channel = trim($channel);
 
-            if (empty($channel)) {
-                throw new InvalidArgumentException("Value '$channel' is not a valid channel name");
-            }
-
-            if (in_array($channel, $this->registered_channels)) {
-                return $channel;
-            } else {
-                if ($this->exception_on_unregistered_channel) {
-                    throw new InvalidArgumentException("Channel '$channel' is not registered");
-                } else {
-                    return QueueInterface::MAIN_CHANNEL;
-                }
-            }
-        } else {
-            throw new InvalidArgumentException('Channel name needs to be a string value');
+        if (empty($channel)) {
+            throw new InvalidArgumentException(
+                sprintf("Value '%s' is not a valid channel name.", $channel),
+            );
         }
+
+        if (in_array($channel, $this->registered_channels)) {
+            return $channel;
+        }
+
+        if ($this->exception_on_unregistered_channel) {
+            throw new InvalidArgumentException(
+                sprintf("Channel '%s' is not registered.", $channel),
+            );
+        }
+
+        return QueueInterface::MAIN_CHANNEL;
     }
 
-    public function batch($name, callable $add_jobs = null)
+    public function batch(string $name, callable $add_jobs = null): BatchInterface
     {
         $batch = $this->getQueue()->createBatch($this, $name);
 
         if ($add_jobs) {
-            call_user_func_array($add_jobs, [&$batch]);
+            call_user_func_array($add_jobs, [$batch]);
         }
 
         $batch->commitDispatchedJobIds();
@@ -147,8 +146,8 @@ class JobsDispatcher implements DispatcherInterface
         return $this->getQueue()->countBatches();
     }
 
-    public function unfurlType($search_for)
+    public function unfurlType(string $search_for): ?array
     {
-        return  $this->getQueue()->unfurlType($search_for);
+        return $this->getQueue()->unfurlType($search_for);
     }
 }

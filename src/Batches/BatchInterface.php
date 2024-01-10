@@ -21,10 +21,10 @@ interface BatchInterface extends DispatchJobInterface
     /**
      * Commit job ID-s dispatched by this batch.
      */
-    public function commitDispatchedJobIds();
+    public function commitDispatchedJobIds(): void;
 
     /**
-     * Return queueu ID that this batch is created under.
+     * Return queue ID that this batch is created under.
      *
      * @return mixed
      */
@@ -39,34 +39,14 @@ interface BatchInterface extends DispatchJobInterface
 
     /**
      * Return true if there are no pending jobs in this queue (all jobs are done).
-     *
-     * @return bool
      */
-    public function isComplete();
+    public function isComplete(): bool;
 
     /**
      * Return total number of jobs that are in the batch.
-     *
-     * @return int
      */
-    public function countJobs();
-
-    /**
-     * @return int
-     */
-    public function countPendingJobs();
-
-    /**
-     * Return total number of jobs.
-     *
-     * @return int
-     */
-    public function countCompletedJobs();
-
-    /**
-     * Return number of failed jobs.
-     *
-     * @return int
-     */
-    public function countFailedJobs();
+    public function countJobs(): int;
+    public function countPendingJobs(): int;
+    public function countCompletedJobs(): int;
+    public function countFailedJobs(): int;
 }

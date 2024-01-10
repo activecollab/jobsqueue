@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Test;
 
 use ActiveCollab\JobsQueue\Queue\MySqlQueue;
@@ -18,15 +20,12 @@ use ActiveCollab\JobsQueue\Test\Jobs\Failing;
 use ActiveCollab\JobsQueue\Test\Jobs\Inc;
 use InvalidArgumentException;
 
-/**
- * @package ActiveCollab\JobsQueue\Test
- */
 class ChannelsTest extends IntegratedMySqlQueueTest
 {
     /**
      * Test if main channel is registered by default.
      */
-    public function testMainChannelIsRegisteredByDefault()
+    public function testMainChannelIsRegisteredByDefault(): void
     {
         $this->assertSame([QueueInterface::MAIN_CHANNEL], $this->dispatcher->getRegisteredChannels());
     }
@@ -34,7 +33,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Channels can be registered.
      */
-    public function testChannelsCanBeRegistered()
+    public function testChannelsCanBeRegistered(): void
     {
         $this->assertFalse($this->dispatcher->isChannelRegistered('new'));
         $this->dispatcher->registerChannel('new');
@@ -45,7 +44,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Test if multiple channels can be registered.
      */
-    public function testMultipleChannelsCanBeRegistered()
+    public function testMultipleChannelsCanBeRegistered(): void
     {
         $this->assertFalse($this->dispatcher->isChannelRegistered('old'));
         $this->assertFalse($this->dispatcher->isChannelRegistered('new'));
@@ -58,7 +57,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
         $this->assertSame([QueueInterface::MAIN_CHANNEL, 'old', 'new'], $this->dispatcher->getRegisteredChannels());
     }
 
-    public function testChannelWithTheSameNameCantBeRegisteredTwice()
+    public function testChannelWithTheSameNameCantBeRegisteredTwice(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -66,21 +65,14 @@ class ChannelsTest extends IntegratedMySqlQueueTest
         $this->dispatcher->registerChannel('new');
     }
 
-    public function testChannelCantBeEmptyOnDispatch()
+    public function testChannelCantBeEmptyOnDispatch(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         $this->dispatcher->dispatch(new Inc(['number' => 123]), '    ');
     }
 
-    public function testChannelNeedsCantBeAnArrayOfChannels()
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        $this->dispatcher->dispatch(new Inc(['number' => 123]), [QueueInterface::MAIN_CHANNEL, 'another_channel']);
-    }
-
-    public function testJobCantBeDispatchedToAnUnknownChannelByDefault()
+    public function testJobCantBeDispatchedToAnUnknownChannelByDefault(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -90,7 +82,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Test if we can turn off exception for unregistered channel.
      */
-    public function testJobDispatchedToUnknownChannelGoToDefaultChannel()
+    public function testJobDispatchedToUnknownChannelGoToDefaultChannel(): void
     {
         $this->assertTrue($this->dispatcher->getExceptionOnUnregisteredChannel());
         $this->dispatcher->exceptionOnUnregisteredChannel(false);
@@ -107,7 +99,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Test dispatching the same job to multiple channels.
      */
-    public function testDispatchJobToMultipleChannels()
+    public function testDispatchJobToMultipleChannels(): void
     {
         $this->dispatcher->registerChannels('second', 'third');
 
@@ -126,7 +118,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Test next in line from any channel.
      */
-    public function testNextInLineFromAnyChannel()
+    public function testNextInLineFromAnyChannel(): void
     {
         $this->dispatcher->registerChannels('second', 'third');
 
@@ -144,7 +136,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * test next in line from a single channel.
      */
-    public function testNextInLineFromSingleChannel()
+    public function testNextInLineFromSingleChannel(): void
     {
         $this->dispatcher->registerChannels('second', 'third');
 
@@ -162,7 +154,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Test next in line form a list of channels (order of channel names should not be relevant).
      */
-    public function testNextInLineFromMultipleChannels()
+    public function testNextInLineFromMultipleChannels(): void
     {
         $this->dispatcher->registerChannels('second', 'third');
 
@@ -180,7 +172,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Test if failed jobs keep their channel information.
      */
-    public function testFailedJobKeepsChannel()
+    public function testFailedJobKeepsChannel(): void
     {
         $this->dispatcher->registerChannels('second');
 
@@ -206,7 +198,7 @@ class ChannelsTest extends IntegratedMySqlQueueTest
     /**
      * Test if failed job restoration keeps the original job channel.
      */
-    public function testRestoredFailedJobKeepsChannel()
+    public function testRestoredFailedJobKeepsChannel(): void
     {
         $this->dispatcher->registerChannels('second');
 

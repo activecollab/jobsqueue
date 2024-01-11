@@ -45,5 +45,10 @@
         "psr-4": {
             "ActiveCollab\\JobsQueue\\Test\\": "test/src"
         }
+    },
+    "config": {
+        "platform": {
+            "php": "8.0.13"
+        }
     }
 }

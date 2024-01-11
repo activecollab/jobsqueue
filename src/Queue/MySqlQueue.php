@@ -40,15 +40,13 @@ class MySqlQueue extends Queue
         self::FAILED_JOBS_TABLE_NAME,
     ];
 
-    private ConnectionInterface $connection;
-
     /**
      * @var PropertyExtractorInterface[]
      */
     private array $property_extractors;
 
     public function __construct(
-        ConnectionInterface $connection,
+        private ConnectionInterface $connection,
         array $additional_extractors = [],
         bool $create_tables_if_missing = true,
         LoggerInterface $logger = null
@@ -56,9 +54,10 @@ class MySqlQueue extends Queue
     {
         parent::__construct($logger);
 
-        $this->connection = $connection;
         $this->property_extractors = array_merge(
-            [new IntPropertyExtractor('priority')],
+            [
+                new IntPropertyExtractor('priority'),
+            ],
             $additional_extractors,
         );
 
@@ -74,14 +73,12 @@ class MySqlQueue extends Queue
         try {
             foreach (self::TABLE_NAMES as $table_name) {
                 if (!in_array($table_name, $existing_table_names)) {
-                    if ($this->logger) {
-                        $this->logger->info(
-                            'Creating {table_name} MySQL queue table',
-                            [
-                                'table_name' => $table_name,
-                            ]
-                        );
-                    }
+                    $this->logger?->info(
+                        'Creating {table_name} MySQL queue table',
+                        [
+                            'table_name' => $table_name,
+                        ]
+                    );
 
                     $this->connection->execute(
                         file_get_contents(
@@ -157,16 +154,14 @@ class MySqlQueue extends Queue
 
         $job_id = $this->connection->lastInsertId();
 
-        if ($this->logger) {
-            $this->logger->info(
-                'Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}',
-                [
-                    'job_id' => $job_id,
-                    'job_type' => get_class($job),
-                    'available_at' => $available_at_timestamp,
-                ]
-            );
-        }
+        $this->logger?->info(
+            'Job #{job_id} ({job_type}) enqueued. Becomes available at {available_at}',
+            [
+                'job_id' => $job_id,
+                'job_type' => get_class($job),
+                'available_at' => $available_at_timestamp,
+            ]
+        );
 
         return $job_id;
     }
@@ -197,13 +192,11 @@ class MySqlQueue extends Queue
     public function execute(JobInterface $job, bool $silent = true)
     {
         try {
-            if ($this->logger) {
-                $this->logger->info('Executing #{job_id} ({job_type})', [
-                    'job_id' => $job->getQueueId(),
-                    'job_type' => get_class($job),
-                    'event' => 'job_started',
-                ]);
-            }
+            $this->logger?->info('Executing #{job_id} ({job_type})', [
+                'job_id' => $job->getQueueId(),
+                'job_type' => get_class($job),
+                'event' => 'job_started',
+            ]);
 
             $result = $job->execute();
 
@@ -215,16 +208,14 @@ class MySqlQueue extends Queue
                 $this->deleteJob($job);
             }
 
-            if ($this->logger) {
-                $this->logger->info(
-                    $log_message,
-                    [
-                        'job_id' => $job->getQueueId(),
-                        'job_type' => get_class($job),
-                        'event' => 'job_executed',
-                    ]
-                );
-            }
+            $this->logger?->info(
+                $log_message,
+                [
+                    'job_id' => $job->getQueueId(),
+                    'job_type' => get_class($job),
+                    'event' => 'job_executed',
+                ]
+            );
 
             return $result;
         } catch (Exception $e) {
@@ -348,7 +339,7 @@ class MySqlQueue extends Queue
                 $log_arguments['event'] = 'job_failed';
 
                 if ($this->logger) {
-                    $log_message = 'Job #{job_id} ({job_type}) failed after {attempts} attemtps';
+                    $log_message = 'Job #{job_id} ({job_type}) failed after {attempts} attempts';
                     $log_arguments['attempts'] = $previous_attempts + 1;
 
                     if ($reason instanceof Exception) {
@@ -555,12 +546,17 @@ class MySqlQueue extends Queue
         $limit = $number_of_jobs_to_reserve + 100;
 
         $job_ids = $this->connection->executeFirstColumn(
-            'SELECT `id` 
-                FROM `' . self::JOBS_TABLE_NAME . "` 
-                WHERE {$channel_conditions}`reserved_at` IS NULL AND `available_at` <= ? 
-                ORDER BY `priority` DESC, `id` 
-                LIMIT 0, {$limit}",
-            $timestamp
+            sprintf(
+                'SELECT `id` 
+                    FROM `%s` 
+                    WHERE %s`reserved_at` IS NULL AND `available_at` <= ? 
+                    ORDER BY `priority` DESC, `id` 
+                    LIMIT 0, %d',
+                self::JOBS_TABLE_NAME,
+                $channel_conditions,
+                $limit,
+            ),
+            $timestamp,
         );
 
         if (!empty($job_ids)) {
@@ -714,7 +710,7 @@ class MySqlQueue extends Queue
             foreach ($rows as $row) {
                 if ($row['process_id'] > 0) {
                     if ($this->isProcessRunning($row['process_id'])) {
-                        continue; // Skip jobs that launched long running background processes
+                        continue; // Skip jobs that launched long-running background processes
                     } else {
                         $this->dequeue($row['id']); // Process done? Consider the job executed
                     }
@@ -742,10 +738,10 @@ class MySqlQueue extends Queue
      */
     private function isProcessRunning($process_id)
     {
-        return DIRECTORY_SEPARATOR != '\\' && posix_kill($process_id, 0); // Note: 0 signal does not kill the process, but kill will check for process existance
+        return DIRECTORY_SEPARATOR != '\\' && posix_kill($process_id, 0); // Note: 0 signal does not kill the process, but kill will check for process existence
     }
 
-    public function cleanUp()
+    public function cleanUp(): void
     {
         $this->connection->execute('DELETE FROM `' . self::FAILED_JOBS_TABLE_NAME . '` WHERE `failed_at` < ?', date('Y-m-d H:i:s', strtotime('-7 days')));
     }

@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Queue;
 
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
@@ -171,7 +173,7 @@ class TestQueue extends Queue
     {
     }
 
-    public function cleanUp()
+    public function cleanUp(): void
     {
     }
 

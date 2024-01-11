@@ -155,7 +155,7 @@ interface QueueInterface extends Countable
     /**
      * Clean up the queue.
      */
-    public function cleanUp();
+    public function cleanUp(): void;
 
     /**
      * Clear up the all failed jobs.

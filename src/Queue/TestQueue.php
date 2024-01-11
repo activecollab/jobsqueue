@@ -44,7 +44,7 @@ class TestQueue extends Queue
         return $this->count() - 1;
     }
 
-    public function dequeue($job_id)
+    public function dequeue(int $job_id): void
     {
     }
 

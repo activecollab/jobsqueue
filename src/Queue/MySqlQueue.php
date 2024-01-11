@@ -166,7 +166,7 @@ class MySqlQueue extends Queue
         return $job_id;
     }
 
-    public function dequeue($job_id)
+    public function dequeue(int $job_id): void
     {
         $this->connection->execute('DELETE FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
     }
@@ -315,13 +315,12 @@ class MySqlQueue extends Queue
 
     /**
      * Handle a job failure (attempts, removal from queue, exception handling etc).
-     *
-     * @param  JobInterface   $job
-     * @param  Exception|null $reason
-     * @param  bool|true      $silent
-     * @throws Exception
      */
-    private function failJob(JobInterface $job, Exception $reason = null, $silent = true)
+    private function failJob(
+        JobInterface $job,
+        Exception $reason = null,
+        bool $silent = true,
+    ): void
     {
         if ($job_id = $job->getQueueId()) {
             $previous_attempts = $this->getPreviousAttemptsByJobId($job_id);
@@ -397,11 +396,8 @@ class MySqlQueue extends Queue
 
     /**
      * Hydrate a job based on row data.
-     *
-     * @param  array        $row
-     * @return JobInterface
      */
-    private function getJobFromRow(array $row)
+    private function getJobFromRow(array $row): JobInterface
     {
         $type = $row['type'];
 
@@ -409,50 +405,60 @@ class MySqlQueue extends Queue
         $job = new $type($this->jsonDecode($row['data']));
         $job->setChannel($row['channel']);
         $job->setBatchId($row['batch_id']);
-        $job->setQueue($this, (integer) $row['id']);
+        $job->setQueue($this, (int) $row['id']);
 
         return $job;
     }
 
     /**
      * Return number of previous attempts that we recorded for the given job.
-     *
-     * @param  int $job_id
-     * @return int
      */
-    private function getPreviousAttemptsByJobId($job_id)
+    private function getPreviousAttemptsByJobId(int $job_id): int
     {
-        return (integer) $this->connection->executeFirstCell('SELECT `attempts` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?', $job_id);
+        return (int) $this->connection->executeFirstCell(
+            'SELECT `attempts` FROM `' . self::JOBS_TABLE_NAME . '` WHERE `id` = ?',
+            $job_id,
+        );
     }
 
     /**
      * Increase number of attempts by job ID.
-     *
-     * @param int $job_id
-     * @param int $previous_attempts
-     * @param int $delay
      */
-    public function prepareForNextAttempt($job_id, $previous_attempts, $delay = 0)
+    private  function prepareForNextAttempt(
+        int $job_id,
+        int $previous_attempts,
+        int $delay = 0,
+    ): void
     {
         $this->connection->execute('UPDATE `' . self::JOBS_TABLE_NAME . '` SET `available_at` = ?, `reservation_key` = NULL, `reserved_at` = NULL, `attempts` = ? WHERE `id` = ?', date('Y-m-d H:i:s', time() + $delay), $previous_attempts + 1, $job_id);
     }
 
     /**
      * Log failed job and delete it from the main queue.
-     *
-     * @param JobInterface $job
-     * @param string       $reason
      */
-    public function logFailedJob(JobInterface $job, $reason)
+    private function logFailedJob(JobInterface $job, string $reason): void
     {
         if (mb_strlen($reason) > 191) {
             $reason = mb_substr($reason, 0, 191);
         }
 
-        $this->connection->transact(function () use ($job, $reason) {
-            $this->connection->execute('INSERT INTO `' . self::FAILED_JOBS_TABLE_NAME . '` (`type`, `channel`, `batch_id`, `data`, `failed_at`, `reason`) VALUES (?, ?, ?, ?, ?, ?)', get_class($job), $job->getChannel(), $job->getBatchId(), json_encode($job->getData()), date('Y-m-d H:i:s'), $reason);
-            $this->deleteJob($job);
-        });
+        $this->connection->transact(
+            function () use ($job, $reason) {
+                $this->connection->insert(
+                    self::FAILED_JOBS_TABLE_NAME,
+                    [
+                        'type' => get_class($job),
+                        'channel' => $job->getChannel(),
+                        'batch_id' => $job->getBatchId(),
+                        'data' => json_encode($job->getData()),
+                        'failed_at' => date('Y-m-d H:i:s'),
+                        'reason' => $reason,
+                    ],
+                );
+
+                $this->deleteJob($job);
+            },
+        );
     }
 
     /**

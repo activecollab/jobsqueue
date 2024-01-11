@@ -36,7 +36,7 @@ interface QueueInterface extends Countable
      *
      * @param mixed $job_id
      */
-    public function dequeue($job_id);
+    public function dequeue(int $job_id): void;
 
     /**
      * Remove jobs from jobs queue by type.

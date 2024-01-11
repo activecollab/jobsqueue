@@ -461,48 +461,33 @@ class MySqlQueue extends Queue
         );
     }
 
-    /**
-     * Delete a job.
-     *
-     * @param JobInterface $job
-     */
-    public function deleteJob($job)
+    public function deleteJob(JobInterface $job): void
     {
         if ($job_id = $job->getQueueId()) {
             $this->dequeue($job_id);
         }
     }
 
-    public function nextInLine(...$from_channels)
+    public function nextInLine(string ...$from_channels): ?JobInterface
     {
-        $reserved_job_ids = $this->reserveNextJobs($from_channels, 1);
+        $reserved_job_ids = $this->reserveNextJobs($from_channels);
 
         if (count($reserved_job_ids) === 1) {
             return $this->getJobById($reserved_job_ids[0]);
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     /**
      * Return a batch of jobs that are next in line to be executed.
      *
-     * @param  int            $jobs_to_run
-     * @param  string[]       ...$from_channels
      * @return JobInterface[]
      */
-    public function nextBatchInLine($jobs_to_run, ...$from_channels)
+    public function nextBatchInLine(int $jobs_to_run, string ...$from_channels): array
     {
-        if (!is_int($jobs_to_run)) {
-            if ($jobs_to_run === null || !ctype_digit($jobs_to_run)) {
-                throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero');
-            }
-
-            $jobs_to_run = (int) $jobs_to_run;
-        }
-
         if ($jobs_to_run < 1) {
-            throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero');
+            throw new InvalidArgumentException('Jobs to run needs to be a number larger than zero.');
         }
 
         $result = [];
@@ -537,12 +522,8 @@ class MySqlQueue extends Queue
 
     /**
      * Reserve next job ID.
-     *
-     * @param  array|null $from_channels
-     * @param  int        $number_of_jobs_to_reserve
-     * @return int[]
      */
-    private function reserveNextJobs(array $from_channels = null, $number_of_jobs_to_reserve = 1)
+    private function reserveNextJobs(array $from_channels = null, int $number_of_jobs_to_reserve = 1): array
     {
         $reserved_job_ids = [];
 

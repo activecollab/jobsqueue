@@ -73,20 +73,15 @@ interface QueueInterface extends Countable
 
     /**
      * Return Job that is next in line to be executed.
-     *
-     * @param  string[]          ...$from_channels
-     * @return JobInterface|null
      */
-    public function nextInLine(...$from_channels);
+    public function nextInLine(string ...$from_channels): ?JobInterface;
 
     /**
      * Return a batch of jobs that are next in line to be executed.
      *
-     * @param  int             $jobs_to_run
-     * @param  string[]        ...$from_channels
      * @return JobInterface[]
      */
-    public function nextBatchInLine($jobs_to_run, ...$from_channels);
+    public function nextBatchInLine(int $jobs_to_run, string ...$from_channels): array;
 
     /**
      * What to do when job fails.

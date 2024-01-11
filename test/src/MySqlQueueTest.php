@@ -464,13 +464,11 @@ class MySqlQueueTest extends IntegratedMySqlQueueTest
         $this->dispatcher->getQueue()->nextBatchInLine($jobs_to_run);
     }
 
-    public function provideInvalidJobsToRunValues()
+    public function provideInvalidJobsToRunValues(): array
     {
         return [
             [-1],
             [0],
-            [null],
-            ['string']
         ];
     }
 

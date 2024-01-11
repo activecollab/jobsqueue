@@ -80,7 +80,7 @@ class TestQueue extends Queue
         return null;
     }
 
-    public function nextInLine(...$from_channels)
+    public function nextInLine(string ...$from_channels): ?JobInterface
     {
         if (empty($this->jobs)) {
             return null;
@@ -96,11 +96,9 @@ class TestQueue extends Queue
     /**
      * Return a batch of jobs that are next in line to be executed.
      *
-     * @param  int            $jobs_to_run
-     * @param  string[]       ...$from_channels
      * @return JobInterface[]
      */
-    public function nextBatchInLine($jobs_to_run, ...$from_channels)
+    public function nextBatchInLine(int $jobs_to_run, string ...$from_channels): array
     {
         if (!empty($this->jobs) && $this->needs_sort) {
             $this->sortByPriority($this->jobs);

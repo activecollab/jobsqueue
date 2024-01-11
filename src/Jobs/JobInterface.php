@@ -26,7 +26,7 @@ interface JobInterface extends JsonSerializable
     const HAS_HIGHEST_PRIORITY = 4294967295; // UNSIGNED INT https://dev.mysql.com/doc/refman/5.0/en/integer-types.html
 
     public function execute(): mixed;
-    public function getChannel(): string;
+    public function getChannel(): ?string;
 
     /**
      * Set job channel when it is known.
@@ -35,75 +35,41 @@ interface JobInterface extends JsonSerializable
 
     /**
      * Return all job data (when $property is NULL) or a particular property.
-     *
-     * @param  string|null $property
-     * @return array|mixed
      */
-    public function getData($property = null);
+    public function getData(string $property = null): mixed;
 
     /**
      * Return job priority.
-     *
-     * @return int
      */
-    public function getPriority();
+    public function getPriority(): int;
 
     /**
      * Return max number of attempts for this job.
-     *
-     * @return int
      */
-    public function getAttempts();
+    public function getAttempts(): int;
 
     /**
      * Return delay between first and every consecutive job execution (after failure).
-     *
-     * @return int
      */
-    public function getDelay();
+    public function getDelay(): int;
 
     /**
      * Return first job delay.
-     *
-     * @return int|null
      */
-    public function getFirstJobDelay();
-    public function getQueue(): QueueInterface;
+    public function getFirstJobDelay(): int;
+    public function getQueue(): ?QueueInterface;
 
     /**
      * Return queue ID that this job is enqueued under.
-     *
-     * @return mixed
      */
-    public function getQueueId();
+    public function getQueueId(): ?int;
 
     /**
      * @return int|null
      */
-    public function getBatchId();
-
-    /**
-     * @param  BatchInterface $batch
-     * @return $this
-     */
-    public function &setBatch(BatchInterface $batch);
-
-    /**
-     * Set job queue.
-     *
-     * @param QueueInterface $queue
-     * @param mixed          $queue_id
-     */
-    public function &setQueue(QueueInterface &$queue, $queue_id);
-
-    /**
-     * @return null|LoggerInterface
-     */
-    public function getLog();
-
-    /**
-     * @param  LoggerInterface $log
-     * @return $this
-     */
-    public function &setLog(LoggerInterface $log);
+    public function getBatchId(): ?int;
+    public function setBatch(BatchInterface $batch): static;
+    public function setQueue(QueueInterface $queue, int $queue_id): static;
+    public function getLog(): ?LoggerInterface;
+    public function setLog(LoggerInterface $log): static;
 }

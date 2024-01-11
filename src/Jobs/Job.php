@@ -58,15 +58,9 @@ abstract class Job implements JobInterface
         return $this->data;
     }
 
-    /**
-     * @var string
-     */
-    private $channel;
+    private ?string $channel = null;
 
-    /**
-     * Get job channel, if known.
-     */
-    public function getChannel(): string
+    public function getChannel(): ?string
     {
         return $this->channel;
     }
@@ -81,7 +75,7 @@ abstract class Job implements JobInterface
         return $this;
     }
 
-    public function getData($property = null)
+    public function getData(string $property = null): mixed
     {
         if ($property === null) {
             return $this->data;
@@ -100,131 +94,91 @@ abstract class Job implements JobInterface
 
     /**
      * Return job priority.
-     *
-     * @return int
      */
-    public function getPriority()
+    public function getPriority(): int
     {
         return $this->data['priority'];
     }
 
     /**
      * Return max number of attempts for this job.
-     *
-     * @return int
      */
-    public function getAttempts()
+    public function getAttempts(): int
     {
         return $this->data['attempts'] ?? 1;
     }
 
     /**
      * Return delay between first and every consecutive job execution (after failure).
-     *
-     * @return int
      */
-    public function getDelay()
+    public function getDelay(): int
     {
         return $this->data['delay'] ?? 0;
     }
 
     /**
      * Return first job delay.
-     *
-     * @return int|null
      */
-    public function getFirstJobDelay()
+    public function getFirstJobDelay(): int
     {
-        return array_key_exists('first_attempt_delay', $this->data) ? $this->data['first_attempt_delay'] : $this->getDelay();
+        return array_key_exists('first_attempt_delay', $this->data)
+            ? $this->data['first_attempt_delay']
+            : $this->getDelay();
     }
 
-    /**
-     * @var QueueInterface
-     */
-    private $queue;
+    private ?QueueInterface $queue = null;
 
-    public function getQueue(): QueueInterface
+    public function getQueue(): ?QueueInterface
     {
         return $this->queue;
     }
 
-    /**
-     * @var mixed
-     */
-    private $queue_id;
+    private ?int $queue_id = null;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getQueueId()
+    public function getQueueId(): ?int
     {
         return $this->queue_id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function &setQueue(QueueInterface &$queue, $queue_id)
+    public function setQueue(QueueInterface $queue, int $queue_id): static
     {
         $this->queue = $queue;
-
-        if ($queue_id === null || is_scalar($queue_id)) {
-            $this->queue_id = $queue_id;
-        } else {
-            throw new InvalidArgumentException('Queue ID is expected to be sacalar or empty value');
-        }
+        $this->queue_id = $queue_id;
 
         return $this;
     }
 
-    /**
-     * @var int
-     */
-    private $batch_id;
+    private ?int $batch_id = null;
 
-    /**
-     * @return int|null
-     */
-    public function getBatchId()
+    public function getBatchId(): ?int
     {
         return $this->batch_id;
     }
 
-    /**
-     * @param  int|null $batch_id
-     * @return $this
-     */
-    public function &setBatchId($batch_id)
+    public function setBatchId(?int $batch_id): static
     {
-        $this->batch_id = $batch_id === null ? null : (integer) $batch_id;
+        $this->batch_id = $batch_id;
 
         return $this;
     }
 
-    /**
-     * @param  BatchInterface $batch
-     * @return $this
-     */
-    public function &setBatch(BatchInterface $batch)
+    public function setBatch(BatchInterface $batch): static
     {
-        if (empty($this->getQueueId())) {
-            if ($batch->getQueueId()) {
-                return $this->setBatchId($batch->getQueueId());
-            } else {
-                throw new RuntimeException("Can't set an unqueued batch");
-            }
-        } else {
-            throw new RuntimeException("Can't add already enqueued job to a batch");
+        if ($this->getQueueId()) {
+            throw new RuntimeException("Can't add already enqueued job to a batch.");
         }
+
+        if (!$batch->getQueueId()) {
+            throw new RuntimeException("Can't set a non-queued batch.");
+        }
+
+        return $this->setBatchId($batch->getQueueId());
     }
 
     /**
      * Report that this job has launched a background process.
-     *
-     * @param  int                             $process_id
-     * @return SignalInterface|ProcessLaunched
      */
-    protected function reportBackgroundProcess($process_id)
+    protected function reportBackgroundProcess(int $process_id): SignalInterface
     {
         if (empty($this->queue) || empty($this->queue_id)) {
             throw new LogicException('Background process can be reported only for enqueued jobs');
@@ -242,21 +196,14 @@ abstract class Job implements JobInterface
     /**
      * @var LoggerInterface|null
      */
-    protected $log;
+    protected ?LoggerInterface $log = null;
 
-    /**
-     * @return null|LoggerInterface
-     */
-    public function getLog()
+    public function getLog(): ?LoggerInterface
     {
         return $this->log;
     }
 
-    /**
-     * @param  LoggerInterface $log
-     * @return $this
-     */
-    public function &setLog(LoggerInterface $log)
+    public function setLog(LoggerInterface $log): static
     {
         $this->log = $log;
 

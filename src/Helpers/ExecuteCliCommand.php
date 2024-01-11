@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Helpers;
 
 use ActiveCollab\JobsQueue\Signals\SignalInterface;
@@ -17,9 +19,6 @@ use LogicException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-/**
- * @package ActiveCollab\JobsQueue\Helpers
- */
 trait ExecuteCliCommand
 {
     /**
@@ -189,11 +188,7 @@ trait ExecuteCliCommand
         return null;
     }
 
-    /**
-     * @param  array  $data
-     * @return string
-     */
-    public function prepareCommandFromData(array $data)
+    public function prepareCommandFromData(array $data): string
     {
         $command = $data['command'];
 
@@ -206,13 +201,13 @@ trait ExecuteCliCommand
                         ' ',
                         array_map(
                             function ($argument_value) {
-                                return escapeshellarg($argument_value);
+                                return escapeshellarg((string) $argument_value);
                             }, 
                             $v
                         )
                     );
                 } else {
-                    $command .= ' ' . escapeshellarg($v);
+                    $command .= ' ' . escapeshellarg((string) $v);
                 }
             } else {
                 if (is_bool($v)) {
@@ -220,7 +215,7 @@ trait ExecuteCliCommand
                         $command .= " --{$k}";
                     }
                 } else {
-                    $command .= " --{$k}=" . escapeshellarg((is_array($v) ? implode(',', $v) : $v));
+                    $command .= " --{$k}=" . escapeshellarg((is_array($v) ? implode(',', $v) : (string) $v));
                 }
             }
         }
@@ -229,7 +224,7 @@ trait ExecuteCliCommand
             $environment_variables = [];
             foreach ($data['command_environment_variables'] as $k => $v) {
                 $variable_name = strtoupper($k);
-                $environment_variables[] =  'export ' . $variable_name . '=' . escapeshellarg($v);
+                $environment_variables[] =  'export ' . $variable_name . '=' . escapeshellarg((string) $v);
             }
 
             $command = implode(';', $environment_variables) . ' && ' . $command;
@@ -242,13 +237,6 @@ trait ExecuteCliCommand
         return $command;
     }
 
-    /**
-     * @return null|LoggerInterface
-     */
-    abstract public function getLog();
-
-    /**
-     * {@inheritdoc}
-     */
-    abstract protected function reportBackgroundProcess($process_id);
+    abstract public function getLog(): ?LoggerInterface;
+    abstract protected function reportBackgroundProcess(int $process_id): SignalInterface;
 }

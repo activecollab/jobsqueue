@@ -25,10 +25,8 @@ interface BatchInterface extends DispatchJobInterface
 
     /**
      * Return queue ID that this batch is created under.
-     *
-     * @return mixed
      */
-    public function getQueueId();
+    public function getQueueId(): ?int;
 
     /**
      * Return batch name (or description).

@@ -24,7 +24,7 @@ abstract class Batch implements BatchInterface
     {
     }
 
-    public function getQueueId()
+    public function getQueueId(): ?int
     {
         return $this->queue_id;
     }

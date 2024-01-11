@@ -11,9 +11,6 @@
 
 namespace ActiveCollab\JobsQueue\Signals;
 
-/**
- * @package ActiveCollab\JobsQueue\Signals
- */
 class ProcessLaunched implements SignalInterface
 {
     /**

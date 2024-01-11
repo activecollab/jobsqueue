@@ -33,7 +33,10 @@ class TestQueue extends Queue
 
     private bool $needs_sort = false;
 
-    public function enqueue(JobInterface $job, $channel = QueueInterface::MAIN_CHANNEL)
+    public function enqueue(
+        JobInterface $job,
+        string $channel = QueueInterface::MAIN_CHANNEL,
+    ): int
     {
         $this->jobs[] = $job;
 
@@ -52,7 +55,7 @@ class TestQueue extends Queue
     {
     }
 
-    public function execute(JobInterface $job, bool $silent = true)
+    public function execute(JobInterface $job, bool $silent = true): mixed
     {
         return $job->execute();
     }
@@ -111,11 +114,12 @@ class TestQueue extends Queue
     {
     }
 
-    public function restoreFailedJobById($job_id, array $update_data = null)
+    public function restoreFailedJobById(int $job_id, array $update_data = null): JobInterface
     {
+        return $this->failed_jobs[$job_id];
     }
 
-    public function restoreFailedJobsByType($job_type, array $update_data = null)
+    public function restoreFailedJobsByType(string $job_type, array $update_data = null): void
     {
     }
 
@@ -124,7 +128,7 @@ class TestQueue extends Queue
         return count($this->jobs);
     }
 
-    public function countByType($type1)
+    public function countByType(string $type): int
     {
         $count = 0;
 
@@ -139,12 +143,12 @@ class TestQueue extends Queue
         return $count;
     }
 
-    public function countFailed()
+    public function countFailed(): int
     {
         return count($this->failed_jobs);
     }
 
-    public function countFailedByType($type1)
+    public function countFailedByType(string $type): int
     {
         $count = 0;
 
@@ -159,15 +163,16 @@ class TestQueue extends Queue
         return $count;
     }
 
-    public function reportBackgroundProcess(JobInterface $job, $process_id)
+    public function reportBackgroundProcess(JobInterface $job, int $process_id): void
     {
     }
 
-    public function getBackgroundProcesses()
+    public function getBackgroundProcesses(): array
     {
+        return [];
     }
 
-    public function checkStuckJobs()
+    public function checkStuckJobs(): void
     {
     }
 
@@ -175,12 +180,9 @@ class TestQueue extends Queue
     {
     }
 
-    /**
-     * @var callable[]
-     */
     private array $on_job_failure = [];
 
-    public function onJobFailure(callable $callback = null)
+    public function onJobFailure(callable $callback = null): void
     {
         $this->on_job_failure[] = $callback;
     }
@@ -189,11 +191,11 @@ class TestQueue extends Queue
     {
     }
 
-    public function clear()
+    public function clear(): void
     {
     }
 
-    public function getFailedJobReasons($job_type)
+    public function getFailedJobReasons(string $job_type): array
     {
         return [];
     }
@@ -203,12 +205,12 @@ class TestQueue extends Queue
         return null;
     }
 
-    public function failedJobStatistics()
+    public function failedJobStatistics(): array
     {
         return [];
     }
 
-    public function failedJobStatisticsByType($event_type)
+    public function failedJobStatisticsByType(string $event_type): array
     {
         return [];
     }

@@ -21,10 +21,8 @@ interface JobsDispatcherInterface extends DispatchJobInterface
 {
     /**
      * Execute a job now (sync, waits for a response).
-     *
-     * @return mixed
      */
-    public function execute(JobInterface $job, bool $silent = true);
+    public function execute(JobInterface $job, bool $silent = true): mixed;
 
     /**
      * Execute next job in line of execution.

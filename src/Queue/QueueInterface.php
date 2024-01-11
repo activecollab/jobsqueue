@@ -24,17 +24,14 @@ interface QueueInterface extends Countable
 
     /**
      * Add a job to the queue.
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
      */
-    public function enqueue(JobInterface $job, $channel = self::MAIN_CHANNEL);
+    public function enqueue(
+        JobInterface $job,
+        string $channel = QueueInterface::MAIN_CHANNEL,
+    ): int;
 
     /**
      * Remove a specific job from the queue.
-     *
-     * @param mixed $job_id
      */
     public function dequeue(int $job_id): void;
 
@@ -45,10 +42,8 @@ interface QueueInterface extends Countable
 
     /**
      * Execute a job now (sync, waits for a response).
-     *
-     * @return mixed
      */
-    public function execute(JobInterface $job, bool $silent = true);
+    public function execute(JobInterface $job, bool $silent = true): mixed;
 
     /**
      * Return true if there's an active job of the give type with the given properties.
@@ -58,7 +53,7 @@ interface QueueInterface extends Countable
     public function changePriority(
         string $job_type,
         int $new_priority,
-        array $properties = null
+        array $properties = null,
     ): void;
 
     /**
@@ -85,67 +80,38 @@ interface QueueInterface extends Countable
 
     /**
      * What to do when job fails.
-     *
-     * @param callable|null $callback
      */
-    public function onJobFailure(callable $callback = null);
+    public function onJobFailure(callable $callback = null): void;
 
     /**
      * Restore failed job by job ID and optionally update job properties.
-     *
-     * @param  mixed        $job_id
-     * @param  array|null   $update_data
-     * @return JobInterface
      */
-    public function restoreFailedJobById($job_id, array $update_data = null);
+    public function restoreFailedJobById(int $job_id, array $update_data = null): JobInterface;
 
     /**
      * Restore failed jobs by job type.
-     *
-     * @param string     $job_type
-     * @param array|null $update_data
      */
-    public function restoreFailedJobsByType($job_type, array $update_data = null);
-
-    /**
-     * @param  string $type1
-     * @return int
-     */
-    public function countByType($type1);
-
-    /**
-     * @return int
-     */
-    public function countFailed();
-
-    /**
-     * @param  string $type1
-     * @return int
-     */
-    public function countFailedByType($type1);
-
+    public function restoreFailedJobsByType(string $job_type, array $update_data = null): void;
+    public function countByType(string $type): int;
+    public function countFailed(): int;
+    public function countFailedByType(string $type): int;
     public function createBatch(JobsDispatcherInterface $dispatcher, string $name): BatchInterface;
     public function countBatches(): int;
 
     /**
      * Let jobs report that they raised background process.
-     *
-     * @param JobInterface $job
-     * @param int          $process_id
      */
-    public function reportBackgroundProcess(JobInterface $job, $process_id);
+    public function reportBackgroundProcess(JobInterface $job, int $process_id): void;
 
     /**
      * Return a list of background processes that jobs from this queue have launched.
-     *
-     * @return array
      */
-    public function getBackgroundProcesses();
+    public function getBackgroundProcesses(): array;
 
     /**
      * Check stuck jobs.
      */
-    public function checkStuckJobs();
+    public function checkStuckJobs(): void;
 
     /**
      * Clean up the queue.
@@ -155,15 +121,12 @@ interface QueueInterface extends Countable
     /**
      * Clear up the all failed jobs.
      */
-    public function clear();
+    public function clear(): void;
 
     /**
      * Return all distinct reasons why a job of the given type failed us in the past.
-     *
-     * @param string $job_type
-     * @returns array
      */
-    public function getFailedJobReasons($job_type);
+    public function getFailedJobReasons(string $job_type): array;
 
     /**
      * Search for a full job class name.
@@ -175,15 +138,12 @@ interface QueueInterface extends Countable
      *
      * @return array
      */
-    public function failedJobStatistics();
+    public function failedJobStatistics(): array;
 
     /**
      * Method that returns failed job statistics.
-     *
-     * @param  string $event_type
-     * @return array
      */
-    public function failedJobStatisticsByType($event_type);
+    public function failedJobStatisticsByType(string $event_type): array;
 
     /**
      * @return array

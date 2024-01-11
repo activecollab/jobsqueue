@@ -31,7 +31,7 @@ class JobsDispatcher implements DispatcherInterface
         return $this->getQueue()->enqueue($job, $this->validateChannel($channel));
     }
 
-    public function execute(JobInterface $job, bool $silent = true)
+    public function execute(JobInterface $job, bool $silent = true): mixed
     {
         return $this->getQueue()->execute($job, $silent);
     }

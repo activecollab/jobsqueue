@@ -70,14 +70,12 @@ trait ExecuteCliCommand
         return $this->runCommand($this->prepareCommandFromData($data), $from_working_directory, $data['log_to_file'], $data['in_background']);
     }
 
-    /**
-     * @param  string               $command
-     * @param  string               $from_working_directory
-     * @param  string               $log_to_file
-     * @param  bool                 $in_background
-     * @return SignalInterface|null
-     */
-    protected function runCommand($command, $from_working_directory = '', $log_to_file = '', $in_background = false)
+    protected function runCommand(
+        string $command,
+        string $from_working_directory = '',
+        string $log_to_file = '',
+        bool $in_background = false
+    ): ?SignalInterface
     {
         // Check working directory if $from_working_directory is set and not current directory
         if ($from_working_directory) {

@@ -257,6 +257,7 @@ export FOO='bar' && php foobar.php --baz=1
 Backward compatibility notes:
 
 1. Check all calls to `JobsDispatcher::batch()` method, and make sure that callbacks do not expect `$batch` to be passed on by reference.
+2. Remove `ActiveCollab\JobsQueue\DispatcherInterface` and `ActiveCollab\JobsQueue\Dispatcher` if used in client code.
 
 ## To do
 

@@ -184,7 +184,7 @@ abstract class Job implements JobInterface
             throw new LogicException('Background process can be reported only for enqueued jobs');
         }
 
-        if (!is_int($process_id) || $process_id < 1) {
+        if ($process_id < 1) {
             throw new InvalidArgumentException('Process ID is required');
         }
 

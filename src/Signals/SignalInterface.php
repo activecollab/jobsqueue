@@ -9,17 +9,14 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Signals;
 
-/**
- * @package ActiveCollab\JobsQueue\Signals
- */
 interface SignalInterface
 {
     /**
      * Return true if you would like to signal queue to keep the job instead of removing it.
-     *
-     * @return bool
      */
-    public function keepJobInQueue();
+    public function keepJobInQueue(): bool;
 }

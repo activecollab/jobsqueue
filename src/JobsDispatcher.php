@@ -18,7 +18,7 @@ use ActiveCollab\JobsQueue\Jobs\JobInterface;
 use ActiveCollab\JobsQueue\Queue\QueueInterface;
 use InvalidArgumentException;
 
-class JobsDispatcher implements DispatcherInterface
+class JobsDispatcher implements JobsDispatcherInterface
 {
     public function __construct(
         private QueueInterface $queue,

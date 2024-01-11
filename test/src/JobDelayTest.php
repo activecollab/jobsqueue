@@ -11,7 +11,6 @@
 
 namespace ActiveCollab\JobsQueue\Test;
 
-use ActiveCollab\JobsQueue\Dispatcher;
 use ActiveCollab\JobsQueue\JobsDispatcher;
 use ActiveCollab\JobsQueue\Queue\TestQueue;
 use ActiveCollab\JobsQueue\Test\Base\TestCase;

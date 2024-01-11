@@ -9,37 +9,27 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Signals;
 
 class ProcessLaunched implements SignalInterface
 {
-    /**
-     * @var int
-     */
-    private $process_id;
-
-    /**
-     * @param int $process_id
-     */
-    public function __construct($process_id)
+    public function __construct(
+        private int $process_id,
+    )
     {
-        $this->process_id = $process_id;
     }
 
-    /**
-     * @return int
-     */
-    public function getProcessId()
+    public function getProcessId(): int
     {
         return $this->process_id;
     }
 
     /**
      * Return true if you would like to signal queue to keep the job instead of removing it.
-     *
-     * @return bool
      */
-    public function keepJobInQueue()
+    public function keepJobInQueue(): bool
     {
         return true;
     }

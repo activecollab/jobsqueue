@@ -9,13 +9,12 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Batches;
 
 use ActiveCollab\JobsQueue\DispatchJobInterface;
 
-/**
- * @package ActiveCollab\JobsQueue
- */
 interface BatchInterface extends DispatchJobInterface
 {
     /**
@@ -30,10 +29,8 @@ interface BatchInterface extends DispatchJobInterface
 
     /**
      * Return batch name (or description).
-     *
-     * @return string
      */
-    public function getName();
+    public function getName(): ?string;
 
     /**
      * Return true if there are no pending jobs in this queue (all jobs are done).

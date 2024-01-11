@@ -26,7 +26,10 @@ class JobsDispatcher implements DispatcherInterface
     {
     }
 
-    public function dispatch(JobInterface $job, string $channel = QueueInterface::MAIN_CHANNEL)
+    public function dispatch(
+        JobInterface $job,
+        string $channel = QueueInterface::MAIN_CHANNEL,
+    ): int
     {
         return $this->getQueue()->enqueue($job, $this->validateChannel($channel));
     }

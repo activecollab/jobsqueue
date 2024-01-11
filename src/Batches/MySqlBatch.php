@@ -36,12 +36,11 @@ class MySqlBatch extends Batch
 
     /**
      * Add a job to the queue.
-     *
-     * @param  JobInterface $job
-     * @param  string       $channel
-     * @return mixed
      */
-    public function dispatch(JobInterface $job, string $channel = QueueInterface::MAIN_CHANNEL)
+    public function dispatch(
+        JobInterface $job,
+        string $channel = QueueInterface::MAIN_CHANNEL,
+    ): int
     {
         $dispatched_job_id = $this->dispatcher->dispatch($job->setBatch($this), $channel);
 

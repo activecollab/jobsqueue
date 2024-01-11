@@ -29,7 +29,7 @@ abstract class Batch implements BatchInterface
         return $this->queue_id;
     }
 
-    public function getName()
+    public function getName(): ?string
     {
         return $this->name;
     }

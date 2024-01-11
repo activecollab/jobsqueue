@@ -16,7 +16,6 @@ use ActiveCollab\ContainerAccess\ContainerAccessInterface\Implementation as Cont
 use ActiveCollab\JobsQueue\JobsDispatcherInterface;
 use DateTime;
 use DateTimeZone;
-use Doctrine\Common\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
 use Exception;
 use Psr\Log\LoggerInterface;

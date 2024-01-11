@@ -9,11 +9,10 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Exception;
 
-/**
- * @package ActiveCollab\JobsQueue\Exception
- */
 abstract class Exception extends \Exception
 {
 }

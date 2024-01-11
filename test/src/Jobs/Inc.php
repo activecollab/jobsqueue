@@ -30,12 +30,7 @@ class Inc extends Job
         parent::__construct($data);
     }
 
-    /**
-     * Increment a number.
-     *
-     * @return int
-     */
-    public function execute()
+    public function execute(): mixed
     {
         return $this->getData()['number'] + 1;
     }

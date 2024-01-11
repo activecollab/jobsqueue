@@ -25,23 +25,13 @@ interface JobInterface extends JsonSerializable
     const HAS_PRIORITY = 256;
     const HAS_HIGHEST_PRIORITY = 4294967295; // UNSIGNED INT https://dev.mysql.com/doc/refman/5.0/en/integer-types.html
 
-    /**
-     * @return mixed
-     */
-    public function execute();
-
-    /**
-     * @return string
-     */
-    public function getChannel();
+    public function execute(): mixed;
+    public function getChannel(): string;
 
     /**
      * Set job channel when it is known.
-     *
-     * @param  string $channel
-     * @return $this
      */
-    public function &setChannel($channel);
+    public function setChannel(string $channel): static;
 
     /**
      * Return all job data (when $property is NULL) or a particular property.

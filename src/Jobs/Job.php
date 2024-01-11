@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Jobs;
 
 use ActiveCollab\JobsQueue\Batches\BatchInterface;
@@ -20,31 +22,14 @@ use LogicException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-/**
- * @package ActiveCollab\JobsQueue\Jobs
- */
 abstract class Job implements JobInterface
 {
-    /**
-     * @var array
-     */
-    private $data;
+    private array $data = [];
 
-    /**
-     * Construct a new Job instance.
-     *
-     * @param  array|null               $data
-     */
     public function __construct(array $data = null)
     {
-        if (empty($data)) {
-            $this->data = [];
-        } else {
-            if (is_array($data)) {
-                $this->data = $data;
-            } else {
-                throw new InvalidArgumentException('Data is expected to be an array or NULL');
-            }
+        if ($data) {
+            $this->data = $data;
         }
 
         if (empty($this->data['priority']) || $this->data['priority'] < self::NOT_A_PRIORITY) {
@@ -68,11 +53,6 @@ abstract class Job implements JobInterface
         }
     }
 
-    /**
-     * @return mixed
-     */
-    abstract public function execute();
-
     public function jsonSerialize(): array
     {
         return $this->data;
@@ -85,45 +65,37 @@ abstract class Job implements JobInterface
 
     /**
      * Get job channel, if known.
-     *
-     * @return string
      */
-    public function getChannel()
+    public function getChannel(): string
     {
         return $this->channel;
     }
 
     /**
      * Set job channel when it is known.
-     *
-     * @param  string $channel
-     * @return $this
      */
-    public function &setChannel($channel)
+    public function setChannel(string $channel): static
     {
         $this->channel = $channel;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getData($property = null)
     {
         if ($property === null) {
             return $this->data;
-        } else {
-            if (empty($property)) {
-                throw new InvalidArgumentException("When provided, property can't be an empty value");
-            } else {
-                if (empty($this->data[$property]) && !array_key_exists($property, $this->data)) {
-                    throw new InvalidArgumentException("Property '$property' not found");
-                } else {
-                    return $this->data[$property];
-                }
-            }
         }
+
+        if (empty($property)) {
+            throw new InvalidArgumentException("When provided, property can't be an empty value");
+        }
+
+        if (empty($this->data[$property]) && !array_key_exists($property, $this->data)) {
+            throw new InvalidArgumentException(sprintf("Property '%s' not found", $property));
+        }
+
+        return $this->data[$property];
     }
 
     /**

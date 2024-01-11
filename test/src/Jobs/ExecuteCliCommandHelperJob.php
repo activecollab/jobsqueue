@@ -9,21 +9,17 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace ActiveCollab\JobsQueue\Test\Jobs;
 
 use ActiveCollab\JobsQueue\Helpers\ExecuteCliCommand;
 use ActiveCollab\JobsQueue\Jobs\Job;
 
-/**
- * @package ActiveCollab\JobsQueue\Test\Jobs
- */
 class ExecuteCliCommandHelperJob extends Job
 {
     use ExecuteCliCommand;
 
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(array $data = null)
     {
         $this->validateCommand($data);
@@ -31,10 +27,7 @@ class ExecuteCliCommandHelperJob extends Job
         parent::__construct($data);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function execute()
+    public function execute(): mixed
     {
         return $this->prepareCommandFromData($this->getData());
     }

@@ -35,10 +35,7 @@ class Failing extends Job
         parent::__construct($data);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function execute()
+    public function execute(): mixed
     {
         throw new Exception($this->getData('exception_message'));
     }

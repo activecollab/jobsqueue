@@ -26,7 +26,8 @@ class WebhookUrl extends Job
         parent::__construct($data);
     }
 
-    public function execute()
+    public function execute(): mixed
     {
+        return null;
     }
 }

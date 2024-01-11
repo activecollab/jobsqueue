@@ -35,10 +35,8 @@ class Inc extends Job
 {
     /**
      * Increment a number
-     *
-     * @return integer
      */
-    public function execute()
+    public function execute(): mixed
     {
       return $this->getData()['number'] + 1;
     }
@@ -122,7 +120,7 @@ $job = new Inc([
 Once in an job's `execute()` method, you can access job properties using `getData()` method:
 
 ```php
-public function execute()
+public function execute(): mixed
 {
     print_r($this->getData()); // Print all job properties
     print $this->getData('number') . "\n"; // Print only number
@@ -180,7 +178,7 @@ class ListAndForget extends Job
     /**
      * Report that we launched a background process
      */
-    public function execute()
+    public function execute(): mixed
     {
         $output = [];
         exec("nohup ls -la > /dev/null 2>&1 & echo $!", $output);
@@ -231,20 +229,14 @@ class RunCommand extends Job
 {
     use ExecuteCliCommand;
     
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(array $data = null)
     {
         $this->validateCommand($data);
 
         parent::__construct($data);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function execute()
+    
+    public function execute(): mixed
     {
         $data['command'] = 'php foobar.php'
         $data['command_environement_variables'] = ['foo' => 'bar'];

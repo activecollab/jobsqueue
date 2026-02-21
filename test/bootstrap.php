@@ -13,5 +13,14 @@ date_default_timezone_set('GMT');
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-exec('mysql -u root -e "DROP DATABASE IF EXISTS activecollab_jobs_queue_test"');
-exec('mysql -u root -e "CREATE DATABASE activecollab_jobs_queue_test"');
+$dbUser = getenv('DB_USER') ?: 'root';
+$dbPass = getenv('DB_PASS') ?: '';
+$dbName = getenv('DB_NAME') ?: 'activecollab_jobs_queue_test';
+
+$mysqlCmd = 'mysql -u ' . escapeshellarg($dbUser);
+if (!empty($dbPass)) {
+    $mysqlCmd .= ' -p' . escapeshellarg($dbPass);
+}
+
+exec($mysqlCmd . ' -e "DROP DATABASE IF EXISTS ' . $dbName . '"');
+exec($mysqlCmd . ' -e "CREATE DATABASE ' . $dbName . '"');

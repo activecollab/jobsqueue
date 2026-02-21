@@ -27,7 +27,12 @@ class IntegratedConnectionTestCase extends TestCase
     {
         parent::setUp();
 
-        $this->link = new mysqli('localhost', 'root', '', 'activecollab_jobs_queue_test');
+        $host = getenv('DB_HOST') ?: 'localhost';
+        $user = getenv('DB_USER') ?: 'root';
+        $pass = getenv('DB_PASS') ?: '';
+        $name = getenv('DB_NAME') ?: 'activecollab_jobs_queue_test';
+
+        $this->link = new mysqli($host, $user, $pass, $name);
 
         if ($this->link->connect_error) {
             throw new RuntimeException('Failed to connect to database. MySQL said: ' . $this->link->connect_error);

@@ -10,6 +10,12 @@
          stopOnSkipped="false"
          processIsolation="false"
          colors="true">
+    <php>
+        <env name="DB_HOST" value="localhost"/>
+        <env name="DB_USER" value="root"/>
+        <env name="DB_PASS" value=""/>
+        <env name="DB_NAME" value="activecollab_jobs_queue_test"/>
+    </php>
     <testsuites>
         <testsuite name="JobsQueue">
             <directory>./test/src</directory>

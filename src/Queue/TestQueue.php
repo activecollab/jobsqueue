@@ -119,6 +119,7 @@ class TestQueue extends Queue
     {
     }
 
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return count($this->jobs);

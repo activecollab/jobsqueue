@@ -650,6 +650,7 @@ class MySqlQueue extends Queue
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return $this->connection->executeFirstCell('SELECT COUNT(`id`) AS "row_count" FROM `' . self::JOBS_TABLE_NAME . '`');

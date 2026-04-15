@@ -76,6 +76,7 @@ abstract class Job implements JobInterface
     /**
      * @return array
      */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->data;

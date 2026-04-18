@@ -39,7 +39,7 @@ class ClearFailedJobsTest extends IntegratedContainerTestCase
     }
 
     /**
-     * Test if execute will delete all records from failed job table.
+     * Test if execute will delete all records from the failed job table.
      */
     public function testExecuteRunsOK()
     {

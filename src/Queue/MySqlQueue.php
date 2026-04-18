@@ -281,12 +281,6 @@ class MySqlQueue extends Queue
     {
         if ($properties) {
             foreach ($properties as $property => $value_to_match) {
-                if (is_bool($value_to_match)) {
-                    $prepared_value = $value_to_match ? 'true' : 'false';
-                } else {
-                    $prepared_value = $this->connection->escapeValue($value_to_match);
-                }
-
                 if ($this->connection->fieldExists(self::JOBS_TABLE_NAME, $property)) {
                     $conditions[] = $this->connection->prepare(
                         sprintf('`%s` = ?', $property),
@@ -317,7 +311,7 @@ class MySqlQueue extends Queue
     }
 
     /**
-     * Handle a job failure (attempts, removal from queue, exception handling etc).
+     * Handle a job failure (attempts, removal from queue, exception handling, etc.).
      */
     private function failJob(
         JobInterface $job,
@@ -414,7 +408,7 @@ class MySqlQueue extends Queue
     }
 
     /**
-     * Return number of previous attempts that we recorded for the given job.
+     * Return the number of previous attempts that we recorded for the given job.
      */
     private function getPreviousAttemptsByJobId(int $job_id): int
     {
@@ -425,7 +419,7 @@ class MySqlQueue extends Queue
     }
 
     /**
-     * Increase number of attempts by job ID.
+     * Increase the number of attempts by job ID.
      */
     private  function prepareForNextAttempt(
         int $job_id,
@@ -437,7 +431,7 @@ class MySqlQueue extends Queue
     }
 
     /**
-     * Log failed job and delete it from the main queue.
+     * Log a failed job and delete it from the main queue.
      */
     private function logFailedJob(JobInterface $job, string $reason): void
     {
@@ -508,7 +502,7 @@ class MySqlQueue extends Queue
     private $on_reservation_key_ready;
 
     /**
-     * Callback that is called when reservation key is prepared for a particular job, but not yet set.
+     * Callback that is called when a reservation key is prepared for a particular job, but not yet set.
      *
      * This callback is useful for testing job snatching when we have multiple workers
      */
@@ -736,7 +730,7 @@ class MySqlQueue extends Queue
     }
 
     /**
-     * Check if process with PID $process_id is running.
+     * Check if the process with PID $process_id is running.
      */
     private function isProcessRunning(int $process_id): bool
     {
@@ -777,9 +771,11 @@ class MySqlQueue extends Queue
 
     public function clear(): void
     {
-        $this->connection->execute('TRUNCATE TABLE `' . self::JOBS_TABLE_NAME . '`');
-        $this->connection->execute('TRUNCATE TABLE `' . self::FAILED_JOBS_TABLE_NAME . '`');
-        $this->connection->execute('TRUNCATE TABLE `' . self::BATCHES_TABLE_NAME . '`');
+        foreach ([self::JOBS_TABLE_NAME, self::FAILED_JOBS_TABLE_NAME, self::BATCHES_TABLE_NAME] as $table_name) {
+            $this->connection->execute(
+                sprintf('DELETE FROM `%s`', $table_name),
+            );
+        }
     }
 
     public function getFailedJobReasons(string $job_type): array

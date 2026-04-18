@@ -59,16 +59,16 @@
         },
         {
             "name": "activecollab/databaseconnection",
-            "version": "5.1.6",
+            "version": "5.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/databaseconnection.git",
-                "reference": "5f5ff2ce8fbe7b94b64027d446735499de71c040"
+                "reference": "3e13a6f743cd16f4cb9ca0c6612ab7c5fad99bc5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/5f5ff2ce8fbe7b94b64027d446735499de71c040",
-                "reference": "5f5ff2ce8fbe7b94b64027d446735499de71c040",
+                "url": "https://api.github.com/repos/activecollab/databaseconnection/zipball/3e13a6f743cd16f4cb9ca0c6612ab7c5fad99bc5",
+                "reference": "3e13a6f743cd16f4cb9ca0c6612ab7c5fad99bc5",
                 "shasum": ""
             },
             "require": {
@@ -110,9 +110,9 @@
             ],
             "support": {
                 "issues": "https://github.com/activecollab/databaseconnection/issues",
-                "source": "https://github.com/activecollab/databaseconnection/tree/5.1.6"
+                "source": "https://github.com/activecollab/databaseconnection/tree/5.1.8"
             },
-            "time": "2023-09-24T06:25:56+00:00"
+            "time": "2026-04-18T19:56:07+00:00"
         },
         {
             "name": "activecollab/datevalue",
